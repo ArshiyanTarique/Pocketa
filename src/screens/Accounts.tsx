@@ -10,6 +10,7 @@ import {
   Plus,
   Scale,
   Smartphone,
+  Trash2,
   TrendingUp,
   Wallet } from 'lucide-react';
 import { Card, CardHeader, Badge, Button, EmptyState, Notice, Progress, Dot } from '../ui/primitives';
@@ -517,10 +518,12 @@ function AccountDetail({
   const settings = useStore((s) => s.settings);
   const balances = useBalances();
   const archiveAccount = useStore((s) => s.archiveAccount);
+  const deleteAccount = useStore((s) => s.deleteAccount);
   const asOf = useToday();
 
   const [reconciling, setReconciling] = React.useState(false);
   const [confirmArchive, setConfirmArchive] = React.useState(false);
+  const [confirmDelete, setConfirmDelete] = React.useState(false);
 
   const account = accounts.find((a) => a.id === id);
   // The full history, revealed a window at a time. Slicing to a fixed 40 hid
@@ -581,6 +584,15 @@ function AccountDetail({
             onClick={() => (account.archived ? void archiveAccount(account.id, false) : setConfirmArchive(true))}
           >
             {account.archived ? 'Unarchive' : 'Archive'}
+          </Button>
+          <Button
+            size="sm"
+            variant="secondary"
+            icon={<Trash2 className="size-3.5" />}
+            onClick={() => setConfirmDelete(true)}
+            className="text-negative"
+          >
+            Delete
           </Button>
         </div>
 
@@ -648,6 +660,26 @@ function AccountDetail({
         onConfirm={async () => {
           await archiveAccount(account.id, true);
           toast.saved(`${account.name} archived`);
+          onClose();
+        }}
+      />
+
+      <Confirm
+        open={confirmDelete}
+        onClose={() => setConfirmDelete(false)}
+        title={`Delete ${account.name}?`}
+        confirmLabel="Delete permanently"
+        tone="danger"
+        requirePhrase={account.name}
+        body={
+          <>
+            All transactions in this account will be voided and it will be removed entirely.
+            This cannot be undone. Type the account name to confirm.
+          </>
+        }
+        onConfirm={async () => {
+          await deleteAccount(account.id);
+          toast.saved(`${account.name} deleted`);
           onClose();
         }}
       />

@@ -122,6 +122,7 @@ export interface StoreActions {
   saveAccount(account: Account, isNew?: boolean): Promise<void>;
   archiveAccount(id: ID, archived: boolean): Promise<void>;
   reorderAccounts(ids: ID[]): Promise<void>;
+  deleteAccount(id: ID): Promise<void>;
 
   saveBudget(budget: Budget, isNew?: boolean): Promise<void>;
   archiveBudget(id: ID, archived: boolean): Promise<void>;
@@ -752,6 +753,42 @@ export const useStore = create<Store>()((set, get) => ({
     if (updated.length === 0) return;
     await db().accounts.bulkPut(updated);
     set((s) => ({ accounts: s.accounts.map((a) => updated.find((u) => u.id === a.id) ?? a) }));
+  },
+
+  async deleteAccount(id) {
+    const state = get();
+    const account = state.accounts.find((a) => a.id === id);
+    if (!account || account.system) return;
+
+    // Void every transaction that touches this account so balances update correctly.
+    // We keep the records (voided = true) so history isn't silently lost.
+    const affected = state.transactions.filter(
+      (t) => !t.voided && t.postings.some((p) => p.accountId === id),
+    );
+    const voided = affected.map((t) => ({
+      ...t,
+      voided: true,
+      voidedAt: nowIso(),
+      updatedAt: nowIso(),
+    }));
+
+    await commit({
+      write: async (d) => {
+        await d.accounts.delete(id);
+        if (voided.length) await d.transactions.bulkPut(voided);
+      },
+      apply: (s) => ({
+        accounts: s.accounts.filter((a) => a.id !== id),
+        transactions: s.transactions.map((t) => voided.find((v) => v.id === t.id) ?? t),
+      }),
+      log: {
+        type: 'account.archived',
+        entity: 'account',
+        entityId: id,
+        summary: `Deleted ${account.name}`,
+        snapshot: { ...account, deleted: true },
+      },
+    });
   },
 
   // -------------------------------------------------------------------------
