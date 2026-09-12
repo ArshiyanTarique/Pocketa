@@ -76,14 +76,14 @@ export function Shell({
 
       <div
         className={cn(
-          'lg:pl-[4.5rem] transition-[padding] duration-200 ease-out',
+          'lg:pl-[4.5rem] transition-[padding] duration-200 ease-out overflow-x-hidden',
           // A detail panel sits beside the page, not on top of it.
           panels > 0 && 'lg:pr-[26rem]',
         )}
       >
         <TopBar />
         <main
-          className="mx-auto w-full max-w-[96rem] px-4 pb-32 pt-3 sm:px-6 lg:pb-12 lg:pt-4"
+          className="mx-auto w-full max-w-[80rem] px-4 pb-32 pt-3 sm:px-6 lg:pb-12 lg:pt-4"
           key={route.path}
         >
           <div className="rise">{children}</div>
@@ -209,7 +209,7 @@ function TopBar() {
 
   return (
     <header className="safe-top sticky top-0 z-20 bg-paper/80 backdrop-blur-md">
-      <div className="mx-auto flex h-14 w-full max-w-[96rem] items-center px-4 sm:px-6">
+      <div className="mx-auto flex h-14 w-full max-w-[80rem] items-center px-4 sm:px-6">
         {/* Logo — mobile only (desktop has the rail) */}
         <div className="lg:hidden">
           <img src="/favicon.svg" alt="Pocketa" className="size-8 rounded-[--radius]" />

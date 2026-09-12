@@ -38,7 +38,7 @@ export function Debts() {
   const payables = accounts.filter((a) => a.class === 'payable' && !a.archived);
 
   const owedToMe = receivables.reduce((s, a) => s + balanceOf(balances, a.id), 0);
-  const iOwe = -payables.reduce((s, a) => s + balanceOf(balances, a.id), 0);
+  const iOwe = payables.reduce((s, a) => s + Math.abs(balanceOf(balances, a.id)), 0);
   const net = owedToMe - iOwe;
 
   /**
@@ -53,7 +53,7 @@ export function Debts() {
       const pay = payables.find((a) => a.personId === person.id) ?? null;
       if (!recv && !pay) continue;
       const theyOwe = recv ? balanceOf(balances, recv.id) : 0;
-      const youOwe = pay ? -balanceOf(balances, pay.id) : 0;
+      const youOwe = pay ? Math.abs(balanceOf(balances, pay.id)) : 0;
       out.push({ person, recv, pay, theyOwe, youOwe, net: theyOwe - youOwe });
     }
     // Ignore accounts without a person record — legacy data; still counted in the totals above.

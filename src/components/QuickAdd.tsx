@@ -492,6 +492,15 @@ function TransactionForm({
     if (remembered) setCategoryId(remembered);
   }, [merchant, mode, merchantMemory, editing, splits]);
 
+  const receivableAccounts = React.useMemo(
+    () => accountsAll.filter((a) => a.class === 'receivable' && !a.archived),
+    [accountsAll],
+  );
+  const payableAccounts = React.useMemo(
+    () => accountsAll.filter((a) => a.class === 'payable' && !a.archived),
+    [accountsAll],
+  );
+  // Keep peopleAccounts for buildDraft lookup only
   const peopleAccounts = React.useMemo(
     () => accountsAll.filter((a) => (a.class === 'receivable' || a.class === 'payable') && !a.archived),
     [accountsAll],
@@ -722,14 +731,14 @@ function TransactionForm({
             <Select id="qa-account" value={accountId ?? ''} onChange={(e) => setAccountId(e.target.value || null)}>
               <option value="">Choose an account</option>
               <AccountOptions accounts={spendable} label="Accounts" />
-              {mode === 'debt' && <AccountOptions accounts={peopleAccounts} label="People" />}
+              {mode === 'debt' && <AccountOptions accounts={payableAccounts} label="People" />}
             </Select>
           </Field>
           <Field label="To">
             <Select value={toAccountId ?? ''} onChange={(e) => setToAccountId(e.target.value || null)}>
               <option value="">Choose an account</option>
               <AccountOptions accounts={spendable} label="Accounts" />
-              {mode === 'debt' && <AccountOptions accounts={peopleAccounts} label="People" />}
+              {mode === 'debt' && <AccountOptions accounts={receivableAccounts} label="People" />}
             </Select>
           </Field>
         </div>

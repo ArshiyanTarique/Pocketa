@@ -59,7 +59,7 @@ export function Dashboard({ onQuickAdd }: { onQuickAdd: () => void }) {
   if (!hasActivity) return <FirstRun onQuickAdd={onQuickAdd} />;
 
   return (
-    <div className="lg:grid lg:grid-cols-[1fr_22rem] lg:gap-8 lg:items-start">
+    <div className="lg:grid lg:grid-cols-[1fr_20rem] lg:gap-6 lg:items-start">
       {/* Left / main column */}
       <div className="space-y-7">
         <SafeToSpendHero />
@@ -76,7 +76,7 @@ export function Dashboard({ onQuickAdd }: { onQuickAdd: () => void }) {
       </div>
 
       {/* Right column — Recent, scrollable on desktop */}
-      <aside className="mt-7 lg:sticky lg:top-[4.5rem] lg:mt-0 lg:max-h-[calc(100dvh-5rem)] lg:overflow-y-auto">
+      <aside className="mt-7 lg:sticky lg:top-[4.5rem] lg:mt-0 lg:max-h-[calc(100dvh-5rem)] lg:overflow-y-auto lg:min-w-0">
         <section>
           <SectionLabel to="/transactions" className="text-ink-3">Recent</SectionLabel>
           <ul className="mt-1 divide-y divide-line">
