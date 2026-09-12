@@ -178,6 +178,7 @@ const EMPTY_SETTINGS: Settings = {
   fxUpdatedAt: null,
   theme: 'system',
   accentColor: 'blue',
+  avatarUrl: null,
   weekStartsOn: 1,
   monthStartDay: 1,
   safeToSpendHorizon: 30,

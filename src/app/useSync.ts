@@ -42,6 +42,8 @@ export type SyncPhase =
 export interface SyncState {
   phase: SyncPhase;
   email: string | null;
+  displayName: string | null;
+  avatarUrl: string | null;
   /** Changes authored here that the server has not acknowledged. */
   pending: number;
   lastSyncedAt: number | null;
@@ -58,6 +60,8 @@ interface SyncStore extends SyncState {
 const useSyncStore = create<SyncStore>()((set) => ({
   phase: syncConfigured ? 'local' : 'unavailable',
   email: null,
+  displayName: null,
+  avatarUrl: null,
   pending: 0,
   lastSyncedAt: null,
   error: null,
@@ -169,6 +173,12 @@ export function useSyncEngine(): void {
 
     const wanted = namespaceForUser(account?.user.id ?? null);
     set({ email: account?.user.email ?? null });
+    const meta = account?.user.user_metadata ?? {};
+    set({
+      email: account?.user.email ?? null,
+      displayName: (meta.full_name ?? meta.name ?? null) as string | null,
+      avatarUrl: (meta.avatar_url ?? meta.picture ?? null) as string | null,
+    });
 
     if (!account) {
       set({ phase: 'local', error: null });
@@ -225,6 +235,8 @@ export function useSync(): SyncState & { syncNow: () => void } {
   return {
     phase: state.phase,
     email: state.email,
+    displayName: state.displayName,
+    avatarUrl: state.avatarUrl,
     pending: state.pending,
     lastSyncedAt: state.lastSyncedAt,
     error: state.error,
