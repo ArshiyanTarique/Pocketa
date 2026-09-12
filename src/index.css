@@ -24,18 +24,16 @@
 @layer base {
   :root {
     /* --- Ground ---------------------------------------------------------- */
-    /* Warm white, not beige. The warmth should be felt, not seen: gold on a
-       tan ground is the dated combination, gold on near-white is not. */
-    --paper: #faf8f4;
+    --paper: #f8f6f2;
     --surface: #ffffff;
-    --surface-2: #f3f0ea;
-    --surface-sunken: #ebe7df;
-    --ink: #17171a;
-    --ink-2: #48464a;
-    --ink-3: #66636a;
-    --ink-4: #5f5c64;
-    --line: #e8e3da;
-    --line-strong: #d5cfc3;
+    --surface-2: #f1ede6;
+    --surface-sunken: #e8e3da;
+    --ink: #141416;
+    --ink-2: #44424a;
+    --ink-3: #6b6870;
+    --ink-4: #9b98a0;
+    --line: #e6e1d8;
+    --line-strong: #d0cac0;
 
     /* --- The notes -------------------------------------------------------- */
     /* Text/stroke shades clear 4.5:1 on --paper; fills are the note colour. */
@@ -81,10 +79,10 @@
     --info-soft: var(--cerulean-soft);
 
     /* --- Elevation ------------------------------------------------------- */
-    --shadow-sm: 0 1px 2px rgb(23 23 26 / 0.05);
-    --shadow-md: 0 2px 6px rgb(23 23 26 / 0.05), 0 12px 28px rgb(23 23 26 / 0.08);
-    --shadow-lg: 0 6px 12px rgb(23 23 26 / 0.06), 0 28px 64px rgb(23 23 26 / 0.14);
-    --shadow-card: 0 1px 0 rgb(255 255 255 / 0.6) inset, 0 10px 30px -12px rgb(23 23 26 / 0.35);
+    --shadow-sm: 0 1px 3px rgb(20 20 22 / 0.06), 0 1px 2px rgb(20 20 22 / 0.04);
+    --shadow-md: 0 4px 8px rgb(20 20 22 / 0.06), 0 16px 32px rgb(20 20 22 / 0.09);
+    --shadow-lg: 0 8px 16px rgb(20 20 22 / 0.07), 0 32px 72px rgb(20 20 22 / 0.16);
+    --shadow-card: 0 1px 0 rgb(255 255 255 / 0.7) inset, 0 12px 36px -14px rgb(20 20 22 / 0.38);
 
     /* --- The cards in the fan ------------------------------------------- */
     /* These do NOT flip with the theme: a banknote is the same colour at
@@ -334,7 +332,7 @@
     font-family: var(--font-display);
     font-variation-settings: 'opsz' 96, 'wdth' 100;
     font-weight: 700;
-    letter-spacing: -0.03em;
+    letter-spacing: -0.035em;
     line-height: 1;
     color: var(--ink);
   }
@@ -344,11 +342,11 @@
   .label {
     font-family: var(--font-display);
     font-variation-settings: 'opsz' 12, 'wdth' 100;
-    font-size: 0.75rem;
+    font-size: 0.6875rem;
     font-weight: 600;
-    letter-spacing: 0.02em;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
-    color: var(--ink-3);
+    color: var(--ink-4);
   }
 
   /* Kept for the few places that still want a mono caption. */
@@ -530,8 +528,8 @@
     border-radius: var(--radius-xl);
     color: var(--note-ink, #fff);
     background:
-      radial-gradient(120% 90% at 100% 0%, color-mix(in oklab, var(--note) 70%, white) 0%, transparent 55%),
-      radial-gradient(90% 80% at 0% 100%, color-mix(in oklab, var(--note) 60%, black) 0%, transparent 60%),
+      radial-gradient(130% 100% at 100% 0%, color-mix(in oklab, var(--note) 65%, white) 0%, transparent 50%),
+      radial-gradient(100% 85% at 0% 100%, color-mix(in oklab, var(--note) 55%, black) 0%, transparent 55%),
       var(--note);
     box-shadow: var(--shadow-card);
   }
@@ -542,9 +540,9 @@
     inset: 0;
     z-index: -1;
     background-image:
-      repeating-linear-gradient(115deg, rgb(255 255 255 / 0.08) 0 1px, transparent 1px 7px),
-      repeating-linear-gradient(-25deg, rgb(0 0 0 / 0.07) 0 1px, transparent 1px 9px);
-    mask-image: radial-gradient(120% 100% at 80% 20%, black 30%, transparent 75%);
+      repeating-linear-gradient(112deg, rgb(255 255 255 / 0.07) 0 1px, transparent 1px 8px),
+      repeating-linear-gradient(-22deg, rgb(0 0 0 / 0.06) 0 1px, transparent 1px 10px);
+    mask-image: radial-gradient(130% 110% at 85% 15%, black 25%, transparent 70%);
     pointer-events: none;
   }
   .note-card:focus-visible {

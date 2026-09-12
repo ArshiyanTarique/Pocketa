@@ -37,7 +37,7 @@ export function AccountBadge({ sync }: { sync: SyncState & { syncNow: () => void
         aria-label={signedIn ? `Account: ${sync.email}` : 'Not signed in — your data is on this device only'}
         title={describeSync(sync)}
         className={cn(
-          'flex h-9 items-center gap-1.5 rounded-full border px-2 transition-colors',
+          'flex size-9 items-center justify-center rounded-full border transition-colors',
           signedIn
             ? 'border-line bg-surface-2 hover:border-line-strong'
             : 'border-accent bg-accent-soft hover:bg-accent-soft/70',
@@ -53,16 +53,8 @@ export function AccountBadge({ sync }: { sync: SyncState & { syncNow: () => void
             {sync.email!.slice(0, 1)}
           </span>
         ) : (
-          <LogIn className="ml-0.5 size-4 text-accent" />
+          <LogIn className="size-4 text-accent" />
         )}
-        <span
-          className={cn(
-            'pr-1 text-[0.6875rem] font-medium',
-            signedIn ? 'hidden text-ink-2 sm:block' : 'text-accent',
-          )}
-        >
-          {signedIn ? shortStatus(sync) : 'Sign in'}
-        </span>
       </button>
 
       <Sheet
@@ -88,13 +80,7 @@ export function AccountBadge({ sync }: { sync: SyncState & { syncNow: () => void
   );
 }
 
-/** Two or three words, for a badge that has to fit next to a page title. */
-function shortStatus(sync: SyncState): string {
-  if (sync.phase === 'syncing') return 'Syncing';
-  if (sync.phase === 'failed') return sync.online ? 'Not synced' : 'Offline';
-  if (sync.pending > 0) return `${sync.pending} waiting`;
-  return 'Synced';
-}
+
 
 function SignedIn({ sync }: { sync: SyncState & { syncNow: () => void } }) {
   const Icon = sync.phase === 'failed' ? TriangleAlert : !sync.online ? CloudOff : Check;

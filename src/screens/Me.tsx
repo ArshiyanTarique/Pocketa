@@ -8,7 +8,7 @@
  */
 
 import * as React from 'react';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, Eye, EyeOff } from 'lucide-react';
 import { SECONDARY } from '../app/Shell';
 import { Link } from '../app/router';
 import { Money } from '../ui/Money';
@@ -25,6 +25,8 @@ export function Me() {
   const settings = useStore((s) => s.settings);
   const hidden = settings.hideAmounts;
   const currency = settings.baseCurrency;
+
+  const updateSettings = useStore((s) => s.updateSettings);
 
   const netWorth = computeNetWorth(balances, accounts);
   const atRisk = overview.budgets.filter((b) => b.health === 'over' || b.health === 'projected_over').length;
@@ -75,8 +77,23 @@ export function Me() {
   };
 
   return (
-    <div className="mx-auto max-w-xl">
-      <ul className="divide-y divide-line">
+    <div className="mx-auto max-w-xl space-y-6">
+      {/* Net worth + hide toggle */}
+      <div className="flex items-center justify-between px-1">
+        <div>
+          <p className="label">Net worth</p>
+          <Money value={netWorth.net} currency={currency} hidden={hidden} size="xl" weight="semibold" symbol={false} compact className="mt-1" />
+        </div>
+        <button
+          onClick={() => void updateSettings({ hideAmounts: !hidden })}
+          className="flex size-9 items-center justify-center rounded-[--radius] text-ink-3 transition-colors hover:bg-surface-2 hover:text-ink"
+          aria-label={hidden ? 'Show amounts' : 'Hide amounts'}
+        >
+          {hidden ? <EyeOff className="size-[1.05rem]" /> : <Eye className="size-[1.05rem]" />}
+        </button>
+      </div>
+
+      <ul className="divide-y divide-line rounded-[--radius-lg] border border-line bg-surface">
         {SECONDARY.map((item) => {
           const Icon = item.icon;
           const s = status[item.path];
@@ -84,20 +101,20 @@ export function Me() {
             <li key={item.path}>
               <Link
                 to={item.path}
-                className="group flex h-14 items-center gap-4 px-1 transition-colors hover:bg-surface-2/60"
+                className="group flex h-[3.75rem] items-center gap-4 px-1 transition-colors hover:bg-surface-2/50"
               >
-                <span className="flex size-9 items-center justify-center rounded-[--radius] bg-surface-2 text-ink-2">
-                  <Icon className="size-[1.15rem]" strokeWidth={1.9} />
+                <span className="flex size-9 items-center justify-center rounded-[--radius] bg-surface-2 text-ink-3 transition-colors group-hover:bg-surface-2">
+                  <Icon className="size-[1.1rem]" strokeWidth={1.8} />
                 </span>
-                <span className="flex-1 text-[0.9375rem] font-semibold text-ink">{item.label}</span>
+                <span className="flex-1 text-[0.9375rem] font-medium text-ink">{item.label}</span>
                 <span
                   className={cn(
-                    'tnum text-[0.8125rem] font-semibold',
+                    'tnum text-[0.875rem] font-semibold',
                     s?.tone === 'positive' && 'text-positive',
                     s?.tone === 'negative' && 'text-negative',
                     s?.tone === 'warn' && 'text-warn',
                     s?.tone === 'muted' && 'text-ink-4',
-                    !s?.tone && 'text-ink-2',
+                    !s?.tone && 'text-ink-3',
                   )}
                 >
                   {s?.figure}

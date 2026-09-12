@@ -42,10 +42,8 @@ export function Dashboard({ onQuickAdd }: { onQuickAdd: () => void }) {
   const accounts = useAccountMap();
   const transactions = useStore((s) => s.transactions);
   const settings = useStore((s) => s.settings);
-  const overview = useOverview();
   const asOf = useToday();
   const hidden = settings.hideAmounts;
-  const currency = settings.baseCurrency;
 
   const hasActivity = live(transactions).length > 0;
 
@@ -65,14 +63,6 @@ export function Dashboard({ onQuickAdd }: { onQuickAdd: () => void }) {
       <SafeToSpendHero />
 
       <section>
-        <SectionLabel
-          to="/accounts"
-          count={
-            <Money value={overview.netWorth.net} currency={currency} hidden={hidden} size="sm" weight="semibold" symbol={false} compact />
-          }
-        >
-          Accounts
-        </SectionLabel>
         <div className="mt-1">
           <AccountFan onAdd={() => navigate('/accounts')} />
         </div>
@@ -83,7 +73,7 @@ export function Dashboard({ onQuickAdd }: { onQuickAdd: () => void }) {
       <StatusLines />
 
       <section>
-        <SectionLabel to="/transactions">Recent</SectionLabel>
+        <SectionLabel to="/transactions" className="text-ink-3">Recent</SectionLabel>
         <ul className="mt-1 divide-y divide-line">
           {recent.map((txn) => (
             <li key={txn.id}>
@@ -119,8 +109,8 @@ function SafeToSpendHero() {
     <section>
       <div className="flex items-end justify-between gap-4">
         <div className="min-w-0">
-          <p className="label">Safe to spend · {safeToSpend.horizonDays} days</p>
-          <div className="count-in mt-2">
+          <p className="label mb-2 text-ink-4">Left to spend</p>
+          <div className="count-in">
             <Money
               value={safeToSpend.amount}
               currency={currency}
@@ -134,12 +124,12 @@ function SafeToSpendHero() {
         <button
           onClick={() => setExplaining(true)}
           className={cn(
-            'mb-1 flex shrink-0 items-center gap-1.5 rounded-full border border-line-strong px-3 py-1.5',
-            'text-xs font-semibold text-ink-2 transition-colors hover:border-accent hover:text-accent',
+            'mb-1.5 flex shrink-0 items-center justify-center rounded-full border border-line size-8',
+            'text-ink-4 transition-colors hover:border-accent hover:text-accent',
           )}
+          aria-label="How is this calculated?"
         >
           <Info className="size-3.5" />
-          How?
         </button>
       </div>
       <div className="reckoning-rule reckoning-rule--total mt-4" aria-hidden="true" />
@@ -148,7 +138,7 @@ function SafeToSpendHero() {
         open={explaining}
         onClose={() => setExplaining(false)}
         title="How this is worked out"
-        description="Shown so you can check it. A budgeting calculation, not financial advice."
+        description="A budgeting calculation, not financial advice."
       >
         <div className="space-y-4 pb-2">
           <Reckoning
@@ -163,7 +153,7 @@ function SafeToSpendHero() {
             }))}
             total={{ label: 'Safe to spend', amount: safeToSpend.amount }}
           />
-          <p className="text-xs text-ink-3">
+          <p className="text-xs text-ink-4">
             Horizon ends {formatDate(safeToSpend.horizonDate)}. Change it in Settings.
           </p>
         </div>
@@ -211,8 +201,8 @@ function MonthFigure({
   hidden: boolean;
 }) {
   return (
-    <button type="button" onClick={() => navigate('/analytics')} className="group flex flex-col gap-1 px-1 text-left">
-      <span className="label group-hover:text-ink-2">{label}</span>
+    <button type="button" onClick={() => navigate('/analytics')} className="group flex flex-col gap-0.5 px-1 text-left">
+      <span className="label text-ink-4 group-hover:text-ink-3">{label}</span>
       <Money value={value} currency={currency} hidden={hidden} size="lg" weight="semibold" symbol={false} compact tone={tone} animate />
     </button>
   );
@@ -468,8 +458,7 @@ function StatusLines() {
 
   return (
     <section>
-      <SectionLabel>Right now</SectionLabel>
-      <div className="mt-1 divide-y divide-line rounded-[--radius] border border-line bg-surface">{lines}</div>
+      <div className="divide-y divide-line rounded-[--radius-lg] border border-line bg-surface">{lines}</div>
     </section>
   );
 }

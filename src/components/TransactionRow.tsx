@@ -30,17 +30,17 @@ export function TransactionRow({
     <Tag
       {...(onClick ? { onClick, type: 'button' as const } : {})}
       className={cn(
-        'flex w-full items-center gap-3 px-5 py-2.5 text-left transition-colors',
+        'flex w-full items-center gap-3 px-4 py-2 text-left transition-colors',
         onClick && 'hover:bg-surface-2 active:bg-surface-2',
-        txn.voided && 'opacity-45',
+        txn.voided && 'opacity-40',
         className,
       )}
     >
       <Dot color={d.color}>
         {isMovement ? (
-          <ArrowLeftRight className="size-[0.9rem]" strokeWidth={2} />
+          <ArrowLeftRight className="size-[0.875rem]" strokeWidth={1.8} />
         ) : txn.kind === 'refund' ? (
-          <Undo2 className="size-[0.9rem]" strokeWidth={2} />
+          <Undo2 className="size-[0.875rem]" strokeWidth={1.8} />
         ) : (
           d.initial
         )}
@@ -50,7 +50,7 @@ export function TransactionRow({
         <div className="flex items-center gap-1.5">
           <span
             className={cn(
-              'truncate text-sm font-medium text-ink',
+              'truncate text-[0.9rem] font-medium text-ink',
               txn.voided && 'line-through',
             )}
           >
@@ -59,12 +59,9 @@ export function TransactionRow({
           {d.isSplit && <Split className="size-3 shrink-0 text-ink-4" aria-label="Split" />}
           {d.isShared && <Users className="size-3 shrink-0 text-ink-4" aria-label="Shared" />}
         </div>
-        <div className="mt-0.5 flex items-center gap-1.5 truncate text-xs text-ink-3">
+        <div className="mt-0.5 truncate text-xs text-ink-4">
           {showDate && dateLabel && (
-            <>
-              <span className="tnum">{dateLabel}</span>
-              <span aria-hidden="true">·</span>
-            </>
+            <><span className="tnum">{dateLabel}</span><span aria-hidden="true" className="mx-1">·</span></>
           )}
           <span className="truncate">{d.subtitle}</span>
         </div>
@@ -84,18 +81,7 @@ export function TransactionRow({
         />
         {d.nativeAmount != null && d.nativeCurrency && (
           <div className="mt-0.5">
-            <Money
-              value={d.nativeAmount}
-              currency={d.nativeCurrency}
-              hidden={hidden}
-              size="xs"
-              tone="muted"
-            />
-          </div>
-        )}
-        {txn.tags.length > 0 && (
-          <div className="mt-0.5 truncate text-[0.625rem] text-ink-4">
-            {txn.tags.slice(0, 2).map((t) => `#${t}`).join(' ')}
+            <Money value={d.nativeAmount} currency={d.nativeCurrency} hidden={hidden} size="xs" tone="muted" />
           </div>
         )}
       </div>

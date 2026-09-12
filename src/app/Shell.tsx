@@ -11,10 +11,8 @@ import {
   CarFront,
   Settings2,
   Plus,
-  Eye,
-  EyeOff,
-  Sun,
   Moon,
+  Sun,
   MonitorSmartphone,
   CloudOff,
   CircleUserRound,
@@ -202,15 +200,11 @@ export function useOnline(): boolean {
 // ---------------------------------------------------------------------------
 
 function TopBar() {
-  const route = useRoute();
   const online = useOnline();
-  // The account is a property of the whole app, so it is driven here rather
-  // than on the one screen that used to know about it. Exactly one engine.
   useSyncEngine();
   const sync = useSync();
   const settings = useStore((s) => s.settings);
   const updateSettings = useStore((s) => s.updateSettings);
-  const current = NAV.find((n) => n.path === route.path);
 
   function cycleTheme() {
     const order = ['system', 'light', 'dark'] as const;
@@ -226,29 +220,19 @@ function TopBar() {
         <div className="lg:hidden">
           <Wordmark />
         </div>
-        {current && current.path !== '/' && (
-          <h1 className="display hidden text-[1.25rem] lg:block">{current.label}</h1>
-        )}
 
         <div className="ml-auto flex items-center gap-0.5">
           {!online && (
             <span
-              className="mr-1 flex items-center gap-1.5 rounded-full bg-surface-2 px-2.5 py-1 text-[0.6875rem] font-semibold text-ink-3"
-              title="Pocketa works offline. Changes are saved on this device."
+              className="mr-1 flex items-center gap-1 rounded-full bg-surface-2 px-2 py-1 text-[0.625rem] font-semibold text-ink-4"
+              title="Working offline"
             >
               <CloudOff className="size-3" />
-              Offline
             </span>
           )}
-          <span className="mr-1">
+          <span className="mr-0.5">
             <AccountBadge sync={sync} />
           </span>
-          <IconButton
-            label={settings.hideAmounts ? 'Show amounts' : 'Hide amounts'}
-            onClick={() => void updateSettings({ hideAmounts: !settings.hideAmounts })}
-          >
-            {settings.hideAmounts ? <EyeOff className="size-[1.05rem]" /> : <Eye className="size-[1.05rem]" />}
-          </IconButton>
           <IconButton label={`Theme: ${settings.theme}`} onClick={cycleTheme}>
             <ThemeIcon className="size-[1.05rem]" />
           </IconButton>
@@ -272,10 +256,10 @@ function PillBar({ current, onQuickAdd }: { current: string; onQuickAdd: () => v
 
   return (
     <nav
-      className="safe-bottom fixed inset-x-0 bottom-0 z-30 flex justify-center px-4 pb-3 lg:hidden"
+      className="safe-bottom fixed inset-x-0 bottom-0 z-30 flex justify-center px-3 pb-3 lg:hidden"
       aria-label="Main"
     >
-      <div className="flex items-center gap-1 rounded-full border border-line bg-surface/90 p-1.5 shadow-[var(--shadow-lg)] backdrop-blur-xl">
+      <div className="flex items-center gap-0.5 rounded-full border border-line bg-surface/95 px-2 py-2 shadow-[var(--shadow-lg)] backdrop-blur-xl">
         {PRIMARY.slice(0, 2).map((item) => (
           <PillLink key={item.path} item={item} active={isActive(item)} />
         ))}
@@ -284,11 +268,11 @@ function PillBar({ current, onQuickAdd }: { current: string; onQuickAdd: () => v
           onClick={onQuickAdd}
           aria-label="Add transaction"
           className={cn(
-            'mx-1 flex size-12 items-center justify-center rounded-full bg-accent-fill text-[--accent-ink]',
+            'mx-1.5 flex size-13 items-center justify-center rounded-full bg-accent-fill text-[--accent-ink]',
             'shadow-[var(--shadow-md)] transition-transform active:scale-90',
           )}
         >
-          <Plus className="size-6" strokeWidth={2.5} />
+          <Plus className="size-[1.375rem]" strokeWidth={2.5} />
         </button>
 
         {PRIMARY.slice(2).map((item) => (
@@ -307,11 +291,10 @@ function PillLink({ item, active }: { item: NavItem; active: boolean }) {
       aria-label={item.label}
       aria-current={active ? 'page' : undefined}
       className={cn(
-        'relative isolate flex h-11 items-center gap-2 rounded-full px-3.5 transition-colors duration-200',
+        'relative isolate flex h-12 items-center gap-2 rounded-full px-4 transition-colors duration-200',
         active ? 'text-paper' : 'text-ink-3 hover:text-ink',
       )}
     >
-      {/* One pill slides between destinations rather than blinking on and off. */}
       {active && (
         <motion.span
           layoutId="pill-active"
@@ -320,7 +303,7 @@ function PillLink({ item, active }: { item: NavItem; active: boolean }) {
           aria-hidden="true"
         />
       )}
-      <Icon className="size-[1.2rem]" strokeWidth={active ? 2.4 : 1.9} />
+      <Icon className="size-[1.2rem]" strokeWidth={active ? 2.3 : 1.8} />
       {active && <span className="text-[0.8125rem] font-semibold">{item.label}</span>}
     </Link>
   );
