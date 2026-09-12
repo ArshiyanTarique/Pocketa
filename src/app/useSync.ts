@@ -160,6 +160,9 @@ export function useSyncEngine(): void {
    *
    * This lived in the Settings screen, which meant it only happened if you were
    * looking at it. Signing in anywhere has to move the whole app.
+   *
+   * Debounced so that the OAuth redirect (which fires INITIAL_SESSION then
+   * SIGNED_IN in quick succession) only triggers one account switch.
    */
   React.useEffect(() => {
     if (!syncConfigured) return;
@@ -172,10 +175,14 @@ export function useSyncEngine(): void {
     }
     if (useStore.getState().namespace === wanted) return;
 
-    void (async () => {
-      const carried = await useStore.getState().switchAccount(account?.user.id ?? null);
-      if (carried > 0) set({ adopted: carried });
-    })();
+    const timer = setTimeout(() => {
+      if (useStore.getState().namespace === wanted) return;
+      void (async () => {
+        const carried = await useStore.getState().switchAccount(account?.user.id ?? null);
+        if (carried > 0) set({ adopted: carried });
+      })();
+    }, 300);
+    return () => clearTimeout(timer);
   }, [account, set]);
 
   /** On sign-in, and after every change once it has settled. */
