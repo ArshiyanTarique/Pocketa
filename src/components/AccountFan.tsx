@@ -79,6 +79,9 @@ export function AccountFan({
 
   return (
     <div className={cn('-mx-4 sm:-mx-6', className)}>
+      {/* Cap the scrollable strip so it never expands beyond ~3 visible cards.
+          The fan scrolls internally; extra accounts are always reachable. */}
+      <div className="max-w-[42rem] overflow-hidden">
       <div
         ref={fan}
         className={cn('fan stagger', drag.dragging && 'cursor-grabbing select-none [scroll-snap-type:none]')}
@@ -137,6 +140,7 @@ export function AccountFan({
           ))}
         </div>
       )}
+      </div>{/* end max-w cap */}
     </div>
   );
 }
