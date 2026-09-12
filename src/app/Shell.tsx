@@ -83,7 +83,7 @@ export function Shell({
       >
         <TopBar />
         <main
-          className="mx-auto w-full max-w-[60rem] px-4 pb-32 pt-3 sm:px-6 lg:pb-12 lg:pt-4"
+          className="mx-auto w-full max-w-[96rem] px-4 pb-32 pt-3 sm:px-6 lg:pb-12 lg:pt-4"
           key={route.path}
         >
           <div className="rise">{children}</div>
@@ -171,7 +171,6 @@ function Wordmark({ compact = false }: { compact?: boolean }) {
     </Link>
   );
 }
-
 export function useOnline(): boolean {
   const [online, setOnline] = React.useState(() =>
     typeof navigator === 'undefined' ? true : navigator.onLine,
@@ -210,12 +209,18 @@ function TopBar() {
 
   return (
     <header className="safe-top sticky top-0 z-20 bg-paper/80 backdrop-blur-md">
-      <div className="mx-auto flex h-14 w-full max-w-[60rem] items-center gap-3 px-4 sm:px-6">
-        {/* Centred title — visible on both mobile and desktop */}
+      <div className="mx-auto flex h-14 w-full max-w-[96rem] items-center px-4 sm:px-6">
+        {/* Logo — mobile only (desktop has the rail) */}
+        <div className="lg:hidden">
+          <img src="/favicon.svg" alt="Pocketa" className="size-8 rounded-[--radius]" />
+        </div>
+
+        {/* Centred title */}
         <span className="pointer-events-none absolute left-1/2 -translate-x-1/2 display text-[1.15rem]">
           Pocketa
         </span>
 
+        {/* Right controls — always flush right */}
         <div className="ml-auto flex items-center gap-0.5">
           {!online && (
             <span

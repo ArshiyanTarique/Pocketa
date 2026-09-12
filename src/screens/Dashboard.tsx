@@ -59,37 +59,43 @@ export function Dashboard({ onQuickAdd }: { onQuickAdd: () => void }) {
   if (!hasActivity) return <FirstRun onQuickAdd={onQuickAdd} />;
 
   return (
-    <div className="space-y-7">
-      <SafeToSpendHero />
+    <div className="lg:grid lg:grid-cols-[1fr_22rem] lg:gap-8 lg:items-start">
+      {/* Left / main column */}
+      <div className="space-y-7">
+        <SafeToSpendHero />
 
-      <section>
-        <div className="mt-1">
-          <AccountFan onAdd={() => navigate('/accounts')} />
-        </div>
-      </section>
+        <section>
+          <div className="mt-1">
+            <AccountFan onAdd={() => navigate('/accounts')} />
+          </div>
+        </section>
 
-      <MonthFigures />
+        <MonthFigures />
 
-      <StatusLines />
+        <StatusLines />
+      </div>
 
-      <section>
-        <SectionLabel to="/transactions" className="text-ink-3">Recent</SectionLabel>
-        <ul className="mt-1 divide-y divide-line">
-          {recent.map((txn) => (
-            <li key={txn.id}>
-              <TransactionRow
-                txn={txn}
-                accounts={accounts}
-                hidden={hidden}
-                showDate
-                dateLabel={formatRelativeDay(txn.date, asOf)}
-                onClick={() => navigate(`/transactions/${txn.id}`)}
-                className="rounded-[--radius] px-2"
-              />
-            </li>
-          ))}
-        </ul>
-      </section>
+      {/* Right column — Recent, scrollable on desktop */}
+      <aside className="mt-7 lg:sticky lg:top-[4.5rem] lg:mt-0 lg:max-h-[calc(100dvh-5rem)] lg:overflow-y-auto">
+        <section>
+          <SectionLabel to="/transactions" className="text-ink-3">Recent</SectionLabel>
+          <ul className="mt-1 divide-y divide-line">
+            {recent.map((txn) => (
+              <li key={txn.id}>
+                <TransactionRow
+                  txn={txn}
+                  accounts={accounts}
+                  hidden={hidden}
+                  showDate
+                  dateLabel={formatRelativeDay(txn.date, asOf)}
+                  onClick={() => navigate(`/transactions/${txn.id}`)}
+                  className="rounded-[--radius] px-2"
+                />
+              </li>
+            ))}
+          </ul>
+        </section>
+      </aside>
     </div>
   );
 }
