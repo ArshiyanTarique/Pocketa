@@ -85,18 +85,30 @@ function Boot() {
   // always announce it — opting in is not a licence to act unannounced.
   const status2 = useStore((s) => s.status);
   const runAutoPost = useStore((s) => s.runAutoPost);
+  const runBudgetRollovers = useStore((s) => s.runBudgetRollovers);
   const autoPosted = React.useRef(false);
   React.useEffect(() => {
     if (status2 !== 'ready' || autoPosted.current) return;
     autoPosted.current = true;
     void runAutoPost().then(({ posted }) => {
-      if (posted.length === 0) return;
-      toast.saved(
-        `${posted.length} bill${posted.length === 1 ? '' : 's'} recorded automatically`,
-        { label: 'Review', run: () => navigate('/bills') },
-      );
+      if (posted.length > 0) {
+        toast.saved(
+          `${posted.length} bill${posted.length === 1 ? '' : 's'} recorded automatically`,
+          { label: 'Review', run: () => navigate('/bills') },
+        );
+      }
     });
-  }, [status2, runAutoPost]);
+    void runBudgetRollovers().then(({ transferred }) => {
+      if (transferred.length > 0) {
+        toast.saved(
+          transferred.length === 1
+            ? `${transferred[0].name} surplus moved to savings`
+            : `${transferred.length} budget surpluses moved to savings`,
+          { label: 'Review', run: () => navigate('/transactions') },
+        );
+      }
+    });
+  }, [status2, runAutoPost, runBudgetRollovers]);
 
   // Keep the document theme and the stored preference in step.
   React.useEffect(() => {

@@ -4,11 +4,11 @@ import { Button, EmptyState, ExpandingRow, Notice, Progress, SectionLabel } from
 import { Money } from '../ui/Money';
 import { Reckoning } from '../ui/Reckoning';
 import { Sheet, Confirm } from '../ui/Sheet';
-import { AmountInput, DateInput, Field, Select, TextInput, Toggle } from '../ui/fields';
+import { AmountInput, DateInput, Field, Select, TextInput } from '../ui/fields';
 import { toast } from '../ui/toast';
 import { cn } from '../ui/cn';
 import { navigate } from '../app/router';
-import { useBudgetStatuses, useCategories, useToday } from '../app/useLedger';
+import { useBudgetStatuses, useCategories, useToday, useSpendableAccounts } from '../app/useLedger';
 import { useStore } from '../store/useStore';
 import { newId } from '../core/ids';
 import { nowIso } from '../core/dates';
@@ -270,6 +270,7 @@ function BudgetEditor({ budget, onClose }: { budget: Budget | null; onClose: () 
   const archiveBudget = useStore((s) => s.archiveBudget);
   const settings = useStore((s) => s.settings);
   const tree = useCategories('expense_category');
+  const spendableAccounts = useSpendableAccounts();
   const asOf = useToday();
 
   const isNew = !budget;
@@ -281,7 +282,12 @@ function BudgetEditor({ budget, onClose }: { budget: Budget | null; onClose: () 
   const [customFrom, setCustomFrom] = React.useState(budget?.customFrom ?? asOf);
   const [customTo, setCustomTo] = React.useState(budget?.customTo ?? asOf);
   const [warnAt, setWarnAt] = React.useState(budget?.warnAt ?? 0.8);
-  const [rollover, setRollover] = React.useState(budget?.rollover ?? false);
+  const [rolloverMode, setRolloverMode] = React.useState<'restart' | 'carry' | 'transfer'>(
+    budget?.rolloverMode ?? (budget?.rollover ? 'carry' : 'restart'),
+  );
+  const [rolloverAccountId, setRolloverAccountId] = React.useState<ID | ''>(
+    budget?.rolloverAccountId ?? '',
+  );
   const [error, setError] = React.useState<string | null>(null);
   const [confirmArchive, setConfirmArchive] = React.useState(false);
 
@@ -302,12 +308,15 @@ function BudgetEditor({ budget, onClose }: { budget: Budget | null; onClose: () 
       customFrom: period === 'custom' ? customFrom : null,
       customTo: period === 'custom' ? customTo : null,
       startDay: Number(startDay) || 1,
-      rollover,
+      rolloverMode,
+      rolloverAccountId: rolloverMode === 'transfer' ? (rolloverAccountId || null) : null,
+      rollover: rolloverMode === 'carry',
       warnAt,
       archived: false,
       color: budget?.color ?? null,
       createdAt: budget?.createdAt ?? nowIso(),
-      updatedAt: nowIso() };
+      updatedAt: nowIso(),
+    };
 
     await saveBudget(row, isNew);
     toast.saved(isNew ? 'Budget created' : 'Budget updated');
@@ -425,12 +434,24 @@ function BudgetEditor({ budget, onClose }: { budget: Budget | null; onClose: () 
           </Select>
         </Field>
 
-        <Toggle
-          checked={rollover}
-          onChange={setRollover}
-          label="Carry unspent budget forward"
-          description="Anything left at the end of a period is added to the next one."
-        />
+        <Field label="At month end">
+          <Select value={rolloverMode} onChange={(e) => setRolloverMode(e.target.value as typeof rolloverMode)}>
+            <option value="restart">Restart fresh</option>
+            <option value="carry">Carry unspent forward</option>
+            <option value="transfer">Move unspent to an account</option>
+          </Select>
+        </Field>
+
+        {rolloverMode === 'transfer' && (
+          <Field label="Transfer surplus into" hint="At the start of each new period, any leftover is transferred into this account automatically.">
+            <Select value={rolloverAccountId} onChange={(e) => setRolloverAccountId(e.target.value as ID)}>
+              <option value="">Choose an account</option>
+              {spendableAccounts.map((a) => (
+                <option key={a.id} value={a.id}>{a.name}</option>
+              ))}
+            </Select>
+          </Field>
+        )}
 
         {error && <Notice tone="negative">{error}</Notice>}
       </div>

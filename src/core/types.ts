@@ -233,7 +233,16 @@ export interface Budget {
   customTo: CalendarDate | null;
   /** Day the monthly period starts, for salary-aligned budgets. Default 1. */
   startDay: number;
-  /** Carry unspent budget into the next period. */
+  /**
+   * What happens to unspent budget at period end.
+   * - 'restart'  — period resets with the original limit (default)
+   * - 'carry'    — leftover is added to next period's limit
+   * - 'transfer' — leftover is transferred into rolloverAccountId
+   */
+  rolloverMode: 'restart' | 'carry' | 'transfer';
+  /** Account to transfer surplus into when rolloverMode === 'transfer'. */
+  rolloverAccountId: ID | null;
+  /** @deprecated use rolloverMode === 'carry' instead. Kept for migration. */
   rollover: boolean;
   /** Warn at this fraction of the limit. Default 0.8. */
   warnAt: number;

@@ -355,14 +355,14 @@ export function Toggle({
         disabled={disabled}
         onClick={() => onChange(!checked)}
         className={cn(
-          'relative mt-0.5 h-6 w-10 shrink-0 rounded-full transition-colors duration-200',
+          'relative mt-0.5 h-6 w-11 shrink-0 rounded-full transition-colors duration-200',
           checked ? 'bg-accent-fill' : 'bg-line-strong',
         )}
       >
         <span
           className={cn(
-            'absolute top-0.5 size-5 rounded-full bg-white shadow-sm transition-transform duration-200',
-            checked ? 'translate-x-[1.125rem]' : 'translate-x-0.5',
+            'absolute top-0.5 size-5 rounded-full bg-white shadow-sm transition-[left] duration-200',
+            checked ? 'left-[1.375rem]' : 'left-0.5',
           )}
         />
       </button>

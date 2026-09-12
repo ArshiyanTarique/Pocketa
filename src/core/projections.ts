@@ -509,7 +509,7 @@ function budgetCovers(budget: Budget, accounts: AccountMap): (id: ID) => boolean
   };
 }
 
-function spentInRange(
+export function spentInRange(
   budget: Budget,
   txns: readonly Transaction[],
   accounts: AccountMap,
@@ -526,7 +526,7 @@ function spentInRange(
 }
 
 /** The period immediately before this one, for the same budget. */
-function previousPeriod(budget: Budget, range: DateRange): DateRange {
+export function previousPeriod(budget: Budget, range: DateRange): DateRange {
   return budgetRange(budget, addDays(range.from, -1));
 }
 
@@ -545,7 +545,9 @@ export function budgetCarry(
   range: DateRange,
   maxPeriods = 24,
 ): number {
-  if (!budget.rollover || budget.period === 'custom') return 0;
+  // Support both old boolean rollover and new rolloverMode
+  const mode = budget.rolloverMode ?? (budget.rollover ? 'carry' : 'restart');
+  if (mode !== 'carry' || budget.period === 'custom') return 0;
 
   const bornOn = budget.createdAt.slice(0, 10);
   const periods: DateRange[] = [];

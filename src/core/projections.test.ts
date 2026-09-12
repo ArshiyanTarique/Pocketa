@@ -304,7 +304,7 @@ describe('budgets', () => {
     customFrom: null,
     customTo: null,
     startDay: 1,
-    rollover: false,
+    rollover: false, rolloverMode: 'restart', rolloverAccountId: null,
     warnAt: 0.8,
     archived: false,
     color: null,
@@ -376,7 +376,7 @@ describe('budgets', () => {
       M(buildSpend({ date: '2026-07-10', accountId: a.cash.id, allocations: [{ categoryId: a.groceries.id, amount: rs(5000) }] }, ctx)),
       M(buildSpend({ date: '2026-08-10', accountId: a.cash.id, allocations: [{ categoryId: a.groceries.id, amount: rs(8000) }] }, ctx)),
     ];
-    const rolling = budget({ rollover: true, createdAt: '2026-07-01T00:00:00Z' });
+    const rolling = budget({ rollover: true, rolloverMode: 'carry', rolloverAccountId: null, createdAt: '2026-07-01T00:00:00Z' });
 
     // September starts with July's 15,000 and August's 12,000 left over.
     const status = budgetStatus(rolling, txns, accounts, '2026-09-10');
@@ -391,7 +391,7 @@ describe('budgets', () => {
     const txns = [
       M(buildSpend({ date: '2026-08-10', accountId: a.cash.id, allocations: [{ categoryId: a.groceries.id, amount: rs(25000) }] }, ctx)),
     ];
-    const rolling = budget({ rollover: true, createdAt: '2026-08-01T00:00:00Z' });
+    const rolling = budget({ rollover: true, rolloverMode: 'carry', rolloverAccountId: null, createdAt: '2026-08-01T00:00:00Z' });
 
     const status = budgetStatus(rolling, txns, accounts, '2026-09-10');
     expect(status.carry).toBe(rs(-5000));
@@ -404,7 +404,7 @@ describe('budgets', () => {
       M(buildSpend({ date: '2026-01-10', accountId: a.cash.id, allocations: [{ categoryId: a.groceries.id, amount: rs(1000) }] }, ctx)),
     ];
     // Created in September, so nothing from January counts towards the carry.
-    const rolling = budget({ rollover: true, createdAt: '2026-09-01T00:00:00Z' });
+    const rolling = budget({ rollover: true, rolloverMode: 'carry', rolloverAccountId: null, createdAt: '2026-09-01T00:00:00Z' });
     expect(budgetCarry(rolling, txns, accounts, budgetRange(rolling, '2026-09-10'))).toBe(0);
   });
 
@@ -413,7 +413,7 @@ describe('budgets', () => {
     const txns = [
       M(buildSpend({ date: '2026-08-10', accountId: a.cash.id, allocations: [{ categoryId: a.groceries.id, amount: rs(1000) }] }, ctx)),
     ];
-    const status = budgetStatus(budget({ rollover: false, createdAt: '2026-07-01T00:00:00Z' }), txns, accounts, '2026-09-10');
+    const status = budgetStatus(budget({ rollover: false, rolloverMode: 'restart', rolloverAccountId: null, createdAt: '2026-07-01T00:00:00Z' }), txns, accounts, '2026-09-10');
     expect(status.carry).toBe(0);
     expect(status.limit).toBe(rs(20000));
   });

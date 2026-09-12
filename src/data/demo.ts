@@ -417,7 +417,7 @@ function makeBudget(name: string, categoryIds: string[], limit: number, warnAt =
     customFrom: null,
     customTo: null,
     startDay: 1,
-    rollover: false,
+    rollover: false, rolloverMode: 'restart', rolloverAccountId: null,
     warnAt,
     archived: false,
     color: null,

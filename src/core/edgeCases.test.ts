@@ -486,7 +486,7 @@ describe('time zones', () => {
 describe('budgets at period edges', () => {
   const budget: Budget = {
     id: 'bud_1', name: 'Groceries', categoryIds: ['cat_groceries'], limit: rs(20000),
-    period: 'monthly', customFrom: null, customTo: null, startDay: 1, rollover: false,
+    period: 'monthly', customFrom: null, customTo: null, startDay: 1, rollover: false, rolloverMode: 'restart', rolloverAccountId: null,
     warnAt: 0.8, archived: false, color: null,
     createdAt: '2026-09-01T00:00:00Z', updatedAt: '2026-09-01T00:00:00Z' };
 

@@ -64,6 +64,7 @@ import {
 } from '../data/oplog';
 import { buildSeed, findCategoryByName, SYSTEM_ADJUSTMENT_ID, SYSTEM_OPENING_ID } from '../data/seed';
 import { buildOccurrences } from '../core/recurrence';
+import { budgetRange, previousPeriod, spentInRange } from '../core/projections';
 import { buildCarpoolSettlement } from '../core/ledger';
 import { tripsToSettle } from '../core/carpool';
 import type { DateRange } from '../core/dates';
@@ -165,6 +166,7 @@ export interface StoreActions {
   ): Promise<{ ok: boolean; settlement?: CarpoolSettlement; error?: string }>;
 
   runAutoPost(): Promise<{ posted: Array<{ name: string; amount: number; date: string; txnId: ID }> }>;
+  runBudgetRollovers(): Promise<{ transferred: Array<{ name: string; amount: number; txnId: ID }> }>;
 
   loadSampleData(): Promise<{ ok: boolean; created: number; failed: number }>;
 }
@@ -1268,8 +1270,63 @@ export const useStore = create<Store>()((set, get) => ({
   },
 
   // -------------------------------------------------------------------------
-  // Attachments
+  // Budget surplus transfers — runs alongside runAutoPost at month start
   // -------------------------------------------------------------------------
+
+  async runBudgetRollovers() {
+    const asOf = today();
+    const state = get();
+    const budgets = state.budgets.filter((b) => !b.archived && b.rolloverMode === 'transfer' && b.rolloverAccountId);
+    if (budgets.length === 0) return { transferred: [] };
+
+    const accounts = new Map(state.accounts.map((a) => [a.id, a]));
+    const transferred: Array<{ name: string; amount: number; txnId: ID }> = [];
+
+    for (const budget of budgets) {
+      if (!budget.rolloverAccountId) continue;
+
+      const currentRange = budgetRange(budget, asOf);
+
+      // Only act on the first day of a new period
+      if (asOf !== currentRange.from) continue;
+
+      const prevRange = previousPeriod(budget, currentRange);
+
+      // Guard against double-posting using the op log
+      const transferKey = `budget-rollover-${budget.id}-${currentRange.from}`;
+      if (state.ops.some((op) => op.summary.includes(transferKey))) continue;
+
+      const spent = spentInRange(budget, state.transactions, accounts, prevRange);
+      const surplus = budget.limit - spent;
+      if (surplus <= 0) continue;
+
+      // Use the first liquid account as the source
+      const sourceAccount = state.accounts.find(
+        (a) => ['cash', 'bank', 'ewallet'].includes(a.class) && !a.archived,
+      );
+      if (!sourceAccount) continue;
+      if (!state.accounts.find((a) => a.id === budget.rolloverAccountId)) continue;
+
+      const draft: TxnDraft = {
+        type: 'move',
+        kind: 'transfer',
+        date: asOf,
+        fromAccountId: sourceAccount.id,
+        toAccountId: budget.rolloverAccountId,
+        amount: surplus,
+        merchant: `${budget.name} surplus`,
+        notes: transferKey,
+        tags: [],
+      };
+
+      const result = await get().createTransaction(draft);
+      if (!result.ok) continue;
+
+      transferred.push({ name: budget.name, amount: surplus, txnId: result.value.id });
+    }
+
+    return { transferred };
+  },
 
   async addAttachment(file, txnId) {
     const prepared = await prepareAttachment(file, {
