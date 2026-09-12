@@ -384,6 +384,7 @@ export interface Settings {
   fxRates: Record<string, number>;
   fxUpdatedAt: ISOTimestamp | null;
   theme: 'light' | 'dark' | 'system';
+  accentColor: 'gold' | 'blue' | 'green' | 'red' | 'purple' | 'slate';
   weekStartsOn: 0 | 1;
   /** Day of month the financial month starts, for salary-aligned budgeting. */
   monthStartDay: number;

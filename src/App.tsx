@@ -26,6 +26,34 @@ const Analytics = React.lazy(() => import('./screens/Analytics').then((m) => ({ 
 const SettingsScreen = React.lazy(() => import('./screens/Settings').then((m) => ({ default: m.SettingsScreen })));
 const JoinInvite = React.lazy(() => import('./screens/JoinInvite').then((m) => ({ default: m.JoinInvite })));
 
+// ---------------------------------------------------------------------------
+// Accent color presets — mapped to CSS custom properties on :root
+// ---------------------------------------------------------------------------
+
+type AccentColor = 'gold' | 'blue' | 'green' | 'red' | 'purple' | 'slate';
+
+const ACCENTS: Record<AccentColor, {
+  accent: string; fill: string; hover: string; soft: string; ink: string;
+}> = {
+  gold:   { accent: '#7a5c07', fill: '#e3b53a', hover: '#d4a52a', soft: '#f7edcf', ink: '#1c1400' },
+  blue:   { accent: '#1a4fd6', fill: '#3b74f5', hover: '#2a63e8', soft: '#dce8ff', ink: '#ffffff' },
+  green:  { accent: '#1c7a52', fill: '#37b47e', hover: '#2da06e', soft: '#dcf2e7', ink: '#04160e' },
+  red:    { accent: '#b52b2b', fill: '#e84040', hover: '#d43030', soft: '#fde8e8', ink: '#ffffff' },
+  purple: { accent: '#683c8d', fill: '#a072cf', hover: '#8f60bc', soft: '#ede2f6', ink: '#ffffff' },
+  slate:  { accent: '#374151', fill: '#4b5563', hover: '#374151', soft: '#e5e7eb', ink: '#ffffff' },
+};
+
+export function applyAccent(color: AccentColor) {
+  const p = ACCENTS[color] ?? ACCENTS.blue;
+  const r = document.documentElement;
+  r.style.setProperty('--accent',       p.accent);
+  r.style.setProperty('--accent-fill',  p.fill);
+  r.style.setProperty('--accent-hover', p.hover);
+  r.style.setProperty('--accent-soft',  p.soft);
+  r.style.setProperty('--accent-ink',   p.ink);
+}
+
+
 export default function App() {
   return (
     <ErrorBoundary>
@@ -45,6 +73,7 @@ function Boot() {
   const error = useStore((s) => s.error);
   const init = useStore((s) => s.init);
   const theme = useStore((s) => s.settings.theme);
+  const accentColor = useStore((s) => s.settings.accentColor);
   const [quickAdd, setQuickAdd] = React.useState(false);
   const [editingId, setEditingId] = React.useState<string | null>(null);
 
@@ -74,20 +103,17 @@ function Boot() {
     const root = document.documentElement;
     if (theme === 'system') {
       delete root.dataset.theme;
-      try {
-        localStorage.removeItem('pocketa.theme');
-      } catch {
-        /* private mode */
-      }
+      try { localStorage.removeItem('pocketa.theme'); } catch { /* private mode */ }
     } else {
       root.dataset.theme = theme;
-      try {
-        localStorage.setItem('pocketa.theme', theme);
-      } catch {
-        /* private mode */
-      }
+      try { localStorage.setItem('pocketa.theme', theme); } catch { /* private mode */ }
     }
   }, [theme]);
+
+  // Apply the accent color whenever it changes.
+  React.useEffect(() => {
+    applyAccent((accentColor ?? 'blue') as AccentColor);
+  }, [accentColor]);
 
   // N adds a transaction from anywhere, the way a ledger app should.
   React.useEffect(() => {

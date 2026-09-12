@@ -177,6 +177,7 @@ const EMPTY_SETTINGS: Settings = {
   fxRates: {},
   fxUpdatedAt: null,
   theme: 'system',
+  accentColor: 'blue',
   weekStartsOn: 1,
   monthStartDay: 1,
   safeToSpendHorizon: 30,

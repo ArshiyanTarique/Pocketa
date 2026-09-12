@@ -143,6 +143,7 @@ export function defaultSettings(deviceId: string, currency: string): Settings {
     fxRates: {},
     fxUpdatedAt: null,
     theme: 'system',
+    accentColor: 'blue',
     weekStartsOn: 1,
     monthStartDay: 1,
     safeToSpendHorizon: 30,

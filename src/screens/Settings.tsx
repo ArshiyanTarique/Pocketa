@@ -51,7 +51,7 @@ import {
   live,
   summarisePeriod } from '../core/projections';
 import { CREATABLE_CATEGORY_CLASSES } from './constants';
-import type { Account, ID } from '../core/types';
+import type { Account, ID, Settings } from '../core/types';
 
 type SettingsTab = 'account' | 'appearance' | 'money' | 'categories' | 'data';
 
@@ -300,6 +300,15 @@ function AppearanceSection() {
   const settings = useStore((s) => s.settings);
   const updateSettings = useStore((s) => s.updateSettings);
 
+  const ACCENT_OPTIONS: Array<{ value: string; label: string; fill: string }> = [
+    { value: 'blue',   label: 'Blue',   fill: '#3b74f5' },
+    { value: 'green',  label: 'Green',  fill: '#37b47e' },
+    { value: 'purple', label: 'Purple', fill: '#a072cf' },
+    { value: 'red',    label: 'Red',    fill: '#e84040' },
+    { value: 'slate',  label: 'Slate',  fill: '#4b5563' },
+    { value: 'gold',   label: 'Gold',   fill: '#e3b53a' },
+  ];
+
   return (
     <Card>
       <CardHeader eyebrow="Appearance" title="How Pocketa looks" />
@@ -314,6 +323,27 @@ function AppearanceSection() {
               { value: 'dark', label: 'Dark' },
             ]}
           />
+        </Field>
+
+        <Field label="Accent color">
+          <div className="flex flex-wrap gap-2 pt-1">
+            {ACCENT_OPTIONS.map((opt) => {
+              const active = (settings.accentColor ?? 'blue') === opt.value;
+              return (
+                <button
+                  key={opt.value}
+                  type="button"
+                  title={opt.label}
+                  aria-label={opt.label}
+                  aria-pressed={active}
+                  onClick={() => void updateSettings({ accentColor: opt.value as Settings['accentColor'] })}
+                  className="flex items-center justify-center rounded-full transition-transform hover:scale-110 active:scale-95"
+                  style={{ width: 32, height: 32, background: opt.fill,
+                    boxShadow: active ? `0 0 0 2px var(--surface), 0 0 0 4px ${opt.fill}` : 'none' }}
+                />
+              );
+            })}
+          </div>
         </Field>
 
         <Toggle

@@ -84,6 +84,7 @@ function dataset(over: Partial<Dataset> = {}): Dataset {
         fxRates: {},
         fxUpdatedAt: null,
         theme: 'system',
+        accentColor: 'blue',
         weekStartsOn: 1,
         monthStartDay: 1,
         safeToSpendHorizon: 30,
