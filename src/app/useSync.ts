@@ -140,6 +140,10 @@ export function useSyncEngine(): void {
       }
       unsubscribe = await onAuthChange((next) => {
         if (cancelled) return;
+        // Skip if the session identity hasn't actually changed — the OAuth
+        // redirect fires the listener several times as Supabase processes the
+        // tokens, which causes a flicker loop if we react to every event.
+        if (next?.user.id === session?.user.id) return;
         session = next;
         setAccount(next);
       });
