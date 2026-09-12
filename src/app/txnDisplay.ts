@@ -103,7 +103,7 @@ export function describeTransaction(
     case 'repay_in': {
       const from = sources[0]?.account?.name ?? '—';
       const to = destinations[0]?.account?.name ?? '—';
-      title = txn.merchant || TXN_KIND_LABELS[txn.kind];
+      title = TXN_KIND_LABELS[txn.kind];
       subtitle = `${from} → ${to}`;
       direction = 'neutral';
       color = null;

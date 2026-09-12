@@ -211,11 +211,8 @@ function TopBar() {
   return (
     <header className="safe-top sticky top-0 z-20 bg-paper/80 backdrop-blur-md">
       <div className="mx-auto flex h-14 w-full max-w-[60rem] items-center gap-3 px-4 sm:px-6">
-        <div className="lg:hidden">
-          <Wordmark />
-        </div>
-
-        <span className="pointer-events-none absolute left-1/2 -translate-x-1/2 display text-[1.15rem] lg:hidden">
+        {/* Centred title — visible on both mobile and desktop */}
+        <span className="pointer-events-none absolute left-1/2 -translate-x-1/2 display text-[1.15rem]">
           Pocketa
         </span>
 

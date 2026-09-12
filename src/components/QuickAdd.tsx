@@ -43,7 +43,7 @@ const MODES: Array<{ value: Mode; label: string; icon: React.ReactNode }> = [
   { value: 'expense', label: 'Expense', icon: <ArrowUpRight className="size-3.5" /> },
   { value: 'income', label: 'Income', icon: <ArrowDownLeft className="size-3.5" /> },
   { value: 'transfer', label: 'Transfer', icon: <ArrowLeftRight className="size-3.5" /> },
-  { value: 'debt', label: 'Debt', icon: <HandCoins className="size-3.5" /> },
+  { value: 'debt', label: 'Lend / Borrow', icon: <HandCoins className="size-3.5" /> },
   { value: 'refund', label: 'Refund', icon: <Undo2 className="size-3.5" /> },
 ];
 
