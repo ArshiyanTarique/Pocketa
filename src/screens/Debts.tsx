@@ -1,6 +1,6 @@
 import * as React from 'react';
-import { HandCoins, Plus, UserPlus, Users } from 'lucide-react';
-import { Badge, Button, EmptyState, ExpandingRow, Notice, Segmented, Dot } from '../ui/primitives';
+import { HandCoins, MessageCircle, Plus, UserPlus, Users } from 'lucide-react';
+import { Badge, Button, EmptyState, Notice, Segmented } from '../ui/primitives';
 import { Money } from '../ui/Money';
 import { cn } from '../ui/cn';
 import { Reckoning } from '../ui/Reckoning';
@@ -12,7 +12,7 @@ import { toast } from '../ui/toast';
 import { useAccountMap, useBalances, useSpendableAccounts, useToday } from '../app/useLedger';
 import { useStore } from '../store/useStore';
 import { accountLedger, balanceOf } from '../core/projections';
-import { formatDate, formatRelativeDay, nowIso } from '../core/dates';
+import { formatDate as fmtDate, formatRelativeDay, nowIso } from '../core/dates';
 import { newId } from '../core/ids';
 import type { Account, ID, Person } from '../core/types';
 
@@ -222,7 +222,6 @@ function PersonDebtRow({
   const asOf = useToday();
   const { person, recv, pay, theyOwe, youOwe, net } = row;
 
-  // The last few movements across both of their accounts, newest first.
   const recent = React.useMemo(() => {
     if (!open) return [];
     const ids = [recv?.id, pay?.id].filter(Boolean) as ID[];
@@ -237,90 +236,137 @@ function PersonDebtRow({
   const overdue = due != null && due < asOf && net !== 0;
   const both = theyOwe > 0 && youOwe > 0;
 
-  const tone = net > 0 ? 'positive' : net < 0 ? 'negative' : 'muted';
+  const tone = net > 0 ? 'text-positive' : net < 0 ? 'text-negative' : 'text-ink-4';
   const word = net > 0 ? 'owes you' : net < 0 ? 'you owe' : 'settled';
 
+  // Build WhatsApp breakdown message
+  function openWhatsApp() {
+    const phone = person.contact?.replace(/[^0-9+]/g, '') ?? '';
+    const lines: string[] = [`*Money summary with ${person.name}*`];
+    if (theyOwe > 0) lines.push(`They owe you: Rs. ${(theyOwe / 100).toLocaleString()}`);
+    if (youOwe > 0) lines.push(`You owe them: Rs. ${(youOwe / 100).toLocaleString()}`);
+    lines.push(`Net: Rs. ${(Math.abs(net) / 100).toLocaleString()} ${net >= 0 ? '(in your favour)' : '(you owe)'}`);
+    if (recent.length > 0) {
+      lines.push('');
+      lines.push('*Recent transactions:*');
+      recent.slice(0, 3).forEach((r) => {
+        const sign = r.delta > 0 ? '+' : '-';
+        lines.push(`${sign}Rs. ${(Math.abs(r.delta) / 100).toLocaleString()} · ${r.txn.date}`);
+      });
+    }
+    const text = encodeURIComponent(lines.join('\n'));
+    const url = phone ? `https://wa.me/${phone}?text=${text}` : `https://wa.me/?text=${text}`;
+    window.open(url, '_blank', 'noopener');
+  }
+
   return (
-    <ExpandingRow
-      open={open}
-      onToggle={onToggle}
-      tone={overdue ? 'warn' : null}
-      leading={
-        <Dot color={person.color ?? (net >= 0 ? '#2E7D5B' : '#B04A3F')}>
+    <div className={cn('border-l-[3px]', overdue ? 'border-l-warn-fill' : net > 0 ? 'border-l-positive-fill' : net < 0 ? 'border-l-negative-fill' : 'border-l-transparent')}>
+      {/* Summary row — always visible */}
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={open}
+        className={cn(
+          'flex w-full items-center gap-4 px-4 py-3.5 text-left transition-colors',
+          open ? 'bg-surface-2/50' : 'hover:bg-surface-2/50',
+        )}
+      >
+        {/* Large avatar */}
+        <span
+          className="flex size-11 shrink-0 items-center justify-center rounded-full text-base font-semibold text-white"
+          style={{ background: person.color ?? (net >= 0 ? '#2E7D5B' : '#B04A3F') }}
+        >
           {person.name.slice(0, 1).toUpperCase()}
-        </Dot>
-      }
-      summary={
-        <span className="block">
-          <span className="block truncate text-sm font-medium text-ink">{person.name}</span>
-          <span className="block truncate text-xs text-ink-3">
-            {overdue ? `Was due ${formatDate(due!)}` : due && net !== 0 ? `Due ${formatDate(due)}` : person.contact ?? word}
-          </span>
         </span>
-      }
-      trailing={
-        <span className="flex flex-col items-end">
-          <Money value={Math.abs(net)} currency={currency} hidden={hidden} size="sm" weight="semibold" tone={tone} symbol={false} />
-          <span className="text-[0.6875rem] text-ink-4">{word}</span>
-        </span>
-      }
-    >
-      {both && (
-        <Reckoning
-          size="sm"
-          currency={currency}
-          hidden={hidden}
-          showSigns={false}
-          lines={[
-            { key: 'they', label: 'They owe you', amount: theyOwe },
-            { key: 'you', label: 'You owe them', amount: youOwe },
-          ]}
-          total={{ label: net >= 0 ? 'Net, in your favour' : 'Net, you owe', amount: Math.abs(net) }}
-        />
-      )}
 
-      {recent.length > 0 && (
-        <div className={cn('-mx-3 divide-y divide-line', both && 'mt-3')}>
-          {recent.map((r) => (
-            <TransactionRow
-              key={r.txn.id}
-              txn={r.txn}
-              accounts={accountMap}
-              hidden={hidden}
-              showDate
-              dateLabel={formatRelativeDay(r.txn.date, asOf)}
-              className="px-3"
-            />
-          ))}
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-[0.9375rem] font-semibold text-ink">{person.name}</p>
+          <p className="mt-0.5 truncate text-xs text-ink-3">
+            {overdue ? `Overdue since ${fmtDate(due!)}` : due && net !== 0 ? `Due ${fmtDate(due)}` : person.contact ?? word}
+          </p>
         </div>
-      )}
 
-      <div className="mt-4 flex flex-wrap gap-2">
-        {net > 0 && recv && (
-          <Button size="sm" variant="primary" onClick={() => onRecord('owed_to_me', recv.id, 'settle')}>
-            They paid back
-          </Button>
-        )}
-        {net < 0 && pay && (
-          <Button size="sm" variant="primary" onClick={() => onRecord('i_owe', pay.id, 'settle')}>
-            Pay back
-          </Button>
-        )}
-        {recv && (
-          <Button size="sm" variant="secondary" onClick={() => onRecord('owed_to_me', recv.id, 'new')}>
-            Lend {net > 0 ? 'more' : ''}
-          </Button>
-        )}
-        {pay && (
-          <Button size="sm" variant="secondary" onClick={() => onRecord('i_owe', pay.id, 'new')}>
-            Borrow {net < 0 ? 'more' : ''}
-          </Button>
-        )}
-        <Button size="sm" variant="ghost" onClick={() => onHistory((net < 0 ? pay : recv)?.id ?? (recv ?? pay)!.id)}>
-          History
-        </Button>
+        <div className="shrink-0 text-right">
+          <p className={cn('tnum text-[0.9375rem] font-semibold', tone)}>
+            {hidden ? '•••' : `Rs. ${(Math.abs(net) / 100).toLocaleString()}`}
+          </p>
+          <p className="mt-0.5 text-[0.6875rem] text-ink-4">{word}</p>
+        </div>
+      </button>
+
+      {/* Expanded detail */}
+      <div className="disclose" data-open={open || undefined}>
+        <div>
+          <div className="space-y-4 px-4 pb-4 pt-1">
+            {both && (
+              <Reckoning
+                size="sm"
+                currency={currency}
+                hidden={hidden}
+                showSigns={false}
+                lines={[
+                  { key: 'they', label: 'They owe you', amount: theyOwe },
+                  { key: 'you', label: 'You owe them', amount: youOwe },
+                ]}
+                total={{ label: net >= 0 ? 'Net, in your favour' : 'Net, you owe', amount: Math.abs(net) }}
+              />
+            )}
+
+            {recent.length > 0 && (
+              <div className={cn('-mx-4 divide-y divide-line', both && 'mt-3')}>
+                {recent.map((r) => (
+                  <TransactionRow
+                    key={r.txn.id}
+                    txn={r.txn}
+                    accounts={accountMap}
+                    hidden={hidden}
+                    showDate
+                    dateLabel={formatRelativeDay(r.txn.date, asOf)}
+                    className="px-4"
+                  />
+                ))}
+              </div>
+            )}
+
+            <div className="flex flex-wrap gap-2">
+              {net > 0 && recv && (
+                <Button size="sm" variant="primary" onClick={() => onRecord('owed_to_me', recv.id, 'settle')}>
+                  They paid back
+                </Button>
+              )}
+              {net < 0 && pay && (
+                <Button size="sm" variant="primary" onClick={() => onRecord('i_owe', pay.id, 'settle')}>
+                  Pay back
+                </Button>
+              )}
+              {recv && (
+                <Button size="sm" variant="secondary" onClick={() => onRecord('owed_to_me', recv.id, 'new')}>
+                  Lend {net > 0 ? 'more' : ''}
+                </Button>
+              )}
+              {pay && (
+                <Button size="sm" variant="secondary" onClick={() => onRecord('i_owe', pay.id, 'new')}>
+                  Borrow {net < 0 ? 'more' : ''}
+                </Button>
+              )}
+              <Button size="sm" variant="ghost" onClick={() => onHistory((net < 0 ? pay : recv)?.id ?? (recv ?? pay)!.id)}>
+                History
+              </Button>
+              {net !== 0 && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  icon={<MessageCircle className="size-3.5 text-[#25D366]" />}
+                  onClick={openWhatsApp}
+                >
+                  WhatsApp
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
-    </ExpandingRow>
+    </div>
   );
 }
 
@@ -618,8 +664,8 @@ function DebtDetail({
         {record?.dueDate && (
           <Notice tone={record.dueDate < asOf && balance > 0 ? 'warn' : 'neutral'}>
             {record.dueDate < asOf && balance > 0
-              ? `This was due back on ${formatDate(record.dueDate)}.`
-              : `Due back by ${formatDate(record.dueDate)}.`}
+              ? `This was due back on ${fmtDate(record.dueDate)}.`
+              : `Due back by ${fmtDate(record.dueDate)}.`}
           </Notice>
         )}
 
