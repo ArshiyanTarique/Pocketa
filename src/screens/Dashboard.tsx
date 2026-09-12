@@ -66,7 +66,7 @@ export function Dashboard({ onQuickAdd }: { onQuickAdd: () => void }) {
 
         <section>
           <div className="mt-1">
-            <AccountFan onAdd={() => navigate('/accounts')} />
+            <AccountFan constrained onAdd={() => navigate('/accounts')} />
           </div>
         </section>
 

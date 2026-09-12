@@ -52,11 +52,14 @@ export function AccountFan({
   onAdd,
   className,
   size = 'md',
+  constrained = false,
 }: {
   onSelect?: (id: ID) => void;
   onAdd?: () => void;
   className?: string;
   size?: 'md' | 'lg';
+  /** Cap the carousel width to ~3 cards (use on Dashboard to keep the Recent column visible). */
+  constrained?: boolean;
 }) {
   const accounts = useStore((s) => s.accounts);
   const hidden = useStore((s) => s.settings.hideAmounts);
@@ -81,7 +84,7 @@ export function AccountFan({
     <div className={cn('-mx-4 sm:-mx-6', className)}>
       {/* Cap the scrollable strip so it never expands beyond ~3 visible cards.
           The fan scrolls internally; extra accounts are always reachable. */}
-      <div className="max-w-[42rem] overflow-hidden">
+      <div className={cn(constrained && 'max-w-[42rem] overflow-hidden')}>
       <div
         ref={fan}
         className={cn('fan stagger', drag.dragging && 'cursor-grabbing select-none [scroll-snap-type:none]')}
