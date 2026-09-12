@@ -1,0 +1,356 @@
+/**
+ * The shared carpool schema.
+ *
+ * Separate from the ledger's `ops` table on purpose. That table's policy is the
+ * simplest one there is — `auth.uid() = user_id`, nobody sees anyone else's
+ * anything — and carpooling needs the opposite in places. Keeping them apart
+ * means a policy written to let teammates see each other can never widen access
+ * to somebody's transactions.
+ *
+ * Two decisions are load-bearing:
+ *
+ *   1. Phone numbers live in their own table, `carpool_contacts`. A number is
+ *      the one field here that can cause real-world harm if it leaks, so it is
+ *      physically separated: a mistake in the policy on profiles cannot expose
+ *      it, because it is not in that table.
+ *
+ *   2. Membership checks go through SECURITY DEFINER functions. A policy on
+ *      `team_memberships` that queries `team_memberships` would recurse; these
+ *      break the cycle and keep every policy a one-liner that can be read and
+ *      checked by eye.
+ */
+
+export const CARPOOL_SCHEMA_SQL = `-- ===========================================================================
+-- Pocketa carpool: the shared layer.
+-- Safe to run more than once.
+-- ===========================================================================
+
+-- --- Profiles: a name and a default role. No contact details here. ---------
+create table if not exists public.carpool_profiles (
+  user_id      uuid primary key references auth.users(id) on delete cascade,
+  display_name text not null check (length(trim(display_name)) between 1 and 60),
+  default_role text not null default 'passenger' check (default_role in ('driver','passenger')),
+  created_at   timestamptz not null default now(),
+  updated_at   timestamptz not null default now()
+);
+
+-- --- Contacts: the sensitive column, kept in its own table. ----------------
+create table if not exists public.carpool_contacts (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  phone   text check (phone ~ '^\\+[0-9]{7,15}$'),
+  updated_at timestamptz not null default now()
+);
+
+-- --- Teams -----------------------------------------------------------------
+create table if not exists public.carpool_teams (
+  id             uuid primary key default gen_random_uuid(),
+  name           text not null check (length(trim(name)) between 1 and 80),
+  driver_user_id uuid not null references auth.users(id) on delete cascade,
+  rate_per_trip  bigint not null default 0 check (rate_per_trip >= 0),
+  currency       text not null default 'PKR',
+  discoverable   boolean not null default false,
+  created_at     timestamptz not null default now(),
+  updated_at     timestamptz not null default now()
+);
+
+-- --- Routes ----------------------------------------------------------------
+create table if not exists public.carpool_routes (
+  id                   uuid primary key default gen_random_uuid(),
+  team_id              uuid not null references public.carpool_teams(id) on delete cascade,
+  name                 text not null,
+  -- [{lat, lng, name}, ...]. The shape is the client's job; that it is a
+  -- non-empty list of at least two points is the database's.
+  path                 jsonb not null check (jsonb_typeof(path) = 'array' and jsonb_array_length(path) >= 2),
+  days                 int[] not null default '{1,2,3,4,5}',
+  departure            text not null default '07:30' check (departure ~ '^[0-2][0-9]:[0-5][0-9]$'),
+  pickup_radius_metres int  not null default 1500 check (pickup_radius_metres between 100 and 10000),
+  seats_total          int  not null default 3 check (seats_total between 1 and 8),
+  discoverable         boolean not null default false,
+  active               boolean not null default true,
+  created_at           timestamptz not null default now(),
+  updated_at           timestamptz not null default now(),
+  -- One route per team, because that is what the app means by "the route".
+  -- Without this a second row could appear and every screen would silently
+  -- show whichever came back first.
+  unique (team_id)
+);
+
+-- --- Membership ------------------------------------------------------------
+create table if not exists public.team_memberships (
+  id           uuid primary key default gen_random_uuid(),
+  team_id      uuid not null references public.carpool_teams(id) on delete cascade,
+  user_id      uuid not null references auth.users(id) on delete cascade,
+  role         text not null default 'passenger' check (role in ('driver','passenger')),
+  status       text not null default 'requested'
+               check (status in ('invited','requested','active','declined','removed')),
+  message      text check (length(message) <= 500),
+  requested_at timestamptz,
+  joined_at    timestamptz,
+  updated_at   timestamptz not null default now(),
+  unique (team_id, user_id),
+  -- An active membership is what grants ride logging and phone visibility, so
+  -- it must say when it started.
+  check (status <> 'active' or joined_at is not null)
+);
+
+-- --- Invites ---------------------------------------------------------------
+create table if not exists public.carpool_invites (
+  id         uuid primary key default gen_random_uuid(),
+  team_id    uuid not null references public.carpool_teams(id) on delete cascade,
+  token      text not null unique,
+  created_by uuid not null references auth.users(id) on delete cascade,
+  expires_at timestamptz,
+  max_uses   int check (max_uses is null or max_uses > 0),
+  uses       int not null default 0,
+  revoked    boolean not null default false,
+  created_at timestamptz not null default now()
+);
+
+-- --- The shared ride log ---------------------------------------------------
+create table if not exists public.carpool_rides (
+  id             uuid primary key default gen_random_uuid(),
+  team_id        uuid not null references public.carpool_teams(id) on delete cascade,
+  ride_date      date not null,
+  rider_user_ids uuid[] not null default '{}',
+  -- The rate in force when the ride was logged, frozen so that changing the
+  -- rate later never re-prices a month that has already happened.
+  rate_snapshot  bigint not null check (rate_snapshot >= 0),
+  note           text check (length(note) <= 500),
+  logged_by      uuid not null references auth.users(id) on delete cascade,
+  settled_at     timestamptz,
+  created_at     timestamptz not null default now(),
+  updated_at     timestamptz not null default now(),
+  unique (team_id, ride_date, logged_by)
+);
+
+-- carpool_routes.team_id is indexed by its unique constraint.
+create index if not exists team_memberships_user_idx on public.team_memberships (user_id, status);
+create index if not exists team_memberships_team_idx on public.team_memberships (team_id, status);
+create index if not exists carpool_rides_team_idx    on public.carpool_rides (team_id, ride_date);
+
+-- ===========================================================================
+-- Helpers.
+--
+-- SECURITY DEFINER so a policy on team_memberships can ask about
+-- team_memberships without recursing into its own policy.
+-- ===========================================================================
+
+create or replace function public.is_active_member(team uuid)
+returns boolean language sql security definer stable
+set search_path = public as $$
+  select exists (
+    select 1 from public.team_memberships m
+    where m.team_id = team and m.user_id = auth.uid() and m.status = 'active'
+  );
+$$;
+
+create or replace function public.is_team_driver(team uuid)
+returns boolean language sql security definer stable
+set search_path = public as $$
+  select exists (
+    select 1 from public.carpool_teams t
+    where t.id = team and t.driver_user_id = auth.uid()
+  );
+$$;
+
+-- Do the caller and this person both actively belong to any one team?
+create or replace function public.shares_active_team(other uuid)
+returns boolean language sql security definer stable
+set search_path = public as $$
+  select exists (
+    select 1
+    from public.team_memberships mine
+    join public.team_memberships theirs on theirs.team_id = mine.team_id
+    where mine.user_id  = auth.uid() and mine.status  = 'active'
+      and theirs.user_id = other      and theirs.status = 'active'
+  );
+$$;
+
+-- Drivers of a discoverable team are visible by name to anyone searching.
+create or replace function public.drives_discoverable_team(candidate uuid)
+returns boolean language sql security definer stable
+set search_path = public as $$
+  select exists (
+    select 1 from public.carpool_teams t
+    where t.driver_user_id = candidate and t.discoverable = true
+  );
+$$;
+
+-- ===========================================================================
+-- Policies
+-- ===========================================================================
+
+alter table public.carpool_profiles  enable row level security;
+alter table public.carpool_contacts  enable row level security;
+alter table public.carpool_teams     enable row level security;
+alter table public.carpool_routes    enable row level security;
+alter table public.team_memberships  enable row level security;
+alter table public.carpool_invites   enable row level security;
+alter table public.carpool_rides     enable row level security;
+
+-- --- Profiles: your own, your teammates', and drivers you can discover -----
+drop policy if exists "profiles readable" on public.carpool_profiles;
+create policy "profiles readable" on public.carpool_profiles for select
+  using (
+    auth.uid() = user_id
+    or public.shares_active_team(user_id)
+    or public.drives_discoverable_team(user_id)
+  );
+
+drop policy if exists "own profile writable" on public.carpool_profiles;
+create policy "own profile writable" on public.carpool_profiles for all
+  using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+-- --- Contacts: your own, and active teammates only. Nothing else. ----------
+-- Note what is absent: no clause for pending requests, and none for
+-- discoverable drivers. A number is released only once both sides have agreed.
+drop policy if exists "contacts readable" on public.carpool_contacts;
+create policy "contacts readable" on public.carpool_contacts for select
+  using (auth.uid() = user_id or public.shares_active_team(user_id));
+
+drop policy if exists "own contact writable" on public.carpool_contacts;
+create policy "own contact writable" on public.carpool_contacts for all
+  using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+-- --- Teams -----------------------------------------------------------------
+drop policy if exists "teams readable" on public.carpool_teams;
+create policy "teams readable" on public.carpool_teams for select
+  using (discoverable = true or driver_user_id = auth.uid() or public.is_active_member(id));
+
+drop policy if exists "driver creates team" on public.carpool_teams;
+create policy "driver creates team" on public.carpool_teams for insert
+  with check (auth.uid() = driver_user_id);
+
+drop policy if exists "driver manages team" on public.carpool_teams;
+create policy "driver manages team" on public.carpool_teams for update
+  using (auth.uid() = driver_user_id) with check (auth.uid() = driver_user_id);
+
+drop policy if exists "driver deletes team" on public.carpool_teams;
+create policy "driver deletes team" on public.carpool_teams for delete
+  using (auth.uid() = driver_user_id);
+
+-- --- Routes ----------------------------------------------------------------
+drop policy if exists "routes readable" on public.carpool_routes;
+create policy "routes readable" on public.carpool_routes for select
+  using (
+    (discoverable = true and exists (
+      select 1 from public.carpool_teams t where t.id = team_id and t.discoverable = true
+    ))
+    or public.is_team_driver(team_id)
+    or public.is_active_member(team_id)
+  );
+
+drop policy if exists "driver writes routes" on public.carpool_routes;
+create policy "driver writes routes" on public.carpool_routes for all
+  using (public.is_team_driver(team_id)) with check (public.is_team_driver(team_id));
+
+-- --- Membership ------------------------------------------------------------
+drop policy if exists "memberships readable" on public.team_memberships;
+create policy "memberships readable" on public.team_memberships for select
+  using (user_id = auth.uid() or public.is_team_driver(team_id) or public.is_active_member(team_id));
+
+-- Anyone may ask to join, but only as themselves and only as 'requested'.
+-- Without the status check a passenger could insert themselves as active.
+drop policy if exists "request to join" on public.team_memberships;
+create policy "request to join" on public.team_memberships for insert
+  with check (user_id = auth.uid() and status = 'requested' and role = 'passenger');
+
+-- The driver admits, declines and removes.
+drop policy if exists "driver decides membership" on public.team_memberships;
+create policy "driver decides membership" on public.team_memberships for update
+  using (public.is_team_driver(team_id)) with check (public.is_team_driver(team_id));
+
+-- A member may leave, but may not promote themselves.
+drop policy if exists "member may leave" on public.team_memberships;
+create policy "member may leave" on public.team_memberships for update
+  using (user_id = auth.uid())
+  with check (user_id = auth.uid() and status in ('removed','declined'));
+
+-- --- Invites ---------------------------------------------------------------
+-- Redemption is done by a function, not by reading the table, so a token
+-- cannot be enumerated.
+drop policy if exists "driver manages invites" on public.carpool_invites;
+create policy "driver manages invites" on public.carpool_invites for all
+  using (public.is_team_driver(team_id)) with check (public.is_team_driver(team_id));
+
+-- --- Rides: the shared log -------------------------------------------------
+drop policy if exists "rides readable by team" on public.carpool_rides;
+create policy "rides readable by team" on public.carpool_rides for select
+  using (public.is_active_member(team_id) or public.is_team_driver(team_id));
+
+drop policy if exists "members log rides" on public.carpool_rides;
+create policy "members log rides" on public.carpool_rides for insert
+  with check (
+    logged_by = auth.uid()
+    and (public.is_active_member(team_id) or public.is_team_driver(team_id))
+  );
+
+-- A passenger corrects their own entries; the driver corrects any.
+drop policy if exists "correct own rides" on public.carpool_rides;
+create policy "correct own rides" on public.carpool_rides for update
+  using (logged_by = auth.uid() or public.is_team_driver(team_id))
+  with check (logged_by = auth.uid() or public.is_team_driver(team_id));
+
+drop policy if exists "delete own rides" on public.carpool_rides;
+create policy "delete own rides" on public.carpool_rides for delete
+  using (logged_by = auth.uid() or public.is_team_driver(team_id));
+
+-- ===========================================================================
+-- Joining by invite.
+--
+-- A function rather than a table read: the caller proves they hold a token
+-- without ever being able to list tokens, and the row is written as 'active'
+-- which no ordinary insert policy permits.
+-- ===========================================================================
+
+create or replace function public.redeem_carpool_invite(invite_token text)
+returns uuid language plpgsql security definer
+set search_path = public as $$
+declare
+  found public.carpool_invites;
+  target uuid;
+begin
+  if auth.uid() is null then
+    raise exception 'Sign in to accept an invite';
+  end if;
+
+  select * into found from public.carpool_invites where token = invite_token;
+  if not found.id is not null then
+    raise exception 'That invite link is not valid';
+  end if;
+  if found.revoked then
+    raise exception 'The driver has cancelled this invite link';
+  end if;
+  if found.expires_at is not null and found.expires_at <= now() then
+    raise exception 'This invite link has expired';
+  end if;
+  if found.max_uses is not null and found.uses >= found.max_uses then
+    raise exception 'This invite link has already been used';
+  end if;
+
+  target := found.team_id;
+
+  insert into public.team_memberships (team_id, user_id, role, status, joined_at, requested_at)
+  values (target, auth.uid(), 'passenger', 'active', now(), now())
+  on conflict (team_id, user_id) do update
+    set status = 'active', joined_at = coalesce(public.team_memberships.joined_at, now()),
+        updated_at = now();
+
+  update public.carpool_invites set uses = uses + 1 where id = found.id;
+  return target;
+end;
+$$;
+
+revoke all on function public.redeem_carpool_invite(text) from public;
+grant execute on function public.redeem_carpool_invite(text) to authenticated;
+`;
+
+/** A short, plain-language account of what the policies above guarantee. */
+export const CARPOOL_PRIVACY_NOTES = [
+  'Phone numbers live in their own table. They are readable only by you and by people who are active members of a team with you.',
+  'A pending request never releases a number — in either direction — so nobody can collect numbers by inviting strangers or by applying widely.',
+  'A public route search returns the route and the driver’s name. It does not return phone numbers, passenger names, or anyone’s home address.',
+  'The pickup point shown in a search is a point on the driver’s own route, never the passenger’s address.',
+  'Only the driver admits or removes members. A passenger may leave, but cannot promote themselves.',
+  'Invites are redeemed through a function, so a link can be used but tokens cannot be listed or guessed.',
+] as const;

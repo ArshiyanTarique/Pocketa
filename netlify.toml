@@ -1,0 +1,71 @@
+# Hosting for Pocketa.
+#
+# The app is static files with a hash router, so there is nothing to run and no
+# SPA rewrite strictly needed — every route is `/#/something`. The catch-all is
+# here only so a mistyped path lands on the app rather than a 404 page.
+
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+# --- Caching -----------------------------------------------------------------
+# Vite fingerprints every asset filename, so those can be cached forever. The
+# three files that are NOT fingerprinted decide when a phone notices an update,
+# and must never be served stale.
+
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+  for = "/manifest.webmanifest"
+  [headers.values]
+    # Netlify guesses `application/octet-stream` for this extension, which is
+    # the wrong type for a web app manifest and is checked by some install flows.
+    Content-Type = "application/manifest+json; charset=utf-8"
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+# Android fetches this to decide whether the installed app shows an address bar.
+# It must be served as JSON from this exact path on this exact domain.
+[[headers]]
+  for = "/.well-known/assetlinks.json"
+  [headers.values]
+    Content-Type = "application/json"
+    Cache-Control = "public, max-age=300"
+
+# --- Security ----------------------------------------------------------------
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    # Geolocation is allowed because the carpool asks "where am I" when marking a
+    # route. Everything else a browser could offer, this app has no use for.
+    Permissions-Policy = "camera=(self), geolocation=(self), microphone=(), payment=(), usb=(), interest-cohort=()"
+    # `style-src` needs 'unsafe-inline' because the app sets widths and colours
+    # as style attributes — a progress bar, a chart bar, a category dot.
+    # `connect-src` allows Supabase so that adding sync later is a rebuild, not
+    # a header change. Everything else is refused, including framing this app.
+    Content-Security-Policy = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://*.supabase.co wss://*.supabase.co; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+
+# --- Routing -----------------------------------------------------------------
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

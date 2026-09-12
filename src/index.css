@@ -1,0 +1,649 @@
+@import 'tailwindcss';
+
+/* ==========================================================================
+   Pocketa — the banknote system
+
+   The palette comes from the notes in a Karachi wallet, not from a template:
+
+     Rs 5000  gold       — the primary. Money itself.
+     Rs 500   jade       — money coming in.
+     Rs 100   rust       — money going out; credit; warnings that cost you.
+     Rs 1000  cerulean   — banks, and anything informational.
+     Rs 50    plum       — savings and goals: money set aside.
+
+   Three type roles, held to strictly:
+     Bricolage Grotesque — the wordmark, section labels, the hero figure's label.
+                           Used sparingly; it is the voice, not the body.
+     Instrument Sans     — every other word.
+     IBM Plex Mono       — every number, tabular and column-aligned.
+
+   That last rule is the identity that survives from the first design: a figure
+   in Pocketa always looks like a figure in a ledger.
+   ========================================================================== */
+
+@layer base {
+  :root {
+    /* --- Ground ---------------------------------------------------------- */
+    /* Warm white, not beige. The warmth should be felt, not seen: gold on a
+       tan ground is the dated combination, gold on near-white is not. */
+    --paper: #faf8f4;
+    --surface: #ffffff;
+    --surface-2: #f3f0ea;
+    --surface-sunken: #ebe7df;
+    --ink: #17171a;
+    --ink-2: #48464a;
+    --ink-3: #66636a;
+    --ink-4: #5f5c64;
+    --line: #e8e3da;
+    --line-strong: #d5cfc3;
+
+    /* --- The notes -------------------------------------------------------- */
+    /* Text/stroke shades clear 4.5:1 on --paper; fills are the note colour. */
+    --gold: #7a5c07;
+    --gold-fill: #e3b53a;
+    --gold-soft: #f7edcf;
+    --gold-ink: #1c1400;
+
+    --jade: #1c7a52;
+    --jade-fill: #37b47e;
+    --jade-soft: #dcf2e7;
+
+    --rust: #a63a29;
+    --rust-fill: #e0644e;
+    --rust-soft: #f9e2dd;
+
+    --cerulean: #1f56a3;
+    --cerulean-fill: #4a86df;
+    --cerulean-soft: #dfe9f8;
+
+    --plum: #683c8d;
+    --plum-fill: #a072cf;
+    --plum-soft: #ede2f6;
+
+    /* --- Roles mapped onto the notes ------------------------------------- */
+    --accent: var(--gold);
+    --accent-fill: var(--gold-fill);
+    --accent-hover: #d4a52a;
+    --accent-soft: var(--gold-soft);
+    --accent-ink: var(--gold-ink);
+
+    --positive: var(--jade);
+    --positive-fill: var(--jade-fill);
+    --positive-soft: var(--jade-soft);
+    --negative: var(--rust);
+    --negative-fill: var(--rust-fill);
+    --negative-soft: var(--rust-soft);
+    --warn: #8a5b09;
+    --warn-fill: var(--gold-fill);
+    --warn-soft: var(--gold-soft);
+    --info: var(--cerulean);
+    --info-fill: var(--cerulean-fill);
+    --info-soft: var(--cerulean-soft);
+
+    /* --- Elevation ------------------------------------------------------- */
+    --shadow-sm: 0 1px 2px rgb(23 23 26 / 0.05);
+    --shadow-md: 0 2px 6px rgb(23 23 26 / 0.05), 0 12px 28px rgb(23 23 26 / 0.08);
+    --shadow-lg: 0 6px 12px rgb(23 23 26 / 0.06), 0 28px 64px rgb(23 23 26 / 0.14);
+    --shadow-card: 0 1px 0 rgb(255 255 255 / 0.6) inset, 0 10px 30px -12px rgb(23 23 26 / 0.35);
+
+    /* --- The cards in the fan ------------------------------------------- */
+    /* These do NOT flip with the theme: a banknote is the same colour at
+       night. Each pairs a fill with the ink that clears 4.5:1 on it. */
+    --card-gold: #e3b53a;
+    --card-gold-ink: #1c1400;
+    --card-jade: #2f9e6e;
+    --card-jade-ink: #04160e;
+    --card-cerulean: #2a5fae;
+    --card-cerulean-ink: #ffffff;
+    --card-rust: #b4402d;
+    --card-rust-ink: #ffffff;
+    --card-plum: #6d3f93;
+    --card-plum-ink: #ffffff;
+    --card-teal: #2f7f7a;
+    --card-teal-ink: #ffffff;
+    --card-brown: #6b5a4a;
+    --card-brown-ink: #ffffff;
+
+    /* Tighter than before: cards with 26px corners read as soft and samey. */
+    --radius-sm: 6px;
+    --radius: 10px;
+    --radius-lg: 14px;
+    --radius-xl: 18px;
+
+    color-scheme: light;
+  }
+
+  :root[data-theme='dark'] {
+    --paper: #0f1114;
+    --surface: #171a1f;
+    --surface-2: #1e2229;
+    --surface-sunken: #0b0d10;
+    --ink: #ede9e1;
+    --ink-2: #bcb7ad;
+    --ink-3: #928d84;
+    --ink-4: #8f8a81;
+    --line: #262b33;
+    --line-strong: #363c46;
+
+    --gold: #e6be47;
+    --gold-fill: #e6be47;
+    --gold-soft: #2c2410;
+    --gold-ink: #1c1400;
+
+    --jade: #4fcd90;
+    --jade-fill: #37b47e;
+    --jade-soft: #123024;
+
+    --rust: #f0846f;
+    --rust-fill: #e0644e;
+    --rust-soft: #3a1c17;
+
+    --cerulean: #7fb0f5;
+    --cerulean-fill: #4a86df;
+    --cerulean-soft: #17263d;
+
+    --plum: #c39bea;
+    --plum-fill: #a072cf;
+    --plum-soft: #2a1d3a;
+
+    --accent: var(--gold);
+    --accent-fill: var(--gold-fill);
+    --accent-hover: #f0cc5e;
+    --accent-soft: var(--gold-soft);
+    --accent-ink: var(--gold-ink);
+
+    --positive: var(--jade);
+    --positive-fill: var(--jade-fill);
+    --positive-soft: var(--jade-soft);
+    --negative: var(--rust);
+    --negative-fill: var(--rust-fill);
+    --negative-soft: var(--rust-soft);
+    --warn: #e6be47;
+    --warn-fill: var(--gold-fill);
+    --warn-soft: var(--gold-soft);
+    --info: var(--cerulean);
+    --info-fill: var(--cerulean-fill);
+    --info-soft: var(--cerulean-soft);
+
+    --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
+    --shadow-md: 0 2px 6px rgb(0 0 0 / 0.4), 0 12px 28px rgb(0 0 0 / 0.45);
+    --shadow-lg: 0 6px 12px rgb(0 0 0 / 0.45), 0 28px 64px rgb(0 0 0 / 0.6);
+    --shadow-card: 0 1px 0 rgb(255 255 255 / 0.06) inset, 0 10px 30px -12px rgb(0 0 0 / 0.8);
+
+    color-scheme: dark;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme='light']) {
+      --paper: #0f1114;
+      --surface: #171a1f;
+      --surface-2: #1e2229;
+      --surface-sunken: #0b0d10;
+      --ink: #ede9e1;
+      --ink-2: #bcb7ad;
+      --ink-3: #928d84;
+      --ink-4: #8f8a81;
+      --line: #262b33;
+      --line-strong: #363c46;
+
+      --gold: #e6be47;
+      --gold-fill: #e6be47;
+      --gold-soft: #2c2410;
+      --gold-ink: #1c1400;
+
+      --jade: #4fcd90;
+      --jade-fill: #37b47e;
+      --jade-soft: #123024;
+
+      --rust: #f0846f;
+      --rust-fill: #e0644e;
+      --rust-soft: #3a1c17;
+
+      --cerulean: #7fb0f5;
+      --cerulean-fill: #4a86df;
+      --cerulean-soft: #17263d;
+
+      --plum: #c39bea;
+      --plum-fill: #a072cf;
+      --plum-soft: #2a1d3a;
+
+      --accent: var(--gold);
+      --accent-fill: var(--gold-fill);
+      --accent-hover: #f0cc5e;
+      --accent-soft: var(--gold-soft);
+      --accent-ink: var(--gold-ink);
+
+      --positive: var(--jade);
+      --positive-fill: var(--jade-fill);
+      --positive-soft: var(--jade-soft);
+      --negative: var(--rust);
+      --negative-fill: var(--rust-fill);
+      --negative-soft: var(--rust-soft);
+      --warn: #e6be47;
+      --warn-fill: var(--gold-fill);
+      --warn-soft: var(--gold-soft);
+      --info: var(--cerulean);
+      --info-fill: var(--cerulean-fill);
+      --info-soft: var(--cerulean-soft);
+
+      --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
+      --shadow-md: 0 2px 6px rgb(0 0 0 / 0.4), 0 12px 28px rgb(0 0 0 / 0.45);
+      --shadow-lg: 0 6px 12px rgb(0 0 0 / 0.45), 0 28px 64px rgb(0 0 0 / 0.6);
+      --shadow-card: 0 1px 0 rgb(255 255 255 / 0.06) inset, 0 10px 30px -12px rgb(0 0 0 / 0.8);
+
+      color-scheme: dark;
+    }
+  }
+}
+
+@theme {
+  --color-paper: var(--paper);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-sunken: var(--surface-sunken);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-ink-4: var(--ink-4);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+
+  --color-accent: var(--accent);
+  --color-accent-fill: var(--accent-fill);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-ink: var(--accent-ink);
+
+  --color-positive: var(--positive);
+  --color-positive-fill: var(--positive-fill);
+  --color-positive-soft: var(--positive-soft);
+  --color-negative: var(--negative);
+  --color-negative-fill: var(--negative-fill);
+  --color-negative-soft: var(--negative-soft);
+  --color-warn: var(--warn);
+  --color-warn-fill: var(--warn-fill);
+  --color-warn-soft: var(--warn-soft);
+  --color-info: var(--info);
+  --color-info-fill: var(--info-fill);
+  --color-info-soft: var(--info-soft);
+
+  --color-gold: var(--gold);
+  --color-gold-fill: var(--gold-fill);
+  --color-gold-soft: var(--gold-soft);
+  --color-jade: var(--jade);
+  --color-jade-fill: var(--jade-fill);
+  --color-jade-soft: var(--jade-soft);
+  --color-rust: var(--rust);
+  --color-rust-fill: var(--rust-fill);
+  --color-rust-soft: var(--rust-soft);
+  --color-cerulean: var(--cerulean);
+  --color-cerulean-fill: var(--cerulean-fill);
+  --color-cerulean-soft: var(--cerulean-soft);
+  --color-plum: var(--plum);
+  --color-plum-fill: var(--plum-fill);
+  --color-plum-soft: var(--plum-soft);
+
+  --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Bricolage Grotesque', 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', 'Cascadia Mono', Menlo, monospace;
+
+  --radius-sm: 6px;
+  --radius-DEFAULT: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 18px;
+
+  --shadow-sm: var(--shadow-sm);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
+  --shadow-card: var(--shadow-card);
+}
+
+@layer base {
+  * {
+    border-color: var(--line);
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    font-synthesis-weight: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overscroll-behavior-y: none;
+  }
+
+  /* Every number in Pocketa is tabular. Columns of figures must align, or the
+     eye cannot scan them, and a ledger you cannot scan is not a ledger. */
+  .tnum {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum' 1, 'zero' 1;
+    letter-spacing: -0.01em;
+  }
+
+  /* The voice: section labels and the wordmark. Wide optical size, tight
+     tracking, so it reads as a title and never as body copy. */
+  .display {
+    font-family: var(--font-display);
+    font-variation-settings: 'opsz' 96, 'wdth' 100;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1;
+    color: var(--ink);
+  }
+
+  /* A quieter label for the small print above a figure. Still the display
+     face, so the two never look like the same thing at different sizes. */
+  .label {
+    font-family: var(--font-display);
+    font-variation-settings: 'opsz' 12, 'wdth' 100;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+
+  /* Kept for the few places that still want a mono caption. */
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    font-weight: 500;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+
+  h1, h2, h3, h4 {
+    letter-spacing: -0.021em;
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  ::selection {
+    background: var(--accent-soft);
+    color: var(--ink);
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--line-strong);
+    border-radius: 999px;
+    border: 3px solid var(--paper);
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--ink-4);
+  }
+
+  input, textarea, select, button {
+    font-family: inherit;
+    font-size: inherit;
+  }
+
+  input[type='number']::-webkit-outer-spin-button,
+  input[type='number']::-webkit-inner-spin-button {
+    appearance: none;
+    margin: 0;
+  }
+
+  dialog::backdrop {
+    background: rgb(15 17 20 / 0.5);
+    backdrop-filter: blur(4px);
+  }
+}
+
+@layer components {
+  /* ---- The reckoning strip -------------------------------------------
+     A column of figures with a real rule above the total, the way a page is
+     hand-totalled. Used wherever the app owes the user its own arithmetic.
+     ------------------------------------------------------------------- */
+  .reckoning {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 0.125rem 1.5rem;
+    align-items: baseline;
+  }
+
+  .reckoning-rule {
+    grid-column: 1 / -1;
+    height: 1px;
+    background: var(--line-strong);
+    margin: 0.5rem 0 0.375rem;
+    transform-origin: right;
+  }
+
+  .reckoning-rule--total {
+    background: var(--ink);
+    height: 1.5px;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .reckoning-rule {
+      animation: rule-draw 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+  }
+
+  @keyframes rule-draw {
+    from {
+      transform: scaleX(0);
+      opacity: 0;
+    }
+    to {
+      transform: scaleX(1);
+      opacity: 1;
+    }
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .hairline {
+    border-bottom: 1px solid var(--line);
+  }
+
+  /* ---- The fan: accounts as cards ------------------------------------
+     A horizontal, snap-aligned row. The card nearest the centre sits at full
+     size; its neighbours fall back slightly, driven by the scroll position
+     itself where the browser supports it, so there is no JavaScript in the
+     scroll path at all. Where it does not, the row still snaps, just flat.
+     ------------------------------------------------------------------- */
+  .fan {
+    display: flex;
+    gap: 0.75rem;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    /* Matches the page gutter, which the wrapper cancels with a negative
+       margin, so the first card lines up with everything else on the page. */
+    scroll-padding-inline: 1rem;
+    padding-inline: 1rem;
+    padding-block: 0.5rem 1rem;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  @media (min-width: 640px) {
+    .fan {
+      scroll-padding-inline: 1.5rem;
+      padding-inline: 1.5rem;
+    }
+  }
+  .fan::-webkit-scrollbar {
+    display: none;
+  }
+  .fan > * {
+    scroll-snap-align: center;
+    flex: 0 0 auto;
+  }
+
+  @supports (animation-timeline: view(inline)) {
+    @media (prefers-reduced-motion: no-preference) {
+      .fan > * {
+        animation: fan-focus linear both;
+        animation-timeline: view(inline);
+        animation-range: cover 0% cover 100%;
+      }
+    }
+  }
+
+  @keyframes fan-focus {
+    0% {
+      transform: scale(0.92) translateY(6px);
+      opacity: 0.72;
+    }
+    50% {
+      transform: scale(1) translateY(0);
+      opacity: 1;
+    }
+    100% {
+      transform: scale(0.92) translateY(6px);
+      opacity: 0.72;
+    }
+  }
+
+  /* A single note-card. Colour comes in through --note. */
+  .note-card {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    border-radius: var(--radius-xl);
+    color: var(--note-ink, #fff);
+    background:
+      radial-gradient(120% 90% at 100% 0%, color-mix(in oklab, var(--note) 70%, white) 0%, transparent 55%),
+      radial-gradient(90% 80% at 0% 100%, color-mix(in oklab, var(--note) 60%, black) 0%, transparent 60%),
+      var(--note);
+    box-shadow: var(--shadow-card);
+  }
+  /* Guilloché-ish texture: the fine line pattern on a banknote, very faint. */
+  .note-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background-image:
+      repeating-linear-gradient(115deg, rgb(255 255 255 / 0.08) 0 1px, transparent 1px 7px),
+      repeating-linear-gradient(-25deg, rgb(0 0 0 / 0.07) 0 1px, transparent 1px 9px);
+    mask-image: radial-gradient(120% 100% at 80% 20%, black 30%, transparent 75%);
+    pointer-events: none;
+  }
+  .note-card:focus-visible {
+    outline: 3px solid var(--ink);
+    outline-offset: 3px;
+  }
+
+  /* Big money counts up once on mount. */
+  @media (prefers-reduced-motion: no-preference) {
+    .count-in {
+      animation: count-in 480ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+  }
+  @keyframes count-in {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+      filter: blur(3px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+      filter: none;
+    }
+  }
+}
+
+@layer utilities {
+  /* Height that animates without measuring: a grid track from 0fr to 1fr.
+     Used by anything that opens in place. */
+  .disclose {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 260ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .disclose[data-open] {
+    grid-template-rows: 1fr;
+  }
+  .disclose > * {
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .rise {
+    animation: rise 380ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  .fade-in {
+    animation: fade 220ms ease both;
+  }
+  @keyframes fade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  /* Stagger children in a list that just mounted. */
+  .stagger > * {
+    animation: rise 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .stagger > :nth-child(1) { animation-delay: 0ms; }
+  .stagger > :nth-child(2) { animation-delay: 50ms; }
+  .stagger > :nth-child(3) { animation-delay: 100ms; }
+  .stagger > :nth-child(4) { animation-delay: 150ms; }
+  .stagger > :nth-child(5) { animation-delay: 200ms; }
+  .stagger > :nth-child(6) { animation-delay: 250ms; }
+  .stagger > :nth-child(n + 7) { animation-delay: 300ms; }
+
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .safe-top {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
