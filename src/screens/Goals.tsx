@@ -159,7 +159,7 @@ function GoalCard({
       onToggle={onToggle}
       tone={reached ? 'positive' : plan?.overdue ? 'warn' : null}
       summary={
-        <span className="block pr-2">
+        <span className="block pe-2">
           <span className="flex items-center justify-between gap-3">
             <span className="flex items-center gap-2 truncate">
               <span className="truncate text-sm font-semibold text-ink">{goal.name}</span>

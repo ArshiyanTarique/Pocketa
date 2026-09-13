@@ -25,6 +25,7 @@ import { IconButton } from '../ui/primitives';
 import { usePanelState } from '../ui/Sheet';
 import { AccountBadge } from './AccountBadge';
 import { useSync, useSyncEngine } from './useSync';
+import { useT } from './i18n';
 
 export interface NavItem {
   path: string;
@@ -74,14 +75,20 @@ export function Shell({
     <div className="min-h-dvh bg-paper">
       <Rail current={route.path} onQuickAdd={onQuickAdd} />
 
+      {/*
+        Content offset:
+        - LTR: pad-left for the rail, optionally pad-right for a sheet panel
+        - RTL: pad-right for the rail (rail is on the right in RTL), optionally pad-left for panel
+        overflow-x-hidden prevents any large-text reflow from creating a horizontal scrollbar.
+      */}
       <div
         className={cn(
-          'lg:pl-[3.5rem] transition-[padding] duration-200 ease-out overflow-x-hidden',
-          panels > 0 && 'lg:pr-[26rem]',
+          'transition-[padding] duration-200 ease-out overflow-x-hidden',
+          'lg:ps-[3.5rem]',
+          panels > 0 && 'lg:pe-[26rem]',
         )}
       >
         <TopBar />
-        {/* min-h ensures the page fills the screen; natural document scroll handles overflow */}
         <main
           className="mx-auto w-full max-w-[68rem] px-4 pb-28 pt-4 sm:px-6 lg:pb-10 lg:pt-5"
           key={route.path}
@@ -102,27 +109,33 @@ export function Shell({
 function Rail({ current, onQuickAdd }: { current: string; onQuickAdd: () => void }) {
   const secondaryActive = SECONDARY.some((n) => n.path === current);
   return (
+    /*
+      inset-y-0 + start-0 = sticks to the logical start edge (left in LTR, right in RTL).
+      Collapsed: 3.5rem wide, icons centered.
+      Expanded on hover: 13rem wide, items left-aligned with px-3.
+    */
     <aside
       className={cn(
-        'group/rail fixed inset-y-0 left-0 z-30 hidden w-[3.5rem] flex-col border-r border-line bg-surface lg:flex',
+        'group/rail fixed inset-y-0 start-0 z-30 hidden w-[3.5rem] flex-col border-e border-line bg-surface lg:flex',
         'transition-[width] duration-200 ease-out hover:w-[13rem] [&:has(:focus-visible)]:w-[13rem]',
       )}
     >
-      {/* Logo — centered when collapsed, left-aligned when expanded */}
-      <div className="flex h-14 items-center justify-center px-0 group-hover/rail:justify-start group-hover/rail:px-3">
+      {/* Logo row */}
+      <div className="flex h-14 shrink-0 items-center justify-center overflow-hidden px-0 group-hover/rail:justify-start group-hover/rail:px-3">
         <img src="/favicon.svg" alt="Pocketa" className="size-7 shrink-0 rounded-[--radius-sm]" />
-        <span className="display ml-2.5 whitespace-nowrap text-[1.0625rem] opacity-0 transition-opacity group-hover/rail:opacity-100 group-has-[:focus-visible]/rail:opacity-100">
+        <span className="display ms-2.5 whitespace-nowrap text-[1.0625rem] opacity-0 transition-opacity group-hover/rail:opacity-100 group-has-[:focus-visible]/rail:opacity-100">
           Pocketa
         </span>
       </div>
 
-      <div className="px-2">
+      {/* Add button */}
+      <div className="shrink-0 px-2">
         <button
           onClick={onQuickAdd}
           className={cn(
-            'flex h-9 w-full items-center justify-center gap-3 overflow-hidden rounded-[--radius] bg-accent-fill',
+            'flex h-9 w-full items-center justify-center overflow-hidden rounded-[--radius] bg-accent-fill',
             'font-semibold text-[--accent-ink] transition-all hover:bg-accent-hover active:scale-[0.98]',
-            'group-hover/rail:justify-start group-hover/rail:px-3',
+            'group-hover/rail:justify-start group-hover/rail:gap-3 group-hover/rail:px-3',
           )}
           aria-label="Add transaction (N)"
         >
@@ -133,6 +146,7 @@ function Rail({ current, onQuickAdd }: { current: string; onQuickAdd: () => void
         </button>
       </div>
 
+      {/* Nav links */}
       <nav className="mt-2 flex-1 space-y-0.5 overflow-y-auto px-2 pb-4">
         {PRIMARY.map((item) => (
           <RailLink
@@ -154,8 +168,9 @@ function RailLink({ item, active }: { item: NavItem; active: boolean }) {
       title={item.label}
       aria-current={active ? 'page' : undefined}
       className={cn(
-        'flex h-9 items-center justify-center gap-3 overflow-hidden rounded-[--radius] transition-colors',
-        'group-hover/rail:justify-start group-hover/rail:px-3',
+        // Collapsed: full width, icon centered. Expanded: left-aligned with gap+padding.
+        'flex h-9 w-full items-center justify-center overflow-hidden rounded-[--radius] transition-colors',
+        'group-hover/rail:justify-start group-hover/rail:gap-3 group-hover/rail:px-3',
         active ? 'bg-ink text-paper' : 'text-ink-3 hover:bg-surface-2 hover:text-ink',
       )}
     >
@@ -188,21 +203,6 @@ export function useOnline(): boolean {
 // Top bar
 // ---------------------------------------------------------------------------
 
-const PAGE_NAMES: Record<string, string> = {
-  '/': 'Pocketa',
-  '/transactions': 'Activity',
-  '/accounts': 'Accounts',
-  '/budgets': 'Budgets',
-  '/bills': 'Bills',
-  '/carpool': 'Carpool',
-  '/goals': 'Goals',
-  '/debts': 'Debts',
-  '/analytics': 'Analytics',
-  '/settings': 'Settings',
-  '/me': 'Me',
-  '/join': 'Join',
-};
-
 function TopBar() {
   const online = useOnline();
   const route = useRoute();
@@ -210,6 +210,7 @@ function TopBar() {
   const sync = useSync();
   const settings = useStore((s) => s.settings);
   const updateSettings = useStore((s) => s.updateSettings);
+  const t = useT();
 
   function cycleTheme() {
     const order = ['system', 'light', 'dark'] as const;
@@ -218,7 +219,23 @@ function TopBar() {
   }
 
   const ThemeIcon = settings.theme === 'light' ? Sun : settings.theme === 'dark' ? Moon : MonitorSmartphone;
-  const pageTitle = PAGE_NAMES[route.path] ?? 'Pocketa';
+
+  // Translate page name — keys match the English labels in i18n.ts
+  const PAGE_KEY: Record<string, string> = {
+    '/': 'Pocketa',
+    '/transactions': 'Activity',
+    '/accounts': 'Accounts',
+    '/budgets': 'Budgets',
+    '/bills': 'Bills',
+    '/carpool': 'Carpool',
+    '/goals': 'Goals',
+    '/debts': 'Debts',
+    '/analytics': 'Analytics',
+    '/settings': 'Settings',
+    '/me': 'Me',
+    '/join': 'Join',
+  };
+  const pageTitle = t(PAGE_KEY[route.path] ?? 'Pocketa');
 
   return (
     <header className="safe-top sticky top-0 z-20 border-b border-line/60 bg-paper/92 backdrop-blur-md">
@@ -234,16 +251,16 @@ function TopBar() {
         </span>
 
         {/* Right controls */}
-        <div className="ml-auto flex items-center gap-0.5">
+        <div className="ms-auto flex items-center gap-0.5">
           {!online && (
             <span
-              className="mr-1.5 flex items-center gap-1 rounded-full bg-surface-2 px-2 py-1 text-[0.625rem] font-semibold text-ink-4"
+              className="me-1.5 flex items-center gap-1 rounded-full bg-surface-2 px-2 py-1 text-[0.625rem] font-semibold text-ink-4"
               title="Working offline"
             >
               <CloudOff className="size-3" />
             </span>
           )}
-          <span className="mr-0.5">
+          <span className="me-0.5">
             <AccountBadge sync={sync} />
           </span>
           <IconButton label={`Theme: ${settings.theme}`} onClick={cycleTheme}>

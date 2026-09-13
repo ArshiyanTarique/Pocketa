@@ -688,7 +688,7 @@ function CategoryRow({
     <div
       className={cn(
         'group flex items-center gap-2.5 rounded-[9px] px-2 py-1.5 transition-colors hover:bg-surface-2',
-        nested && 'ml-6',
+        nested && 'ms-6',
         account.archived && 'opacity-55',
       )}
     >

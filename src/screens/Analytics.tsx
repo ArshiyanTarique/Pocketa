@@ -340,7 +340,7 @@ function CategoryRow({
         <span className="size-2.5 shrink-0 rounded-full" style={{ background: slice.color ?? 'var(--ink-4)' }} aria-hidden="true" />
       }
       summary={
-        <span className="block pr-2">
+        <span className="block pe-2">
           <span className="flex items-baseline justify-between gap-3">
             <span className="truncate text-sm font-medium text-ink">{slice.name}</span>
             <span className="tnum shrink-0 text-xs text-ink-4">

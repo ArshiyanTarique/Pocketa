@@ -578,7 +578,7 @@ function AuditTrail({ history, currency }: { history: Op[]; currency: string }) 
           <History className="size-3" />
           History
           {amended > 0 && (
-            <span className="ml-1 rounded-full bg-warn-soft px-1.5 py-px text-[0.625rem] font-medium normal-case tracking-normal text-warn">
+            <span className="ms-1 rounded-full bg-warn-soft px-1.5 py-px text-[0.625rem] font-medium normal-case tracking-normal text-warn">
               edited {amended}×
             </span>
           )}
@@ -587,11 +587,11 @@ function AuditTrail({ history, currency }: { history: Op[]; currency: string }) 
       </button>
 
       {open && (
-        <ol className="mt-2.5 space-y-3 border-l border-line pl-4 fade-in">
+        <ol className="mt-2.5 space-y-3 border-s border-line ps-4 fade-in">
           {history.map((op) => (
             <li key={op.id} className="relative">
               <span
-                className="absolute -left-[1.3125rem] top-1.5 size-2 rounded-full bg-line-strong ring-4 ring-[--surface]"
+                className="absolute -start-[1.3125rem] top-1.5 size-2 rounded-full bg-line-strong ring-4 ring-[--surface]"
                 aria-hidden="true"
               />
               <p className="text-[0.8125rem] text-ink">{op.summary}</p>

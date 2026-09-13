@@ -266,7 +266,7 @@ function PersonDebtRow({
   }
 
   return (
-    <div className={cn('border-l-[3px]', overdue ? 'border-l-warn-fill' : net > 0 ? 'border-l-positive-fill' : net < 0 ? 'border-l-negative-fill' : 'border-l-transparent')}>
+    <div className={cn('border-s-[3px]', overdue ? 'border-s-warn-fill' : net > 0 ? 'border-s-positive-fill' : net < 0 ? 'border-s-negative-fill' : 'border-s-transparent')}>
       {/* Summary row — always visible */}
       <button
         type="button"

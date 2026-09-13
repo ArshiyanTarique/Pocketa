@@ -393,5 +393,23 @@ Not done, deliberately: shared-element row→panel morphs. The panel opens
 beside the list on desktop and the row stays highlighted; a morph would be
 decoration on top of that.
 
-Remaining: a contrast pass in both themes at 375px and 1280px once the
-build tools are available again, then build and deploy.
+### Phase 7 — RTL (Urdu) layout support (built)
+
+`html[dir="rtl"]` is set when language = Urdu. All layout uses CSS logical properties throughout.
+
+| What | How |
+|---|---|
+| Shell rail | `start-0`, `border-e`, `ps-`, `pe-` — sticks to the logical start edge in both LTR and RTL |
+| Content offset | `lg:ps-[3.5rem]` / `lg:pe-[26rem]` — panel margin flips automatically |
+| Sheet panel | `end-0`, `border-s`, panel-in animation direction reversed for RTL via a separate `@keyframes panel-in-rtl` |
+| Accent stripes | All `border-l-[3px]` → `border-s-[3px]` in `ExpandingRow`, `Notice`, `Debts`, `Dashboard` |
+| Toast | `border-s-[3px]`, `sm:pe-6`, close button `-me-1` |
+| Navigation arrows | `ArrowRight` / `ChevronRight` directional indicators get `rtl-flip` (scaleX(-1)); calendar nav chevrons intentionally kept physical (left=past) |
+| List indentation | `ms-6` / `ms-2` / `ms-auto` / `me-` throughout screens and primitives |
+| Charts | Average label `end-0`; Progress overflow indicator `end-0` |
+| Transactions audit tree | `border-s`, `ps-4`, dot `start` positioned |
+| Urdu font stack | Applied via `[dir=rtl]` selector in index.css; numbers keep `direction: ltr` |
+| i18n | Added 'Join' and 'Pocketa' Urdu translations; page title in topbar runs through `useT()` |
+| Supabase Realtime | `alter publication supabase_realtime add table public.ops` — push notifications for cross-device sync |
+
+Remaining: a contrast pass in both themes at 375px and 1280px.

@@ -30,6 +30,8 @@ const UR: Record<string, string> = {
   'Goals': 'اہداف',
   'Analytics': 'تجزیہ',
   'Settings': 'ترتیبات',
+  'Join': 'شامل ہوں',
+  'Pocketa': 'پاکٹہ',
 
   // QuickAdd
   'Add transaction': 'لین دین شامل کریں',

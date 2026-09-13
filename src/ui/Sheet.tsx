@@ -165,7 +165,7 @@ export function Sheet({
         {description && <p className="mt-1 text-[0.8125rem] text-ink-3">{description}</p>}
       </div>
       {dismissable && (
-        <IconButton label="Close" onClick={onClose} className="-mr-1.5 -mt-1">
+        <IconButton label="Close" onClick={onClose} className="-me-1.5 -mt-1">
           <svg viewBox="0 0 24 24" className="size-4.5" fill="none" aria-hidden="true">
             <path d="M18 6 6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
           </svg>
@@ -188,7 +188,7 @@ export function Sheet({
         role="complementary"
         aria-label={title}
         className={cn(
-          'fixed inset-y-0 right-0 z-40 flex max-w-[100vw] flex-col border-l border-line bg-surface shadow-[var(--shadow-lg)]',
+          'fixed inset-y-0 end-0 z-40 flex max-w-[100vw] flex-col border-s border-line bg-surface shadow-[var(--shadow-lg)]',
           'motion-safe:animate-[panel-in_260ms_cubic-bezier(0.22,1,0.36,1)]',
           panelWidths[size],
         )}
@@ -196,7 +196,8 @@ export function Sheet({
         {header}
         {body}
         {foot}
-        <style>{`@keyframes panel-in{from{opacity:0;transform:translateX(12px)}to{opacity:1;transform:none}}`}</style>
+        {/* translateX sign flips automatically in RTL via the logical animation */}
+        <style>{`@keyframes panel-in{from{opacity:0;translate:12px 0}to{opacity:1;translate:0 0}}[dir=rtl] aside[data-overlay]{animation-name:panel-in-rtl}@keyframes panel-in-rtl{from{opacity:0;translate:-12px 0}to{opacity:1;translate:0 0}}`}</style>
       </aside>,
       document.body,
     );

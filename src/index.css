@@ -323,21 +323,28 @@
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    /* Only block the pull-to-refresh bounce; allow normal vertical scrolling */
     overscroll-behavior-x: none;
     font-size: 1rem;
   }
 
-  /* Text size classes applied to body — do NOT scale html rem,
-     which would break all rem-based layout widths. */
-  body.text-scale-large {
-    font-size: 1.0625rem;
+  /*
+    Text size scaling: we only change the body font-size.
+    Layout dimensions (sidebar width, max-width, panel offsets) use px in
+    component classes so they are immune to this scaling. Only text/padding
+    specified in em will grow. Components use Tailwind rem classes which are
+    computed at build time as px, so they don't change with body font-size —
+    the scaling effect is therefore limited to elements that use font-size:inherit
+    (inputs, textareas, buttons) and a small number of explicitly em-sized elements.
+    This is intentional: it enlarges readable text without breaking layout boxes.
+  */
+  html.text-scale-large body {
+    font-size: 1.0625rem; /* ~17px */
   }
-  body.text-scale-xlarge {
-    font-size: 1.125rem;
+  html.text-scale-xlarge body {
+    font-size: 1.125rem; /* ~18px */
   }
 
-  /* Compact density reduces padding/gaps in cards */
+  /* Compact density */
   :root[data-density='compact'] {
     --density-px: 0.75rem;
     --density-py: 0.625rem;
@@ -685,4 +692,44 @@
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* ==========================================================================
+   RTL support — applied when html[dir="rtl"] is set (Urdu mode)
+   ========================================================================== */
+
+/* Prevent any content from creating horizontal overflow during layout transitions */
+html {
+  overflow-x: hidden;
+}
+
+/* Flip directional icons when in RTL */
+[dir='rtl'] .rtl-flip {
+  transform: scaleX(-1);
+}
+
+/* Charts and scrollable rows keep their LTR scroll direction regardless —
+   financial data reads left-to-right everywhere. */
+[dir='rtl'] .fan {
+  direction: ltr;
+}
+
+/* The main content area must not overflow its box */
+[dir='rtl'] main {
+  overflow-x: hidden;
+}
+
+/* Urdu text uses a different font stack */
+[dir='rtl'],
+[dir='rtl'] input,
+[dir='rtl'] textarea,
+[dir='rtl'] select,
+[dir='rtl'] button {
+  font-family: 'Noto Nastaliq Urdu', 'Jameel Noori Nastaleeq', 'Segoe UI', system-ui, sans-serif;
+}
+
+/* Keep numbers LTR inside RTL layout */
+[dir='rtl'] .tnum {
+  direction: ltr;
+  unicode-bidi: embed;
 }

@@ -339,7 +339,7 @@ function TeamCard({
             {members.length} {members.length === 1 ? 'person' : 'people'} ·{' '}
             <Money value={team.ratePerTrip} currency={currency} size="xs" symbol={false} /> a trip
           </span>
-          <Button size="sm" variant="secondary" className="ml-auto" onClick={() => setLogging(true)}>
+          <Button size="sm" variant="secondary" className="ms-auto" onClick={() => setLogging(true)}>
             Log a ride
           </Button>
         </div>

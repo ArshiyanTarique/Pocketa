@@ -43,6 +43,11 @@ create policy "update own ops" on public.ops
 drop policy if exists "no deletes" on public.ops;
 create policy "no deletes" on public.ops for delete using (false);
 
+-- Enable Realtime so devices receive push notifications when new ops arrive.
+-- This is safe: each device still filters by user_id via row-level security,
+-- so a notification never exposes another user's data.
+alter publication supabase_realtime add table public.ops;
+
 -- ...and nothing may rewrite one either.
 --
 -- Without this, "append-only" was only half true: deletes were refused, but an

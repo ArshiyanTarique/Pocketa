@@ -60,7 +60,7 @@ export function Toaster() {
 
   return (
     <div
-      className="pointer-events-none fixed inset-x-0 bottom-0 z-[60] flex flex-col items-center gap-2 px-4 pb-[calc(env(safe-area-inset-bottom,0px)+5.5rem)] sm:items-end sm:pr-6 sm:pb-6"
+      className="pointer-events-none fixed inset-x-0 bottom-0 z-[60] flex flex-col items-center gap-2 px-4 pb-[calc(env(safe-area-inset-bottom,0px)+5.5rem)] sm:items-end sm:pe-6 sm:pb-6"
       role="region"
       aria-live="polite"
       aria-label="Notifications"
@@ -79,16 +79,16 @@ function ToastRow({ toast: t, onDismiss }: { toast: Toast; onDismiss: () => void
   }, [t.duration, onDismiss]);
 
   const accent = {
-    default: 'border-l-ink-3',
-    positive: 'border-l-positive',
-    negative: 'border-l-negative',
-    warn: 'border-l-warn',
+    default: 'border-s-ink-3',
+    positive: 'border-s-positive',
+    negative: 'border-s-negative',
+    warn: 'border-s-warn',
   }[t.tone];
 
   return (
     <div
       className={cn(
-        'pointer-events-auto flex w-full max-w-sm items-start gap-3 rounded-[--radius] border border-l-[3px]',
+        'pointer-events-auto flex w-full max-w-sm items-start gap-3 rounded-[--radius] border border-s-[3px]',
         'border-line bg-surface px-4 py-3 shadow-[var(--shadow-lg)]',
         'motion-safe:animate-[toast-in_240ms_cubic-bezier(0.22,1,0.36,1)]',
         accent,
@@ -114,7 +114,7 @@ function ToastRow({ toast: t, onDismiss }: { toast: Toast; onDismiss: () => void
       <button
         onClick={onDismiss}
         aria-label="Dismiss"
-        className="-mr-1 shrink-0 rounded p-1 text-ink-4 transition-colors hover:text-ink"
+        className="-me-1 shrink-0 rounded p-1 text-ink-4 transition-colors hover:text-ink"
       >
         <svg viewBox="0 0 24 24" className="size-3.5" fill="none" aria-hidden="true">
           <path d="M18 6 6 18M6 6l12 12" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />

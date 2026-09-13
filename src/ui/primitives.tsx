@@ -43,7 +43,7 @@ export function CardHeader({
         <h2 className="truncate text-[0.9375rem] font-semibold text-ink">{title}</h2>
       </div>
       {action && (
-        <div className="-mr-1 -mt-1 shrink-0 [&_a]:inline-flex [&_a]:min-h-9 [&_a]:items-center [&_a]:px-1">
+        <div className="-me-1 -mt-1 shrink-0 [&_a]:inline-flex [&_a]:min-h-9 [&_a]:items-center [&_a]:px-1">
           {action}
         </div>
       )}
@@ -77,9 +77,9 @@ export function SectionLabel({
   const body = (
     <>
       <span className="text-[0.9375rem] font-semibold text-ink">{children}</span>
-      {count != null && <span className="tnum ml-2 text-[0.8125rem] text-ink-4">{count}</span>}
+      {count != null && <span className="tnum ms-2 text-[0.8125rem] text-ink-4">{count}</span>}
       {(to || onClick) && (
-        <ChevronRight className="ml-auto size-3.5 text-ink-4 transition-transform group-hover:translate-x-0.5" />
+        <ChevronRight className="ms-auto size-3.5 text-ink-4 transition-transform group-hover:translate-x-0.5 rtl-flip" />
       )}
     </>
   );
@@ -180,13 +180,13 @@ export function ExpandingRow({
 }) {
   const id = React.useId();
   const stripes = {
-    positive: 'border-l-positive-fill',
-    negative: 'border-l-negative-fill',
-    warn: 'border-l-warn-fill',
-    accent: 'border-l-accent-fill',
+    positive: 'border-s-positive-fill',
+    negative: 'border-s-negative-fill',
+    warn: 'border-s-warn-fill',
+    accent: 'border-s-accent-fill',
   };
   return (
-    <div className={cn('border-l-[3px]', tone ? stripes[tone] : 'border-l-transparent', className)}>
+    <div className={cn('border-s-[3px]', tone ? stripes[tone] : 'border-s-transparent', className)}>
       <button
         type="button"
         onClick={onToggle}
@@ -387,7 +387,7 @@ export function Progress({
         className={cn('h-full rounded-full transition-[width] duration-500 ease-out', colors[tone])}
         style={{ width: `${pct * 100}%` }}
       />
-      {over && <div className="absolute inset-y-0 right-0 w-1 bg-negative-fill" aria-hidden="true" />}
+      {over && <div className="absolute inset-y-0 end-0 w-1 bg-negative-fill" aria-hidden="true" />}
       {marker != null && marker > 0 && marker < 1 && (
         <div
           className="absolute inset-y-0 w-px bg-ink"
@@ -579,11 +579,11 @@ export function Notice({
   icon?: React.ReactNode;
 }) {
   const stripe = {
-    info: 'border-l-info-fill',
-    warn: 'border-l-warn-fill',
-    negative: 'border-l-negative-fill',
-    positive: 'border-l-positive-fill',
-    neutral: 'border-l-line-strong',
+    info: 'border-s-info-fill',
+    warn: 'border-s-warn-fill',
+    negative: 'border-s-negative-fill',
+    positive: 'border-s-positive-fill',
+    neutral: 'border-s-line-strong',
   };
   const iconTone = {
     info: 'text-info',
@@ -596,7 +596,7 @@ export function Notice({
   return (
     <div
       className={cn(
-        'rounded-[--radius] border border-line border-l-[3px] bg-surface px-3.5 py-2.5',
+        'rounded-[--radius] border border-line border-s-[3px] bg-surface px-3.5 py-2.5',
         stripe[tone],
         className,
       )}

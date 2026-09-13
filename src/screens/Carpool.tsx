@@ -642,7 +642,7 @@ function QuickLog({
               aria-pressed={on}
               onClick={() => setSelected((s) => (on ? s.filter((x) => x !== rider.id) : [...s, rider.id]))}
               className={cn(
-                'flex h-10 items-center gap-2 rounded-full border pl-1 pr-3 text-sm font-semibold transition-all duration-150',
+                'flex h-10 items-center gap-2 rounded-full border ps-1 pe-3 text-sm font-semibold transition-all duration-150',
                 on ? 'border-ink bg-ink text-paper' : 'border-line bg-surface text-ink-2 hover:border-line-strong',
               )}
             >
@@ -659,7 +659,7 @@ function QuickLog({
             </button>
           );
         })}
-        <div className="ml-auto flex items-center gap-3">
+        <div className="ms-auto flex items-center gap-3">
           <Money value={value} currency={carpool.currency} size="sm" weight="semibold" symbol={false} tone={selected.length ? 'default' : 'muted'} />
           <Button variant="primary" size="sm" loading={busy} disabled={selected.length === 0} onClick={() => void log()}>
             Log

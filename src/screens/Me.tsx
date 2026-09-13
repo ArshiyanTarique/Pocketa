@@ -119,7 +119,7 @@ export function Me() {
                 >
                   {s?.figure}
                 </span>
-                <ChevronRight className="size-4 text-ink-4 transition-transform group-hover:translate-x-0.5" />
+                <ChevronRight className="size-4 text-ink-4 transition-transform group-hover:translate-x-0.5 rtl-flip" />
               </Link>
             </li>
           );

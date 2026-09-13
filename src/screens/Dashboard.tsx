@@ -466,11 +466,11 @@ function QuietLine({ to, icon, children }: { to: string; icon: React.ReactNode; 
   return (
     <Link
       to={to}
-      className="flex min-h-11 items-center gap-3 border-l-[3px] border-l-transparent px-3 py-2.5 text-sm text-ink-3 transition-colors hover:bg-surface-2/50 hover:text-ink"
+      className="flex min-h-11 items-center gap-3 border-s-[3px] border-s-transparent px-3 py-2.5 text-sm text-ink-3 transition-colors hover:bg-surface-2/50 hover:text-ink"
     >
       {icon}
       <span className="flex-1">{children}</span>
-      <ArrowRight className="size-3.5 text-ink-4" />
+      <ArrowRight className="size-3.5 text-ink-4 rtl-flip" />
     </Link>
   );
 }
@@ -479,7 +479,7 @@ function Through({ to, children }: { to: string; children: React.ReactNode }) {
   return (
     <Link to={to} className="mt-3 inline-flex items-center gap-1 text-[0.8125rem] font-semibold text-accent hover:underline">
       {children}
-      <ArrowRight className="size-3.5" />
+      <ArrowRight className="size-3.5 rtl-flip" />
     </Link>
   );
 }
@@ -699,7 +699,7 @@ function SampleDataButton() {
       variant="primary"
       size="lg"
       loading={loading}
-      icon={<ArrowRight className="size-4" />}
+      icon={<ArrowRight className="size-4 rtl-flip" />}
       onClick={async () => {
         setLoading(true);
         const result = await loadSampleData();

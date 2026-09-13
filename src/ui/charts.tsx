@@ -248,7 +248,7 @@ export function DailyBars({
           style={{ bottom: `${(average / peak) * 100}%` }}
           aria-hidden="true"
         >
-          <span className="tnum absolute -top-4 right-0 text-[0.625rem] text-ink-4">
+          <span className="tnum absolute -top-4 end-0 text-[0.625rem] text-ink-4">
             avg {hidden ? '••' : formatMoney(average, currency, { compact: true, symbol: false })}
           </span>
         </div>

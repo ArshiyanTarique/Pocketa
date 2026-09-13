@@ -161,7 +161,7 @@ function BudgetCard({
       onToggle={onToggle}
       tone={status.health === 'over' ? 'negative' : status.health === 'on_track' ? null : 'warn'}
       summary={
-        <span className="block pr-2">
+        <span className="block pe-2">
           <span className="flex items-baseline justify-between gap-3">
             <span className="truncate text-sm font-semibold text-ink">{budget.name}</span>
             <span className="tnum shrink-0 text-xs text-ink-4">
@@ -495,7 +495,7 @@ function CategoryToggle({
       disabled={disabled}
       className={cn(
         'flex w-full items-center gap-2.5 rounded-[9px] px-2.5 py-1.5 text-left text-[0.8125rem] transition-colors',
-        nested && 'pl-7',
+        nested && 'ps-7',
         checked ? 'bg-accent-soft font-medium text-accent' : 'text-ink-2 hover:bg-surface-2',
         disabled && 'cursor-default opacity-60',
       )}
