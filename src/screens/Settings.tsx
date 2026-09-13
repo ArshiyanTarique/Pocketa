@@ -310,12 +310,37 @@ function AppearanceSection() {
     { value: 'red',    label: 'Red',    fill: '#e84040' },
     { value: 'slate',  label: 'Slate',  fill: '#4b5563' },
     { value: 'gold',   label: 'Gold',   fill: '#e3b53a' },
+    { value: 'teal',   label: 'Teal',   fill: '#0891b2' },
+    { value: 'orange', label: 'Orange', fill: '#f97316' },
+    { value: 'pink',   label: 'Pink',   fill: '#ec4899' },
   ];
 
   return (
     <div className="space-y-5">
       <div className="overflow-hidden rounded-[--radius-lg] border border-line bg-surface">
-        <div className="space-y-4 px-5 py-5">
+        <div className="space-y-5 px-5 py-5">
+
+          {/* Language toggle — top of appearance so it's easy to find */}
+          <Field label="Language / زبان">
+            <div className="flex gap-2.5">
+              {(['en', 'ur'] as const).map((lang) => (
+                <button
+                  key={lang}
+                  type="button"
+                  onClick={() => void updateSettings({ language: lang })}
+                  className={cn(
+                    'flex-1 rounded-[--radius] border px-4 py-2.5 text-sm font-semibold transition-all',
+                    (settings.language ?? 'en') === lang
+                      ? 'border-accent bg-accent-soft text-accent'
+                      : 'border-line text-ink-2 hover:border-line-strong hover:text-ink',
+                  )}
+                >
+                  {lang === 'en' ? 'English' : 'اردو'}
+                </button>
+              ))}
+            </div>
+          </Field>
+
           <Field label="Theme">
             <Segmented
               value={settings.theme}
@@ -347,6 +372,35 @@ function AppearanceSection() {
                 );
               })}
             </div>
+          </Field>
+
+          <Field
+            label="Text size"
+            hint="Makes all text and numbers larger — helpful on a small screen."
+          >
+            <Segmented
+              value={settings.fontSize ?? 'normal'}
+              onChange={(v) => void updateSettings({ fontSize: v as Settings['fontSize'] })}
+              options={[
+                { value: 'normal', label: 'Normal' },
+                { value: 'large', label: 'Large' },
+                { value: 'xlarge', label: 'Very Large' },
+              ]}
+            />
+          </Field>
+
+          <Field
+            label="Display density"
+            hint="Comfortable gives more breathing room; compact fits more on screen."
+          >
+            <Segmented
+              value={settings.density ?? 'comfortable'}
+              onChange={(v) => void updateSettings({ density: v as Settings['density'] })}
+              options={[
+                { value: 'comfortable', label: 'Comfortable' },
+                { value: 'compact', label: 'Compact' },
+              ]}
+            />
           </Field>
 
           <Toggle

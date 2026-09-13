@@ -30,6 +30,7 @@ import {
   useTags,
   useToday,
 } from '../app/useLedger';
+import { useT } from '../app/i18n';
 import { allocateEvenly, sumMinor, CURRENCIES } from '../core/money';
 import { formatDate } from '../core/dates';
 import { parseNaturalLanguage, describeParse } from '../core/nlp';
@@ -348,9 +349,11 @@ function TransactionForm({
   /** An accepted sentence to pre-fill from. */
   seed?: Parsed | null;
 }) {
+  const t = useT();
   const asOf = useToday();
   const settings = useStore((s) => s.settings);
   const transactions = useStore((s) => s.transactions);
+  const budgets = useStore((s) => s.budgets);
   const createTransaction = useStore((s) => s.createTransaction);
   const updateTransaction = useStore((s) => s.updateTransaction);
   const voidTransaction = useStore((s) => s.voidTransaction);
@@ -370,7 +373,9 @@ function TransactionForm({
   // --- form state --------------------------------------------------------
   const [mode, setMode] = React.useState<Mode>('expense');
   const [amount, setAmount] = React.useState<number | null>(null);
+  const [title, setTitle] = React.useState('');
   const [categoryId, setCategoryId] = React.useState<ID | null>(null);
+  const [budgetId, setBudgetId] = React.useState<ID | ''>('');
   const [accountId, setAccountId] = React.useState<ID | null>(null);
   const [toAccountId, setToAccountId] = React.useState<ID | null>(null);
   const [toAmount, setToAmount] = React.useState<number | null>(null);
@@ -381,12 +386,18 @@ function TransactionForm({
   const [attachmentIds, setAttachmentIds] = React.useState<ID[]>([]);
   // Null means "whatever the account is in"; set only on a deliberate override.
   const [currencyOverride, setCurrencyOverride] = React.useState<string | null>(null);
-  const [showDetails, setShowDetails] = React.useState(false);
+  const [showMoreDetails, setShowMoreDetails] = React.useState(false);
   const [splits, setSplits] = React.useState<Allocation[] | null>(null);
   const [shares, setShares] = React.useState<Share[] | null>(null);
   const [refundOf, setRefundOf] = React.useState<ID | null>(null);
   const [issues, setIssues] = React.useState<Issue[]>([]);
   const [saving, setSaving] = React.useState(false);
+
+  // Budgets relevant to current mode
+  const activeBudgets = React.useMemo(
+    () => budgets.filter((b) => !b.archived),
+    [budgets],
+  );
 
   // --- seed from an edit, a parse, or smart defaults ----------------------
   React.useEffect(() => {
@@ -414,9 +425,9 @@ function TransactionForm({
       setToAccountId(p.toAccountId ?? ((debt && (p.kind === 'borrow' || p.kind === 'repay_in')) ? usual : null));
       setDate(p.date);
       setMerchant(p.merchant ?? '');
+      setTitle(p.merchant ?? '');
       setTags(p.tags);
       if (p.notes) setNotes(p.notes);
-      setShowDetails(true);
       return;
     }
     // Smart defaults: the account and category used most recently.
@@ -438,11 +449,11 @@ function TransactionForm({
       return c === 'expense_category' || c === 'income_category';
     };
     setDate(txn.date);
+    setTitle(txn.merchant ?? txn.notes?.split('\n')[0] ?? '');
     setMerchant(txn.merchant ?? '');
     setNotes(txn.notes ?? '');
     setTags(txn.tags);
     setAttachmentIds(txn.attachmentIds);
-    setShowDetails(true);
 
     if (txn.kind === 'income') {
       setMode('income');
@@ -522,7 +533,8 @@ function TransactionForm({
   function buildDraft(): TxnDraft | null {
     const base = {
       date,
-      merchant: merchant.trim() || null,
+      // Title is the primary label; merchant is used if title is blank (for backwards compat)
+      merchant: title.trim() || merchant.trim() || null,
       notes: notes.trim() || null,
       tags,
       attachmentIds,
@@ -616,12 +628,14 @@ function TransactionForm({
 
     if (addAnother && !editingId) {
       setAmount(null);
+      setTitle('');
       setMerchant('');
       setNotes('');
       setSplits(null);
       setShares(null);
       setAttachmentIds([]);
       setCurrencyOverride(null);
+      setBudgetId('');
       setIssues([]);
     } else {
       onClose();
@@ -667,36 +681,62 @@ function TransactionForm({
         </div>
       )}
 
-      {/* Amount comes first: it is what the user came here to type. */}
-      <div>
-        <div className="mb-1.5 flex items-baseline justify-between gap-2">
-          <label htmlFor="quickadd-amount" className="text-[0.8125rem] font-medium text-ink-2">
-            Amount
-          </label>
-          <CurrencyChip
-            value={txnCurrency}
-            accountCurrency={accountCurrency}
-            baseCurrency={settings.baseCurrency}
-            rates={settings.fxRates}
-            onChange={(c) => setCurrencyOverride(c === accountCurrency ? null : c)}
+      {/* Title — what is this for? Simple, human-readable label */}
+      <Field label={t('Title')} htmlFor="qa-title">
+        <TextInput
+          id="qa-title"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder={
+            mode === 'expense' ? 'e.g. Groceries, Petrol, Rent…'
+            : mode === 'income' ? 'e.g. Salary, Freelance…'
+            : 'What is this for?'
+          }
+          autoComplete="off"
+          list="qa-merchants"
+        />
+        <datalist id="qa-merchants">
+          {merchants.slice(0, 40).map((m) => (
+            <option key={m} value={m} />
+          ))}
+        </datalist>
+      </Field>
+
+      {/* Amount + date side by side — the two most critical fields */}
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div>
+          <div className="mb-1.5 flex items-baseline justify-between gap-2">
+            <label htmlFor="quickadd-amount" className="text-[0.8125rem] font-medium text-ink-2">
+              {t('Amount')}
+            </label>
+            <CurrencyChip
+              value={txnCurrency}
+              accountCurrency={accountCurrency}
+              baseCurrency={settings.baseCurrency}
+              rates={settings.fxRates}
+              onChange={(c) => setCurrencyOverride(c === accountCurrency ? null : c)}
+            />
+          </div>
+          <AmountInput
+            id="quickadd-amount"
+            value={amount}
+            onChange={setAmount}
+            currency={txnCurrency}
+            size="hero"
+            autoFocus
+            onEnter={() => void save(false)}
           />
         </div>
-        <AmountInput
-          id="quickadd-amount"
-          value={amount}
-          onChange={setAmount}
-          currency={txnCurrency}
-          size="hero"
-          autoFocus
-          onEnter={() => void save(false)}
-        />
-        {needsRate && (
-          <Notice tone="warn" className="mt-2.5">
-            No exchange rate is set for {txnCurrency}. Add one in Settings before saving, so the
-            amount can be reported in {settings.baseCurrency}.
-          </Notice>
-        )}
+        <Field label={t('Date')} htmlFor="qa-date">
+          <DateInput id="qa-date" value={date} onChange={setDate} />
+        </Field>
       </div>
+
+      {needsRate && (
+        <Notice tone="warn">
+          No exchange rate is set for {txnCurrency}. Add one in Settings before saving.
+        </Notice>
+      )}
 
       {mode === 'refund' && (
         <Field
@@ -715,13 +755,25 @@ function TransactionForm({
       )}
 
       {needsCategory && !splits && (
-        <Field label="Category">
+        <Field label={t('Category')}>
           <CategoryPicker
             id="qa-category"
             categories={categories}
             value={categoryId}
             onChange={setCategoryId}
           />
+        </Field>
+      )}
+
+      {/* Budget selector — expense and income only */}
+      {(mode === 'expense' || mode === 'income') && activeBudgets.length > 0 && (
+        <Field label={t('Budget')} optional hint="Tag this transaction to a budget to track it there.">
+          <Select value={budgetId} onChange={(e) => setBudgetId(e.target.value)}>
+            <option value="">No budget</option>
+            {activeBudgets.map((b) => (
+              <option key={b.id} value={b.id}>{b.name}</option>
+            ))}
+          </Select>
         </Field>
       )}
 
@@ -743,7 +795,7 @@ function TransactionForm({
           </Field>
         </div>
       ) : (
-        <Field label={mode === 'income' || mode === 'refund' ? 'Into' : 'Paid from'}>
+        <Field label={mode === 'income' || mode === 'refund' ? t('Into') : t('Paid from')}>
           <div id="qa-account" tabIndex={-1} className="outline-none">
             <ChipGroup
               value={accountId}
@@ -819,42 +871,32 @@ function TransactionForm({
         </div>
       )}
 
+      {/* Extra details — collapsed by default to keep form simple */}
       <button
-        onClick={() => setShowDetails((v) => !v)}
+        onClick={() => setShowMoreDetails((v) => !v)}
         className="flex w-full items-center justify-between rounded-[10px] px-1 py-2 text-[0.8125rem] font-medium text-ink-2 transition-colors hover:text-ink"
       >
-        <span>Date, merchant, notes and tags</span>
-        <ChevronDown className={cn('size-4 transition-transform', showDetails && 'rotate-180')} />
+        <span>Notes, tags &amp; receipt</span>
+        <ChevronDown className={cn('size-4 transition-transform', showMoreDetails && 'rotate-180')} />
       </button>
 
-      {showDetails && (
+      {showMoreDetails && (
         <div className="space-y-3.5 rounded-[--radius] border border-line bg-surface-2/50 p-4 fade-in">
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Field label="Date" htmlFor="qa-date">
-              <DateInput id="qa-date" value={date} onChange={setDate} />
-            </Field>
-            <Field label="Merchant" htmlFor="qa-merchant" optional>
-              <TextInput
-                id="qa-merchant"
-                list="qa-merchants"
-                value={merchant}
-                onChange={(e) => setMerchant(e.target.value)}
-                placeholder="Where was this?"
-                autoComplete="off"
-              />
-              <datalist id="qa-merchants">
-                {merchants.slice(0, 40).map((m) => (
-                  <option key={m} value={m} />
-                ))}
-              </datalist>
-            </Field>
-          </div>
+          <Field label="Merchant / Shop" htmlFor="qa-merchant" optional>
+            <TextInput
+              id="qa-merchant"
+              value={merchant}
+              onChange={(e) => setMerchant(e.target.value)}
+              placeholder="Shop or payee name"
+              autoComplete="off"
+            />
+          </Field>
 
-          <Field label="Tags" optional>
+          <Field label={t('Tags')} optional>
             <TagInput value={tags} onChange={setTags} suggestions={knownTags.slice(0, 10)} />
           </Field>
 
-          <Field label="Notes" optional>
+          <Field label={t('Notes')} optional>
             <Textarea
               value={notes}
               rows={2}
@@ -863,7 +905,7 @@ function TransactionForm({
             />
           </Field>
 
-          <Field label="Receipt" optional>
+          <Field label={t('Receipt')} optional>
             <AttachmentPicker
               attachmentIds={attachmentIds}
               onChange={setAttachmentIds}
@@ -874,7 +916,7 @@ function TransactionForm({
       )}
 
       {issues.length > 0 && (
-        <Notice tone="negative" title="This cannot be saved yet">
+        <Notice tone="negative" title={t('This cannot be saved yet')}>
           <ul className="space-y-1">
             {issues.map((issue, i) => (
               <li key={i}>{issue.message}</li>
@@ -886,11 +928,11 @@ function TransactionForm({
       <div className="sticky bottom-0 -mx-5 flex gap-2.5 border-t border-line bg-surface px-5 py-3 sm:-mx-6 sm:px-6">
         {!editingId && (
           <Button variant="secondary" onClick={() => void save(true)} disabled={saving}>
-            Save & add
+            {t('Save & add')}
           </Button>
         )}
         <Button variant="primary" full loading={saving} onClick={() => void save(false)}>
-          {editingId ? 'Save changes' : 'Save'}
+          {editingId ? t('Save changes') : t('Save')}
         </Button>
       </div>
 

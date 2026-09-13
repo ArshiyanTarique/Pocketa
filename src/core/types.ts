@@ -393,7 +393,7 @@ export interface Settings {
   fxRates: Record<string, number>;
   fxUpdatedAt: ISOTimestamp | null;
   theme: 'light' | 'dark' | 'system';
-  accentColor: 'gold' | 'blue' | 'green' | 'red' | 'purple' | 'slate';
+  accentColor: 'gold' | 'blue' | 'green' | 'red' | 'purple' | 'slate' | 'teal' | 'orange' | 'pink';
   /** Custom avatar — overrides the Google profile photo when set. */
   avatarUrl: string | null;
   weekStartsOn: 0 | 1;
@@ -406,6 +406,12 @@ export interface Settings {
   hideAmounts: boolean;
   onboarded: boolean;
   deviceId: string;
+  /** UI language: 'en' = English, 'ur' = Urdu */
+  language: 'en' | 'ur';
+  /** Font size scale: 'normal' | 'large' | 'xlarge' */
+  fontSize: 'normal' | 'large' | 'xlarge';
+  /** Display density: 'comfortable' | 'compact' */
+  density: 'comfortable' | 'compact';
   createdAt: ISOTimestamp;
   updatedAt: ISOTimestamp;
 }

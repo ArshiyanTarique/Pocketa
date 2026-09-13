@@ -81,6 +81,7 @@ export function Shell({
         )}
       >
         <TopBar />
+        {/* min-h ensures the page fills the screen; natural document scroll handles overflow */}
         <main
           className="mx-auto w-full max-w-[68rem] px-4 pb-28 pt-4 sm:px-6 lg:pb-10 lg:pt-5"
           key={route.path}

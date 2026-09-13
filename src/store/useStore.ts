@@ -142,6 +142,11 @@ export interface StoreActions {
    * ids, so a caller can point a debt at them straight away.
    */
   addPerson(name: string, contact?: string | null): Promise<{ personId: ID; receivableId: ID; payableId: ID }>;
+  /**
+   * Delete a person and both of their ledger accounts. Only safe when the
+   * balance is zero — the caller is responsible for checking first.
+   */
+  deletePerson(personId: ID): Promise<void>;
 
   updateSettings(patch: Partial<Settings>): Promise<void>;
 
@@ -189,6 +194,9 @@ const EMPTY_SETTINGS: Settings = {
   hideAmounts: false,
   onboarded: false,
   deviceId: 'unknown',
+  language: 'en',
+  fontSize: 'normal',
+  density: 'comfortable',
   createdAt: nowIso(),
   updatedAt: nowIso(),
 };
@@ -1038,6 +1046,52 @@ export const useStore = create<Store>()((set, get) => ({
     });
 
     return { personId: person.id, receivableId: receivable.id, payableId: payable.id };
+  },
+
+  async deletePerson(personId) {
+    const state = get();
+    const person = state.people.find((p) => p.id === personId);
+    if (!person) return;
+
+    // Remove the person's linked accounts (receivable + payable).
+    const linkedAccounts = state.accounts.filter((a) => a.personId === personId);
+    const linkedAccountIds = linkedAccounts.map((a) => a.id);
+
+    // Void any live transactions that touch those accounts so balances are consistent.
+    const affected = state.transactions.filter(
+      (t) => !t.voided && t.postings.some((p) => linkedAccountIds.includes(p.accountId)),
+    );
+    const voided = affected.map((t) => ({
+      ...t,
+      voided: true,
+      voidedAt: nowIso(),
+      updatedAt: nowIso(),
+    }));
+
+    // Archive debts for this person.
+    const debtsToRemove = state.debts.filter((d) => d.personId === personId);
+
+    await commit({
+      write: async (d) => {
+        await d.people.delete(personId);
+        if (linkedAccountIds.length) await d.accounts.bulkDelete(linkedAccountIds);
+        if (voided.length) await d.transactions.bulkPut(voided);
+        if (debtsToRemove.length) await d.debts.bulkDelete(debtsToRemove.map((d) => d.id));
+      },
+      apply: (s) => ({
+        people: s.people.filter((p) => p.id !== personId),
+        accounts: s.accounts.filter((a) => !linkedAccountIds.includes(a.id)),
+        transactions: s.transactions.map((t) => voided.find((v) => v.id === t.id) ?? t),
+        debts: s.debts.filter((d) => d.personId !== personId),
+      }),
+      log: {
+        type: 'account.archived',
+        entity: 'person',
+        entityId: personId,
+        summary: `Deleted ${person.name}`,
+        snapshot: { ...person, deleted: true },
+      },
+    });
   },
 
   // -------------------------------------------------------------------------

@@ -1,10 +1,10 @@
 import * as React from 'react';
-import { HandCoins, MessageCircle, Plus, UserPlus, Users } from 'lucide-react';
+import { HandCoins, MessageCircle, Pencil, Plus, Trash2, UserPlus, Users } from 'lucide-react';
 import { Badge, Button, EmptyState, Notice, Segmented } from '../ui/primitives';
 import { Money } from '../ui/Money';
 import { cn } from '../ui/cn';
 import { Reckoning } from '../ui/Reckoning';
-import { Sheet } from '../ui/Sheet';
+import { Sheet, Confirm } from '../ui/Sheet';
 import { AmountInput, DateInput, Field, Select, TextInput, Textarea } from '../ui/fields';
 import { TransactionRow } from '../components/TransactionRow';
 import { useIncremental } from '../ui/useIncremental';
@@ -26,6 +26,7 @@ export function Debts() {
   const hidden = settings.hideAmounts;
 
   const [addingPerson, setAddingPerson] = React.useState(false);
+  const [editingPerson, setEditingPerson] = React.useState<Person | null>(null);
   const [recording, setRecording] = React.useState<{
     direction: Direction;
     personAccountId?: ID;
@@ -147,6 +148,7 @@ export function Debts() {
                 onToggle={() => setOpenId((id) => (id === row.person.id ? null : row.person.id))}
                 onRecord={(direction, personAccountId, mode) => setRecording({ direction, personAccountId, mode })}
                 onHistory={(id) => setDetailId(id)}
+                onEdit={(person) => setEditingPerson(person)}
               />
             </li>
           ))}
@@ -164,6 +166,12 @@ export function Debts() {
       )}
 
       {addingPerson && <PersonEditor onClose={() => setAddingPerson(false)} />}
+      {editingPerson && (
+        <PersonEditor
+          person={editingPerson}
+          onClose={() => setEditingPerson(null)}
+        />
+      )}
       {recording && (
         <RecordDebt
           direction={recording.direction}
@@ -207,6 +215,7 @@ function PersonDebtRow({
   onToggle,
   onRecord,
   onHistory,
+  onEdit,
 }: {
   row: PersonRow;
   hidden: boolean;
@@ -215,12 +224,15 @@ function PersonDebtRow({
   onToggle: () => void;
   onRecord: (direction: Direction, personAccountId: ID, mode: 'new' | 'settle') => void;
   onHistory: (accountId: ID) => void;
+  onEdit: (person: Person) => void;
 }) {
   const transactions = useStore((s) => s.transactions);
   const debts = useStore((s) => s.debts);
+  const deletePerson = useStore((s) => s.deletePerson);
   const accountMap = useAccountMap();
   const asOf = useToday();
   const { person, recv, pay, theyOwe, youOwe, net } = row;
+  const [confirmDelete, setConfirmDelete] = React.useState(false);
 
   const recent = React.useMemo(() => {
     if (!open) return [];

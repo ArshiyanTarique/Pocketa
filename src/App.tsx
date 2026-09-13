@@ -30,7 +30,7 @@ const JoinInvite = React.lazy(() => import('./screens/JoinInvite').then((m) => (
 // Accent color presets — mapped to CSS custom properties on :root
 // ---------------------------------------------------------------------------
 
-type AccentColor = 'gold' | 'blue' | 'green' | 'red' | 'purple' | 'slate';
+type AccentColor = 'gold' | 'blue' | 'green' | 'red' | 'purple' | 'slate' | 'teal' | 'orange' | 'pink';
 
 const ACCENTS: Record<AccentColor, {
   accent: string; fill: string; hover: string; soft: string; ink: string;
@@ -41,16 +41,36 @@ const ACCENTS: Record<AccentColor, {
   red:    { accent: '#b52b2b', fill: '#e84040', hover: '#d43030', soft: '#fde8e8', ink: '#ffffff' },
   purple: { accent: '#683c8d', fill: '#a072cf', hover: '#8f60bc', soft: '#ede2f6', ink: '#ffffff' },
   slate:  { accent: '#374151', fill: '#4b5563', hover: '#374151', soft: '#e5e7eb', ink: '#ffffff' },
+  teal:   { accent: '#0e7490', fill: '#0891b2', hover: '#0e7490', soft: '#cffafe', ink: '#ffffff' },
+  orange: { accent: '#c2410c', fill: '#f97316', hover: '#ea6d04', soft: '#ffedd5', ink: '#ffffff' },
+  pink:   { accent: '#be185d', fill: '#ec4899', hover: '#db2777', soft: '#fce7f3', ink: '#ffffff' },
 };
 
-export function applyAccent(color: AccentColor) {
-  const p = ACCENTS[color] ?? ACCENTS.blue;
+export function applyAccent(color: string) {
+  const p = ACCENTS[color as AccentColor] ?? ACCENTS.blue;
   const r = document.documentElement;
   r.style.setProperty('--accent',       p.accent);
   r.style.setProperty('--accent-fill',  p.fill);
   r.style.setProperty('--accent-hover', p.hover);
   r.style.setProperty('--accent-soft',  p.soft);
   r.style.setProperty('--accent-ink',   p.ink);
+}
+
+function applyFontSize(size: string) {
+  const r = document.documentElement;
+  const scale = size === 'large' ? '1.1' : size === 'xlarge' ? '1.25' : '1';
+  r.style.setProperty('--font-scale', scale);
+}
+
+function applyDensity(density: string) {
+  const r = document.documentElement;
+  r.dataset.density = density ?? 'comfortable';
+}
+
+function applyLanguage(lang: string) {
+  const r = document.documentElement;
+  r.lang = lang === 'ur' ? 'ur' : 'en';
+  r.dir = lang === 'ur' ? 'rtl' : 'ltr';
 }
 
 
@@ -74,6 +94,9 @@ function Boot() {
   const init = useStore((s) => s.init);
   const theme = useStore((s) => s.settings.theme);
   const accentColor = useStore((s) => s.settings.accentColor);
+  const fontSize = useStore((s) => s.settings.fontSize ?? 'normal');
+  const density = useStore((s) => s.settings.density ?? 'comfortable');
+  const language = useStore((s) => s.settings.language ?? 'en');
   const [quickAdd, setQuickAdd] = React.useState(false);
   const [editingId, setEditingId] = React.useState<string | null>(null);
 
@@ -124,8 +147,23 @@ function Boot() {
 
   // Apply the accent color whenever it changes.
   React.useEffect(() => {
-    applyAccent((accentColor ?? 'blue') as AccentColor);
+    applyAccent((accentColor ?? 'blue') as string);
   }, [accentColor]);
+
+  // Apply font size scale.
+  React.useEffect(() => {
+    applyFontSize(fontSize);
+  }, [fontSize]);
+
+  // Apply density.
+  React.useEffect(() => {
+    applyDensity(density);
+  }, [density]);
+
+  // Apply language / RTL direction.
+  React.useEffect(() => {
+    applyLanguage(language);
+  }, [language]);
 
   // N adds a transaction from anywhere, the way a ledger app should.
   React.useEffect(() => {
