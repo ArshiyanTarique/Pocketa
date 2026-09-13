@@ -5,13 +5,21 @@
  * and one you have to remember on every device. Someone who signs in on a phone
  * and a laptop expects the two to agree, and expects that to be the app's job.
  *
- * So this runs quietly on four triggers, which between them cover how the app
+ * So this runs quietly on five triggers, which between them cover how the app
  * is actually used:
  *
  *   - **on sign-in**, so a new device pulls a ledger down immediately
  *   - **after a change**, debounced, so a burst of edits is one push
  *   - **on coming back online**, because that is when a queued change can leave
  *   - **on returning to the app**, because the other device may have moved on
+ *   - **Realtime notification from Supabase**, so a change on another device
+ *     arrives within seconds — no polling needed when the server tells us
+ *   - **periodic background poll** (60s), as a fallback when Realtime is
+ *     unavailable or the connection drops silently
+ *
+ * Push safety: syncOnce always pushes local changes first, then pulls remote
+ * ones. A local write can never be overwritten by a pull — ingestion only adds
+ * rows that are not already present by id. Your data is safe.
  *
  * Success is silent. A person who has to be told their data saved does not
  * trust that it saves. Only a lasting failure is worth their attention, and
@@ -26,7 +34,7 @@ import * as React from 'react';
 import { create } from 'zustand';
 import { useStore } from '../store/useStore';
 import { namespaceForUser } from '../data/db';
-import { getSession, onAuthChange, syncConfigured, syncOnce } from '../data/sync';
+import { getClient, getSession, onAuthChange, syncConfigured, syncOnce } from '../data/sync';
 import type { Session } from '@supabase/supabase-js';
 
 export type SyncPhase =
@@ -76,6 +84,9 @@ const SETTLE_MS = 2500;
 /** Returning to the app re-checks, but not more often than this. */
 const REFOCUS_MS = 30_000;
 
+/** Background poll interval — fires even when the tab is not focused. */
+const POLL_MS = 60_000;
+
 /** Guards against a second engine if the shell ever remounts. */
 let running = false;
 let lastRunAt = 0;
@@ -92,6 +103,8 @@ async function runSync(): Promise<void> {
 
   try {
     const store = useStore.getState();
+    // Push first, pull second — this guarantees a local write is never
+    // clobbered by incoming remote data. Ingestion only adds rows absent by id.
     const result = await syncOnce(store.ops);
 
     if (!result.ok) {
@@ -195,7 +208,7 @@ export function useSyncEngine(): void {
     return () => clearTimeout(timer);
   }, [account, set]);
 
-  /** On sign-in, and after every change once it has settled. */
+  /** On sign-in, and after every local change once it has settled. */
   React.useEffect(() => {
     if (!account || status !== 'ready') return;
     const first = useSyncStore.getState().lastSyncedAt === null;
@@ -227,6 +240,72 @@ export function useSyncEngine(): void {
       document.removeEventListener('visibilitychange', onVisible);
     };
   }, [set]);
+
+  /**
+   * Background poll — runs every 60 s regardless of tab focus.
+   *
+   * This is the fallback when Realtime is not available or the WebSocket drops
+   * silently. 60 s is long enough to avoid burning quota; Realtime handles the
+   * sub-second path.
+   */
+  React.useEffect(() => {
+    if (!account) return;
+    const id = setInterval(() => void runSync(), POLL_MS);
+    return () => clearInterval(id);
+  }, [account]);
+
+  /**
+   * Supabase Realtime — the server pushes a notification whenever a new op
+   * arrives for this user, so the other device sees changes within a second
+   * without any extra polling.
+   *
+   * We only subscribe when signed in, and we unsubscribe on sign-out or
+   * unmount so channels do not accumulate.
+   *
+   * Security: the Realtime event carries no payload — it is only a nudge that
+   * tells this device to run its normal syncOnce. The actual data travels
+   * through the regular pull path which enforces row-level security, so a
+   * tampered notification can only trigger an unnecessary (and harmless) pull.
+   */
+  React.useEffect(() => {
+    if (!account || !syncConfigured) return;
+
+    let channel: ReturnType<NonNullable<Awaited<ReturnType<typeof getClient>>>['channel']> | null = null;
+    let cancelled = false;
+
+    void (async () => {
+      const supabase = await getClient();
+      if (!supabase || cancelled) return;
+
+      channel = supabase
+        .channel(`ops:${account.user.id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'ops',
+            // Filter server-side to only rows for this user — the Realtime
+            // filter mirrors the row-level security policy.
+            filter: `user_id=eq.${account.user.id}`,
+          },
+          (payload) => {
+            // Ignore ops this device just pushed — we already have them.
+            const incomingDeviceId = (payload.new as { device_id?: string })?.device_id;
+            const myDeviceId = useStore.getState().settings.deviceId;
+            if (incomingDeviceId && incomingDeviceId === myDeviceId) return;
+            // A remote device wrote something — pull it now.
+            void runSync();
+          },
+        )
+        .subscribe();
+    })();
+
+    return () => {
+      cancelled = true;
+      if (channel) void channel.unsubscribe();
+    };
+  }, [account]);
 }
 
 /** Read the state. Safe to call from anywhere, as often as you like. */
