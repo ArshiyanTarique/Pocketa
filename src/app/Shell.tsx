@@ -76,7 +76,7 @@ export function Shell({
 
       <div
         className={cn(
-          'lg:pl-[4.5rem] transition-[padding] duration-200 ease-out overflow-x-hidden',
+          'lg:pl-[3.5rem] transition-[padding] duration-200 ease-out overflow-x-hidden',
           panels > 0 && 'lg:pr-[26rem]',
         )}
       >
@@ -104,20 +104,25 @@ function Rail({ current, onQuickAdd }: { current: string; onQuickAdd: () => void
   return (
     <aside
       className={cn(
-        'group/rail fixed inset-y-0 left-0 z-30 hidden w-[4.5rem] flex-col border-r border-line bg-surface lg:flex',
+        'group/rail fixed inset-y-0 left-0 z-30 hidden w-[3.5rem] flex-col border-r border-line bg-surface lg:flex',
         'transition-[width] duration-200 ease-out hover:w-[13rem] [&:has(:focus-visible)]:w-[13rem]',
       )}
     >
-      <div className="flex h-14 items-center px-[1.125rem]">
-        <Wordmark compact />
+      {/* Logo — centered when collapsed, left-aligned when expanded */}
+      <div className="flex h-14 items-center justify-center px-0 group-hover/rail:justify-start group-hover/rail:px-3">
+        <img src="/favicon.svg" alt="Pocketa" className="size-7 shrink-0 rounded-[--radius-sm]" />
+        <span className="display ml-2.5 whitespace-nowrap text-[1.0625rem] opacity-0 transition-opacity group-hover/rail:opacity-100 group-has-[:focus-visible]/rail:opacity-100">
+          Pocketa
+        </span>
       </div>
 
-      <div className="px-2.5">
+      <div className="px-2">
         <button
           onClick={onQuickAdd}
           className={cn(
-            'flex h-10 w-full items-center gap-3 overflow-hidden rounded-[--radius] bg-accent-fill px-3',
+            'flex h-9 w-full items-center justify-center gap-3 overflow-hidden rounded-[--radius] bg-accent-fill',
             'font-semibold text-[--accent-ink] transition-all hover:bg-accent-hover active:scale-[0.98]',
+            'group-hover/rail:justify-start group-hover/rail:px-3',
           )}
           aria-label="Add transaction (N)"
         >
@@ -128,7 +133,7 @@ function Rail({ current, onQuickAdd }: { current: string; onQuickAdd: () => void
         </button>
       </div>
 
-      <nav className="mt-3 flex-1 space-y-0.5 overflow-y-auto px-2.5 pb-4">
+      <nav className="mt-2 flex-1 space-y-0.5 overflow-y-auto px-2 pb-4">
         {PRIMARY.map((item) => (
           <RailLink
             key={item.path}
@@ -149,11 +154,12 @@ function RailLink({ item, active }: { item: NavItem; active: boolean }) {
       title={item.label}
       aria-current={active ? 'page' : undefined}
       className={cn(
-        'flex h-10 items-center gap-3 overflow-hidden rounded-[--radius] px-3 transition-colors',
+        'flex h-9 items-center justify-center gap-3 overflow-hidden rounded-[--radius] transition-colors',
+        'group-hover/rail:justify-start group-hover/rail:px-3',
         active ? 'bg-ink text-paper' : 'text-ink-3 hover:bg-surface-2 hover:text-ink',
       )}
     >
-      <Icon className="size-[1.1rem] shrink-0" strokeWidth={active ? 2.2 : 1.8} />
+      <Icon className="size-[1.05rem] shrink-0" strokeWidth={active ? 2.2 : 1.8} />
       <span className="whitespace-nowrap text-[0.8125rem] font-semibold opacity-0 transition-opacity group-hover/rail:opacity-100 group-has-[:focus-visible]/rail:opacity-100">
         {item.label}
       </span>
@@ -161,14 +167,6 @@ function RailLink({ item, active }: { item: NavItem; active: boolean }) {
   );
 }
 
-function Wordmark({ compact = false }: { compact?: boolean }) {
-  return (
-    <Link to="/" className="flex items-center gap-2" aria-label="Pocketa home">
-      <img src="/favicon.svg" alt="Pocketa" className="size-8 rounded-[--radius-sm]" />
-      {!compact && <span className="display text-[1.125rem]">Pocketa</span>}
-    </Link>
-  );
-}
 export function useOnline(): boolean {
   const [online, setOnline] = React.useState(() =>
     typeof navigator === 'undefined' ? true : navigator.onLine,

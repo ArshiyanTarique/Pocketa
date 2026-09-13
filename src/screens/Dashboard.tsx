@@ -49,17 +49,18 @@ export function Dashboard({ onQuickAdd }: { onQuickAdd: () => void }) {
   if (!hasActivity) return <FirstRun onQuickAdd={onQuickAdd} />;
 
   return (
-    <div className="lg:grid lg:grid-cols-[1fr_19rem] lg:gap-8 lg:items-start">
-      {/* Left / main column */}
-      <div className="space-y-8">
+    <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_17rem] lg:gap-6 lg:items-start">
+      {/* Left / main column — minmax(0,1fr) prevents it from overflowing */}
+      <div className="min-w-0 space-y-8">
         <SafeToSpendHero />
         <AccountFanSection />
         <MonthFigures />
         <StatusLines />
       </div>
 
-      {/* Right column — Recent */}
-      <aside className="mt-8 lg:sticky lg:top-[3.5rem] lg:mt-0">
+      {/* Right column — Recent. w-full + overflow-hidden stops it from
+          pushing past the grid boundary at any font size. */}
+      <aside className="mt-8 min-w-0 lg:sticky lg:top-[3.5rem] lg:mt-0">
         <RecentPanel recent={recent} accounts={accounts} hidden={hidden} asOf={asOf} />
       </aside>
     </div>

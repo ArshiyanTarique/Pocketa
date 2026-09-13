@@ -57,9 +57,13 @@ export function applyAccent(color: string) {
 }
 
 function applyFontSize(size: string) {
-  const r = document.documentElement;
-  const scale = size === 'large' ? '1.1' : size === 'xlarge' ? '1.25' : '1';
-  r.style.setProperty('--font-scale', scale);
+  // Apply font size as a body-level class, NOT as html font-size.
+  // Changing html font-size scales ALL rem units including layout widths,
+  // which causes the right column and sidebar to overflow the viewport.
+  const body = document.body;
+  body.classList.remove('text-scale-large', 'text-scale-xlarge');
+  if (size === 'large') body.classList.add('text-scale-large');
+  if (size === 'xlarge') body.classList.add('text-scale-xlarge');
 }
 
 function applyDensity(density: string) {
@@ -67,10 +71,11 @@ function applyDensity(density: string) {
   r.dataset.density = density ?? 'comfortable';
 }
 
-function applyLanguage(lang: string) {
-  const r = document.documentElement;
-  r.lang = lang === 'ur' ? 'ur' : 'en';
-  r.dir = lang === 'ur' ? 'rtl' : 'ltr';
+function applyLanguage(_lang: string) {
+  // Language switching is stored in settings and used by useT() for translated
+  // strings. We do NOT change html[dir] or html[lang] here — switching to RTL
+  // layout breaks all the fixed-width rail, panel, and grid layout that is
+  // built for LTR. Full RTL layout support requires a dedicated design pass.
 }
 
 
