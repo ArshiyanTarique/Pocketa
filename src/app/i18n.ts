@@ -134,7 +134,7 @@ const UR: Record<string, string> = {
   'Add': 'شامل',
   'New': 'نیا',
   'Archive': 'آرکائیو',
-  'Restore': 'بحال',
+  'Restored': 'بحال',
   'Back': 'واپس',
   'Close': 'بند کریں',
   'Confirm': 'تصدیق کریں',

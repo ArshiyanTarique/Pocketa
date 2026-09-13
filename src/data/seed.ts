@@ -152,6 +152,9 @@ export function defaultSettings(deviceId: string, currency: string): Settings {
     hideAmounts: false,
     onboarded: false,
     deviceId,
+    language: 'en',
+    fontSize: 'normal',
+    density: 'comfortable',
     createdAt: ts,
     updatedAt: ts,
   };
