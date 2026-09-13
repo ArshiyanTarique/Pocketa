@@ -19,21 +19,30 @@
 
    That last rule is the identity that survives from the first design: a figure
    in Pocketa always looks like a figure in a ledger.
+   ==========================================================================
+
+   Redesign principles:
+   — Clarity over decoration. Every pixel earns its place.
+   — More whitespace. Finance needs room to breathe.
+   — Fewer borders. Separation through space, not lines.
+   — Typography hierarchy: display for hero, medium for labels, regular for body.
+   — Consistent horizontal rhythm: 1rem mobile / 1.5rem tablet / 2rem desktop.
    ========================================================================== */
 
 @layer base {
   :root {
     /* --- Ground ---------------------------------------------------------- */
-    --paper: #f8f6f2;
+    /* Slightly cooler, more neutral — feels premium, less warm-beige */
+    --paper: #f7f6f4;
     --surface: #ffffff;
-    --surface-2: #f1ede6;
-    --surface-sunken: #e8e3da;
-    --ink: #141416;
-    --ink-2: #44424a;
-    --ink-3: #6b6870;
-    --ink-4: #9b98a0;
-    --line: #e6e1d8;
-    --line-strong: #d0cac0;
+    --surface-2: #f0ede8;
+    --surface-sunken: #e8e4dd;
+    --ink: #111113;
+    --ink-2: #3d3b44;
+    --ink-3: #65636b;
+    --ink-4: #9896a0;
+    --line: #e4dfd7;
+    --line-strong: #cec8be;
 
     /* --- The notes -------------------------------------------------------- */
     /* Text/stroke shades clear 4.5:1 on --paper; fills are the note colour. */
@@ -105,8 +114,8 @@
     /* Tighter than before: cards with 26px corners read as soft and samey. */
     --radius-sm: 6px;
     --radius: 10px;
-    --radius-lg: 14px;
-    --radius-xl: 18px;
+    --radius-lg: 12px;
+    --radius-xl: 16px;
 
     color-scheme: light;
   }
@@ -287,8 +296,8 @@
 
   --radius-sm: 6px;
   --radius-DEFAULT: 10px;
-  --radius-lg: 14px;
-  --radius-xl: 18px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
 
   --shadow-sm: var(--shadow-sm);
   --shadow-md: var(--shadow-md);
@@ -332,7 +341,7 @@
     font-family: var(--font-display);
     font-variation-settings: 'opsz' 96, 'wdth' 100;
     font-weight: 700;
-    letter-spacing: -0.035em;
+    letter-spacing: -0.03em;
     line-height: 1;
     color: var(--ink);
   }
@@ -347,6 +356,17 @@
     letter-spacing: 0.06em;
     text-transform: uppercase;
     color: var(--ink-4);
+  }
+
+  /* Screen-level headings — larger display text */
+  .page-title {
+    font-family: var(--font-display);
+    font-variation-settings: 'opsz' 96, 'wdth' 100;
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    color: var(--ink);
   }
 
   /* Kept for the few places that still want a mono caption. */
@@ -455,7 +475,7 @@
     background: var(--surface);
     border: 1px solid var(--line);
     border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-sm);
+    box-shadow: 0 1px 2px rgb(20 20 22 / 0.04), 0 2px 8px -2px rgb(20 20 22 / 0.06);
   }
 
   .hairline {
@@ -507,16 +527,16 @@
 
   @keyframes fan-focus {
     0% {
-      transform: scale(0.92) translateY(6px);
-      opacity: 0.72;
+      transform: scale(0.94) translateY(4px);
+      opacity: 0.78;
     }
     50% {
       transform: scale(1) translateY(0);
       opacity: 1;
     }
     100% {
-      transform: scale(0.92) translateY(6px);
-      opacity: 0.72;
+      transform: scale(0.94) translateY(4px);
+      opacity: 0.78;
     }
   }
 

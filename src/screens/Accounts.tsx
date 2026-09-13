@@ -13,7 +13,7 @@ import {
   Trash2,
   TrendingUp,
   Wallet } from 'lucide-react';
-import { Card, CardHeader, Badge, Button, EmptyState, Notice, Progress, Dot } from '../ui/primitives';
+import { Badge, Button, EmptyState, Notice, Progress, Dot } from '../ui/primitives';
 import { Money } from '../ui/Money';
 import { Reckoning } from '../ui/Reckoning';
 import { Sheet, Confirm } from '../ui/Sheet';
@@ -76,10 +76,10 @@ export function Accounts() {
   const archivedCount = accounts.filter((a) => CREATABLE.includes(a.class) && a.archived).length;
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <section>
-        <p className="label">Net worth</p>
-        <div className="count-in mt-2 flex flex-wrap items-end justify-between gap-x-6 gap-y-2">
+        <p className="text-[0.6875rem] font-semibold uppercase tracking-widest text-ink-4 mb-3">Net worth</p>
+        <div className="count-in flex flex-wrap items-end justify-between gap-x-6 gap-y-2">
           <Money
             value={netWorth.net}
             currency={settings.baseCurrency}
@@ -88,13 +88,13 @@ export function Accounts() {
             weight="semibold"
             tone={netWorth.net < 0 ? 'negative' : 'default'}
           />
-          <div className="flex gap-5 pb-1.5 text-xs">
-            <span className="flex flex-col">
-              <span className="label">Own</span>
+          <div className="flex gap-6 pb-1.5">
+            <span className="flex flex-col gap-0.5">
+              <span className="text-[0.625rem] font-semibold uppercase tracking-widest text-ink-4">Own</span>
               <Money value={netWorth.assets} currency={settings.baseCurrency} hidden={hidden} size="sm" weight="semibold" symbol={false} />
             </span>
-            <span className="flex flex-col">
-              <span className="label">Owe</span>
+            <span className="flex flex-col gap-0.5">
+              <span className="text-[0.625rem] font-semibold uppercase tracking-widest text-ink-4">Owe</span>
               <Money value={netWorth.liabilities} currency={settings.baseCurrency} hidden={hidden} size="sm" weight="semibold" symbol={false} tone={netWorth.liabilities > 0 ? 'negative' : 'muted'} />
             </span>
           </div>
@@ -105,7 +105,7 @@ export function Accounts() {
       <AccountFan size="lg" onSelect={setDetailId} onAdd={() => setEditing('new')} />
 
       <div className="flex items-center justify-between">
-        <h2 className="display text-[1.0625rem]">Every account</h2>
+        <h2 className="display text-[1.0625rem]">Accounts</h2>
         <Button
           size="sm"
           variant="primary"
@@ -117,20 +117,18 @@ export function Accounts() {
       </div>
 
       {visible.length === 0 ? (
-        <Card>
-          <EmptyState
-            icon={<Wallet className="size-5" />}
-            title="No accounts yet"
-            body="Add the accounts you actually use, then set what is in each of them today. Everything else is worked out from your transactions."
-            action={
-              <Button variant="primary" icon={<Plus className="size-4" />} onClick={() => setEditing('new')}>
-                Add your first account
-              </Button>
-            }
-          />
-        </Card>
+        <EmptyState
+          icon={<Wallet className="size-5" />}
+          title="No accounts yet"
+          body="Add the accounts you actually use, then set what is in each of them today. Everything else is worked out from your transactions."
+          action={
+            <Button variant="primary" icon={<Plus className="size-4" />} onClick={() => setEditing('new')}>
+              Add your first account
+            </Button>
+          }
+        />
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-5">
           {assets.length > 0 && (
             <AccountGroup
               title="Assets"
@@ -202,20 +200,18 @@ function AccountGroup({
   const total = accounts.reduce((sum, a) => sum + (balances.base.get(a.id) ?? 0), 0);
 
   return (
-    <Card>
-      <CardHeader
-        title={title}
-        action={
-          <Money
-            value={title === 'Liabilities' ? -total : total}
-            hidden={hidden}
-            size="sm"
-            weight="medium"
-            tone={title === 'Liabilities' && total !== 0 ? 'negative' : 'default'}
-          />
-        }
-      />
-      <ul className="pb-2">
+    <section>
+      <div className="mb-2 flex items-center justify-between px-0.5">
+        <span className="text-[0.6875rem] font-semibold uppercase tracking-widest text-ink-4">{title}</span>
+        <Money
+          value={title === 'Liabilities' ? -total : total}
+          hidden={hidden}
+          size="sm"
+          weight="semibold"
+          tone={title === 'Liabilities' && total !== 0 ? 'negative' : 'default'}
+        />
+      </div>
+      <ul className="divide-y divide-line rounded-[--radius-lg] border border-line bg-surface overflow-hidden">
         {accounts
           .slice()
           .sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name))
@@ -230,7 +226,7 @@ function AccountGroup({
                 <button
                   onClick={() => onSelect(account.id)}
                   className={cn(
-                    'flex w-full items-center gap-3 px-5 py-3 text-left transition-colors hover:bg-surface-2',
+                    'flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors hover:bg-surface-2/60 sm:px-5',
                     account.archived && 'opacity-55',
                   )}
                 >
@@ -240,7 +236,7 @@ function AccountGroup({
 
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
-                      <span className="truncate text-sm font-medium text-ink">{account.name}</span>
+                      <span className="truncate text-[0.9375rem] font-medium text-ink">{account.name}</span>
                       {account.archived && <Badge tone="neutral">Archived</Badge>}
                       {account.currency !== 'PKR' && <Badge tone="neutral">{account.currency}</Badge>}
                     </div>
@@ -256,19 +252,19 @@ function AccountGroup({
                       currency={account.currency}
                       hidden={hidden}
                       size="sm"
-                      weight="medium"
+                      weight="semibold"
                       tone={balance < 0 ? 'negative' : 'default'}
                     />
                     {credit != null && (
                       <p className="mt-0.5 text-[0.6875rem] text-ink-4">
-                        {hidden ? '••••' : <>available <Money value={credit} currency={account.currency} size="xs" tone="muted" symbol={false} /></>}
+                        {hidden ? '••••' : <>avail. <Money value={credit} currency={account.currency} size="xs" tone="muted" symbol={false} /></>}
                       </p>
                     )}
                   </div>
                 </button>
 
                 {credit != null && account.creditLimit ? (
-                  <div className="px-5 pb-2.5">
+                  <div className="px-4 pb-3 sm:px-5">
                     <Progress
                       value={Math.min(1, Math.abs(Math.min(0, balance)) / account.creditLimit)}
                       tone={
@@ -282,7 +278,7 @@ function AccountGroup({
             );
           })}
       </ul>
-    </Card>
+    </section>
   );
 }
 

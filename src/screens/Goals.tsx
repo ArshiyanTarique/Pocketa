@@ -30,11 +30,11 @@ export function Goals() {
   const totalTarget = active.reduce((sum, g) => sum + g.targetAmount, 0);
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       {active.length > 0 && (
         <section>
-          <p className="label">Set aside</p>
-          <div className="count-in mt-2 flex flex-wrap items-end justify-between gap-x-6 gap-y-2">
+          <p className="text-[0.6875rem] font-semibold uppercase tracking-widest text-ink-4 mb-3">Set aside</p>
+          <div className="count-in flex flex-wrap items-end justify-between gap-x-6 gap-y-2">
             <Money
               value={totalSaved}
               currency={settings.baseCurrency}
@@ -43,19 +43,20 @@ export function Goals() {
               weight="semibold"
             />
             <div className="flex gap-5 pb-1.5">
-              <span className="flex flex-col">
-                <span className="label">Target</span>
+              <span className="flex flex-col gap-0.5">
+                <span className="text-[0.625rem] font-semibold uppercase tracking-widest text-ink-4">Target</span>
                 <Money value={totalTarget} currency={settings.baseCurrency} hidden={hidden} size="sm" weight="semibold" symbol={false} />
               </span>
               {done.length > 0 && (
-                <span className="flex flex-col">
-                  <span className="label">Reached</span>
+                <span className="flex flex-col gap-0.5">
+                  <span className="text-[0.625rem] font-semibold uppercase tracking-widest text-ink-4">Reached</span>
                   <span className="tnum text-[0.8125rem] font-semibold text-positive">{done.length}</span>
                 </span>
               )}
             </div>
           </div>
           <Progress value={totalTarget > 0 ? totalSaved / totalTarget : 0} tone="accent" label="Overall goal progress" className="mt-4" />
+          <div className="reckoning-rule reckoning-rule--total mt-4" aria-hidden="true" />
         </section>
       )}
 
@@ -78,7 +79,7 @@ export function Goals() {
           }
         />
       ) : (
-        <ul className="divide-y divide-line rounded-[--radius] border border-line bg-surface">
+        <ul className="divide-y divide-line rounded-[--radius-lg] border border-line bg-surface overflow-hidden">
           {active.map((goal) => (
             <li key={goal.id}>
               <GoalCard

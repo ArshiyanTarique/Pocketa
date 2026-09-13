@@ -11,7 +11,7 @@ import {
   HandCoins,
   PieChart,
 } from 'lucide-react';
-import { Button, ExpandingRow, Progress, SectionLabel } from '../ui/primitives';
+import { Button, ExpandingRow, Progress } from '../ui/primitives';
 import { Money, Num } from '../ui/Money';
 import { Reckoning } from '../ui/Reckoning';
 import { Sheet } from '../ui/Sheet';
@@ -25,19 +25,9 @@ import { summarisePeriod as summariseCarpool } from '../core/carpool';
 import { balanceOfBase, live } from '../core/projections';
 import { formatDate, formatRelativeDay, monthRange } from '../core/dates';
 import { cn } from '../ui/cn';
-import type { Account } from '../core/types';
+import type { Account, Transaction } from '../core/types';
 import type { BudgetStatus } from '../core/projections';
 
-/**
- * Home answers one question — can I spend, and is anything wrong? — and then
- * gets out of the way.
- *
- * It used to be nine cards and forty numbers. Now it is: the figure, the
- * accounts, three numbers for the month, and then a list of *status lines*
- * that only appear when they have something to say — a bill overdue, a budget
- * heading over, someone owing you, trips unbilled. Each line opens in place;
- * each ends with a way through to its screen. Nothing on this page is a chart.
- */
 export function Dashboard({ onQuickAdd }: { onQuickAdd: () => void }) {
   const accounts = useAccountMap();
   const transactions = useStore((s) => s.transactions);
@@ -52,56 +42,32 @@ export function Dashboard({ onQuickAdd }: { onQuickAdd: () => void }) {
       live(transactions)
         .slice()
         .sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt))
-        .slice(0, 3),
+        .slice(0, 5),
     [transactions],
   );
 
   if (!hasActivity) return <FirstRun onQuickAdd={onQuickAdd} />;
 
   return (
-    <div className="lg:grid lg:grid-cols-[1fr_20rem] lg:gap-6 lg:items-start">
+    <div className="lg:grid lg:grid-cols-[1fr_19rem] lg:gap-8 lg:items-start">
       {/* Left / main column */}
-      <div className="space-y-7">
+      <div className="space-y-8">
         <SafeToSpendHero />
-
-        <section>
-          <div className="mt-1">
-            <AccountFan constrained onAdd={() => navigate('/accounts')} />
-          </div>
-        </section>
-
+        <AccountFanSection />
         <MonthFigures />
-
         <StatusLines />
       </div>
 
-      {/* Right column — Recent, scrollable on desktop */}
-      <aside className="mt-7 lg:sticky lg:top-[4.5rem] lg:mt-0 lg:max-h-[calc(100dvh-5rem)] lg:overflow-y-auto lg:min-w-0">
-        <section>
-          <SectionLabel to="/transactions" className="text-ink-3">Recent</SectionLabel>
-          <ul className="mt-1 divide-y divide-line">
-            {recent.map((txn) => (
-              <li key={txn.id}>
-                <TransactionRow
-                  txn={txn}
-                  accounts={accounts}
-                  hidden={hidden}
-                  showDate
-                  dateLabel={formatRelativeDay(txn.date, asOf)}
-                  onClick={() => navigate(`/transactions/${txn.id}`)}
-                  className="rounded-[--radius] px-2"
-                />
-              </li>
-            ))}
-          </ul>
-        </section>
+      {/* Right column — Recent */}
+      <aside className="mt-8 lg:sticky lg:top-[3.5rem] lg:mt-0">
+        <RecentPanel recent={recent} accounts={accounts} hidden={hidden} asOf={asOf} />
       </aside>
     </div>
   );
 }
 
 // ---------------------------------------------------------------------------
-// The figure
+// Hero — Safe to Spend
 // ---------------------------------------------------------------------------
 
 function SafeToSpendHero() {
@@ -113,29 +79,27 @@ function SafeToSpendHero() {
 
   return (
     <section>
+      <p className="text-[0.6875rem] font-semibold uppercase tracking-widest text-ink-4 mb-3">Left to spend</p>
       <div className="flex items-end justify-between gap-4">
-        <div className="min-w-0">
-          <p className="label mb-2 text-ink-4">Left to spend</p>
-          <div className="count-in">
-            <Money
-              value={safeToSpend.amount}
-              currency={currency}
-              hidden={hidden}
-              size="display"
-              weight="semibold"
-              tone={safeToSpend.shortfall ? 'negative' : 'default'}
-            />
-          </div>
+        <div className="count-in min-w-0">
+          <Money
+            value={safeToSpend.amount}
+            currency={currency}
+            hidden={hidden}
+            size="display"
+            weight="semibold"
+            tone={safeToSpend.shortfall ? 'negative' : 'default'}
+          />
         </div>
         <button
           onClick={() => setExplaining(true)}
           className={cn(
-            'mb-1.5 flex shrink-0 items-center justify-center rounded-full border border-line size-8',
+            'mb-2 flex shrink-0 items-center justify-center rounded-full border border-line size-7',
             'text-ink-4 transition-colors hover:border-accent hover:text-accent',
           )}
           aria-label="How is this calculated?"
         >
-          <Info className="size-3.5" />
+          <Info className="size-3" />
         </button>
       </div>
       <div className="reckoning-rule reckoning-rule--total mt-4" aria-hidden="true" />
@@ -169,7 +133,19 @@ function SafeToSpendHero() {
 }
 
 // ---------------------------------------------------------------------------
-// This month: three figures, one row, no boxes
+// Account fan section
+// ---------------------------------------------------------------------------
+
+function AccountFanSection() {
+  return (
+    <section>
+      <AccountFan constrained onAdd={() => navigate('/accounts')} />
+    </section>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// This month: three figures
 // ---------------------------------------------------------------------------
 
 function MonthFigures() {
@@ -181,12 +157,11 @@ function MonthFigures() {
   const shared = { currency, hidden };
 
   return (
-    <section className="grid grid-cols-3 divide-x divide-line">
-      <MonthFigure label="In" value={month.income} tone="positive" {...shared} />
-      <div className="pl-4">
+    <section>
+      <p className="text-[0.6875rem] font-semibold uppercase tracking-widest text-ink-4 mb-3">This month</p>
+      <div className="grid grid-cols-3 divide-x divide-line rounded-[--radius-lg] border border-line bg-surface overflow-hidden">
+        <MonthFigure label="In" value={month.income} tone="positive" {...shared} />
         <MonthFigure label="Out" value={month.expenses} {...shared} />
-      </div>
-      <div className="pl-4">
         <MonthFigure label={kept ? 'Kept' : 'Over'} value={Math.abs(month.savings)} tone={kept ? 'default' : 'negative'} {...shared} />
       </div>
     </section>
@@ -207,15 +182,31 @@ function MonthFigure({
   hidden: boolean;
 }) {
   return (
-    <button type="button" onClick={() => navigate('/analytics')} className="group flex flex-col gap-0.5 px-1 text-left">
-      <span className="label text-ink-4 group-hover:text-ink-3">{label}</span>
-      <Money value={value} currency={currency} hidden={hidden} size="lg" weight="semibold" symbol={false} compact tone={tone} animate />
+    <button
+      type="button"
+      onClick={() => navigate('/analytics')}
+      className="group flex flex-col gap-1 px-4 py-3.5 text-left transition-colors hover:bg-surface-2/50"
+    >
+      <span className="text-[0.6875rem] font-medium uppercase tracking-wide text-ink-4 group-hover:text-ink-3">
+        {label}
+      </span>
+      <Money
+        value={value}
+        currency={currency}
+        hidden={hidden}
+        size="base"
+        weight="semibold"
+        symbol={false}
+        compact
+        tone={tone}
+        animate
+      />
     </button>
   );
 }
 
 // ---------------------------------------------------------------------------
-// Status lines — present only when there is something to say
+// Status lines
 // ---------------------------------------------------------------------------
 
 function StatusLines() {
@@ -234,7 +225,6 @@ function StatusLines() {
   const [open, setOpen] = React.useState<string | null>(null);
   const toggle = (key: string) => setOpen((k) => (k === key ? null : key));
 
-  // --- the facts ------------------------------------------------------------
   const overdue = overview.overdue;
   const soon = overview.bills.filter((b) => b.status !== 'overdue' && b.daysUntilDue <= 7).slice(0, 3);
   const atRisk = overview.budgets.filter((b) => b.health === 'over' || (b.health === 'projected_over' && b.projectionReliable));
@@ -270,7 +260,7 @@ function StatusLines() {
 
   const lines: React.ReactNode[] = [];
 
-  // --- overdue --------------------------------------------------------------
+  // Overdue bills
   if (overdue.length > 0) {
     lines.push(
       <ExpandingRow
@@ -278,11 +268,11 @@ function StatusLines() {
         tone="negative"
         open={open === 'overdue'}
         onToggle={() => toggle('overdue')}
-        leading={<TriangleAlert className="size-4 text-negative" />}
+        leading={<TriangleAlert className="size-3.5 text-negative" />}
         summary={
           <span className="text-sm font-semibold text-ink">
             {overdue.length === 1
-              ? `${overdue[0].recurrence.name} overdue ${Math.abs(overdue[0].daysUntilDue)}d`
+              ? `${overdue[0].recurrence.name} overdue`
               : `${overdue.length} bills overdue`}
           </span>
         }
@@ -304,14 +294,14 @@ function StatusLines() {
     );
   }
 
-  // --- due soon -------------------------------------------------------------
+  // Due soon
   if (soon.length > 0) {
     lines.push(
       <ExpandingRow
         key="soon"
         open={open === 'soon'}
         onToggle={() => toggle('soon')}
-        leading={<CalendarClock className="size-4 text-ink-3" />}
+        leading={<CalendarClock className="size-3.5 text-ink-3" />}
         summary={
           <span className="text-sm text-ink">
             <span className="font-semibold">{soon[0].recurrence.name}</span>
@@ -337,7 +327,7 @@ function StatusLines() {
     );
   }
 
-  // --- budgets --------------------------------------------------------------
+  // Budgets at risk
   if (atRisk.length > 0) {
     lines.push(
       <ExpandingRow
@@ -345,7 +335,7 @@ function StatusLines() {
         tone="warn"
         open={open === 'budgets'}
         onToggle={() => toggle('budgets')}
-        leading={<PieChart className="size-4 text-warn" />}
+        leading={<PieChart className="size-3.5 text-warn" />}
         summary={
           <span className="text-sm font-semibold text-ink">
             {atRisk.length === 1
@@ -376,13 +366,13 @@ function StatusLines() {
     );
   } else if (overview.budgets.length > 0) {
     lines.push(
-      <QuietLine key="budgets-ok" to="/budgets" icon={<PieChart className="size-4 text-ink-4" />}>
+      <QuietLine key="budgets-ok" to="/budgets" icon={<PieChart className="size-3.5 text-ink-4" />}>
         {overview.budgets.length} budget{overview.budgets.length === 1 ? '' : 's'} on track
       </QuietLine>,
     );
   }
 
-  // --- people ---------------------------------------------------------------
+  // People debts
   if (owed.length + owing.length > 0) {
     const net = totalOwed - totalOwing;
     const one = owed.length + owing.length === 1 ? (owed[0] ?? owing[0]) : null;
@@ -392,7 +382,7 @@ function StatusLines() {
         tone={net > 0 ? 'positive' : net < 0 ? 'negative' : null}
         open={open === 'people'}
         onToggle={() => toggle('people')}
-        leading={<HandCoins className={cn('size-4', net > 0 ? 'text-positive' : net < 0 ? 'text-negative' : 'text-ink-3')} />}
+        leading={<HandCoins className={cn('size-3.5', net > 0 ? 'text-positive' : net < 0 ? 'text-negative' : 'text-ink-3')} />}
         summary={
           <span className="text-sm text-ink">
             {one ? (
@@ -423,7 +413,7 @@ function StatusLines() {
     );
   }
 
-  // --- carpool --------------------------------------------------------------
+  // Carpool
   if (tally && tally.outstanding > 0) {
     lines.push(
       <ExpandingRow
@@ -431,7 +421,7 @@ function StatusLines() {
         tone="accent"
         open={open === 'carpool'}
         onToggle={() => toggle('carpool')}
-        leading={<CarFront className="size-4 text-accent" />}
+        leading={<CarFront className="size-3.5 text-accent" />}
         summary={
           <span className="text-sm text-ink">
             <span className="font-semibold">Carpool</span>
@@ -464,23 +454,26 @@ function StatusLines() {
 
   return (
     <section>
-      <div className="divide-y divide-line rounded-[--radius-lg] border border-line bg-surface">{lines}</div>
+      <div className="divide-y divide-line rounded-[--radius-lg] border border-line bg-surface overflow-hidden">
+        {lines}
+      </div>
     </section>
   );
 }
 
-/** A line with nothing to open — a fact, and a way through. */
 function QuietLine({ to, icon, children }: { to: string; icon: React.ReactNode; children: React.ReactNode }) {
   return (
-    <Link to={to} className="flex min-h-12 items-center gap-3 border-l-[3px] border-l-transparent px-3 py-2.5 text-sm text-ink-3 transition-colors hover:bg-surface-2/60 hover:text-ink">
+    <Link
+      to={to}
+      className="flex min-h-11 items-center gap-3 border-l-[3px] border-l-transparent px-3 py-2.5 text-sm text-ink-3 transition-colors hover:bg-surface-2/50 hover:text-ink"
+    >
       {icon}
       <span className="flex-1">{children}</span>
-      <ArrowRight className="size-4 text-ink-4" />
+      <ArrowRight className="size-3.5 text-ink-4" />
     </Link>
   );
 }
 
-/** The link at the foot of an opened line. */
 function Through({ to, children }: { to: string; children: React.ReactNode }) {
   return (
     <Link to={to} className="mt-3 inline-flex items-center gap-1 text-[0.8125rem] font-semibold text-accent hover:underline">
@@ -508,6 +501,51 @@ function PersonLine({
       <span className="text-ink">{name}</span>
       <Money value={amount} currency={currency} hidden={hidden} size="sm" symbol={false} sign="always" tone={tone} />
     </li>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Recent panel (right column)
+// ---------------------------------------------------------------------------
+
+function RecentPanel({
+  recent,
+  accounts,
+  hidden,
+  asOf,
+}: {
+  recent: Transaction[];
+  accounts: ReturnType<typeof useAccountMap>;
+  hidden: boolean;
+  asOf: string;
+}) {
+  return (
+    <div className="overflow-hidden rounded-[--radius-lg] border border-line bg-surface">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-line">
+        <span className="text-[0.8125rem] font-semibold text-ink">Recent</span>
+        <Link to="/transactions" className="text-xs font-semibold text-accent hover:underline underline-offset-2">
+          See all
+        </Link>
+      </div>
+      <ul className="divide-y divide-line">
+        {recent.map((txn) => (
+          <li key={txn.id}>
+            <TransactionRow
+              txn={txn}
+              accounts={accounts}
+              hidden={hidden}
+              showDate
+              dateLabel={formatRelativeDay(txn.date, asOf)}
+              onClick={() => navigate(`/transactions/${txn.id}`)}
+              className="px-4"
+            />
+          </li>
+        ))}
+      </ul>
+      {recent.length === 0 && (
+        <p className="px-4 py-8 text-center text-sm text-ink-4">No transactions yet</p>
+      )}
+    </div>
   );
 }
 
@@ -555,11 +593,11 @@ function FirstRun({ onQuickAdd }: { onQuickAdd: () => void }) {
   ];
 
   return (
-    <div className="py-2 sm:py-6">
+    <div className="py-2 sm:py-8">
       <div className="grid items-center gap-8 lg:grid-cols-[1.1fr_1fr] lg:gap-12">
         <div>
-          <p className="label">Start here</p>
-          <h1 className="display mt-2 text-[2.5rem] leading-[0.95] sm:text-[3.5rem]">
+          <p className="text-[0.6875rem] font-semibold uppercase tracking-widest text-ink-4">Start here</p>
+          <h1 className="display mt-3 text-[2.5rem] leading-[0.95] sm:text-[3.25rem]">
             Where do you
             <br />
             stand?
@@ -582,16 +620,16 @@ function FirstRun({ onQuickAdd }: { onQuickAdd: () => void }) {
               <button
                 type="button"
                 onClick={() => (step.onClick ? step.onClick() : navigate(step.to!))}
-                className="card group flex h-full w-full flex-col gap-4 px-5 py-5 text-left transition-transform hover:-translate-y-0.5"
+                className="card group flex h-full w-full flex-col gap-4 px-5 py-5 text-left transition-transform hover:-translate-y-px"
               >
                 <span className="flex items-center justify-between">
-                  <span className="tnum flex size-9 items-center justify-center rounded-full bg-accent-fill text-sm font-semibold text-[--accent-ink]">
+                  <span className="tnum flex size-8 items-center justify-center rounded-full bg-accent-fill text-xs font-semibold text-[--accent-ink]">
                     {i + 1}
                   </span>
-                  <Icon className="size-5 text-ink-3 transition-colors group-hover:text-accent" />
+                  <Icon className="size-4.5 text-ink-3 transition-colors group-hover:text-accent" />
                 </span>
                 <span>
-                  <span className="display block text-[1.125rem]">{step.title}</span>
+                  <span className="display block text-[1.0625rem]">{step.title}</span>
                   <span className="mt-1 block text-[0.8125rem] text-ink-3">{step.hint}</span>
                 </span>
               </button>
@@ -603,7 +641,6 @@ function FirstRun({ onQuickAdd }: { onQuickAdd: () => void }) {
   );
 }
 
-/** Three notes, fanned, so an empty ledger still shows the shape of a full one. */
 function PreviewFan() {
   const now = '2026-01-01T00:00:00.000Z';
   const sample = (id: string, cls: Account['class'], name: string, institution?: string): Account => ({
@@ -631,7 +668,7 @@ function PreviewFan() {
   ];
 
   return (
-    <div className="stagger relative mx-auto h-[15rem] w-full max-w-[22rem] select-none sm:h-[17rem]" aria-hidden="true">
+    <div className="stagger relative mx-auto h-[14rem] w-full max-w-[22rem] select-none sm:h-[16rem]" aria-hidden="true">
       {cards.map((c, i) => (
         <div
           key={c.account.id}

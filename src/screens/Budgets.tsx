@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Archive, CircleAlert, PieChart, Plus, Pencil, TriangleAlert } from 'lucide-react';
-import { Button, EmptyState, ExpandingRow, Notice, Progress, SectionLabel } from '../ui/primitives';
+import { Button, EmptyState, ExpandingRow, Notice, Progress } from '../ui/primitives';
 import { Money } from '../ui/Money';
 import { Reckoning } from '../ui/Reckoning';
 import { Sheet, Confirm } from '../ui/Sheet';
@@ -34,11 +34,11 @@ export function Budgets() {
   }, [statuses]);
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       {statuses.length > 0 && (
         <section>
-          <p className="label">Still available</p>
-          <div className="count-in mt-2 flex flex-wrap items-end justify-between gap-x-6 gap-y-2">
+          <p className="text-[0.6875rem] font-semibold uppercase tracking-widest text-ink-4 mb-3">Still available</p>
+          <div className="count-in flex flex-wrap items-end justify-between gap-x-6 gap-y-2">
             <Money
               value={totalLimit - totalSpent}
               currency={settings.baseCurrency}
@@ -48,12 +48,12 @@ export function Budgets() {
               tone={totalLimit - totalSpent < 0 ? 'negative' : 'default'}
             />
             <div className="flex gap-5 pb-1.5">
-              <span className="flex flex-col">
-                <span className="label">Budgeted</span>
+              <span className="flex flex-col gap-0.5">
+                <span className="text-[0.625rem] font-semibold uppercase tracking-widest text-ink-4">Budgeted</span>
                 <Money value={totalLimit} currency={settings.baseCurrency} hidden={hidden} size="sm" weight="semibold" symbol={false} />
               </span>
-              <span className="flex flex-col">
-                <span className="label">Spent</span>
+              <span className="flex flex-col gap-0.5">
+                <span className="text-[0.625rem] font-semibold uppercase tracking-widest text-ink-4">Spent</span>
                 <Money value={totalSpent} currency={settings.baseCurrency} hidden={hidden} size="sm" weight="semibold" symbol={false} />
               </span>
             </div>
@@ -73,7 +73,7 @@ export function Budgets() {
         <EmptyState
           icon={<PieChart className="size-5" />}
           title="No budgets yet"
-          body="How much is left for this, before the month ends."
+          body="Set a limit per category. Pocketa shows how much is left and where you are heading."
           action={
             <Button variant="primary" icon={<Plus className="size-4" />} onClick={() => setEditing('new')}>
               Create a budget
@@ -81,7 +81,7 @@ export function Budgets() {
           }
         />
       ) : (
-        <ul className="divide-y divide-line rounded-[--radius] border border-line bg-surface">
+        <ul className="divide-y divide-line rounded-[--radius-lg] border border-line bg-surface overflow-hidden">
           {ordered.map((status) => (
             <li key={status.budget.id}>
               <BudgetCard
@@ -99,11 +99,13 @@ export function Budgets() {
 
       {archived.length > 0 && (
         <section>
-          <SectionLabel count={archived.length}>Archived</SectionLabel>
-          <ul className="divide-y divide-line">
+          <p className="mb-2 text-[0.6875rem] font-semibold uppercase tracking-widest text-ink-4">
+            Archived · {archived.length}
+          </p>
+          <ul className="divide-y divide-line rounded-[--radius] border border-line bg-surface overflow-hidden">
             {archived.map((b) => (
-              <li key={b.id} className="flex items-center justify-between py-2">
-                <span className="text-sm text-ink-3">{b.name}</span>
+              <li key={b.id} className="flex items-center justify-between px-4 py-2.5">
+                <span className="text-[0.8125rem] text-ink-2">{b.name}</span>
                 <Button size="sm" variant="ghost" onClick={() => setEditing(b)}>
                   Restore
                 </Button>

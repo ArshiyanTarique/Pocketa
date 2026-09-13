@@ -101,9 +101,9 @@ export function Me() {
             <li key={item.path}>
               <Link
                 to={item.path}
-                className="group flex h-[3.75rem] items-center gap-4 px-1 transition-colors hover:bg-surface-2/50"
+                className="group flex h-[3.75rem] items-center gap-4 px-4 transition-colors hover:bg-surface-2/60"
               >
-                <span className="flex size-9 items-center justify-center rounded-[--radius] bg-surface-2 text-ink-3 transition-colors group-hover:bg-surface-2">
+                <span className="flex size-9 items-center justify-center rounded-[--radius] bg-surface-2 text-ink-3 transition-colors group-hover:bg-accent-soft group-hover:text-accent">
                   <Icon className="size-[1.1rem]" strokeWidth={1.8} />
                 </span>
                 <span className="flex-1 text-[0.9375rem] font-medium text-ink">{item.label}</span>

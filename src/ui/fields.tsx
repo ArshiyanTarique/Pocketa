@@ -63,7 +63,7 @@ export function Field({
 }
 
 const CONTROL = [
-  'w-full rounded-[11px] border bg-surface px-3 text-sm text-ink',
+  'w-full rounded-[--radius] border bg-surface px-3 text-sm text-ink',
   'transition-[border-color,box-shadow] duration-150',
   'placeholder:text-ink-4',
   'focus:outline-none focus:border-accent focus:ring-[3px] focus:ring-[color-mix(in_srgb,var(--accent)_18%,transparent)]',
@@ -402,7 +402,7 @@ export function TagInput({
     <div>
       <div
         className={cn(
-          'flex min-h-11 flex-wrap items-center gap-1.5 rounded-[11px] border border-line-strong bg-surface px-2 py-1.5',
+          'flex min-h-11 flex-wrap items-center gap-1.5 rounded-[--radius] border border-line-strong bg-surface px-2 py-1.5',
           'focus-within:border-accent focus-within:ring-[3px] focus-within:ring-[color-mix(in_srgb,var(--accent)_18%,transparent)]',
         )}
       >

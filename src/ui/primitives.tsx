@@ -21,11 +21,6 @@ export function Card({
   );
 }
 
-/**
- * Kept for the screens that still use it. The eyebrow is rendered in the
- * display face now, and the title sits tighter, but the shape is unchanged so
- * nothing downstream has to move.
- */
 export function CardHeader({
   title,
   eyebrow,
@@ -38,9 +33,13 @@ export function CardHeader({
   className?: string;
 }) {
   return (
-    <div className={cn('flex items-start justify-between gap-4 px-4 pt-3.5 pb-2.5 sm:px-5', className)}>
+    <div className={cn('flex items-start justify-between gap-4 px-4 pt-4 pb-3 sm:px-5', className)}>
       <div className="min-w-0">
-        {eyebrow && <p className="label mb-1">{eyebrow}</p>}
+        {eyebrow && (
+          <p className="mb-1 text-[0.625rem] font-semibold uppercase tracking-widest text-ink-4">
+            {eyebrow}
+          </p>
+        )}
         <h2 className="truncate text-[0.9375rem] font-semibold text-ink">{title}</h2>
       </div>
       {action && (
@@ -69,21 +68,18 @@ export function SectionLabel({
   className,
 }: {
   children: React.ReactNode;
-  /** Where the whole heading links to. Renders a chevron. */
   to?: string;
   onClick?: () => void;
-  /** Something on the right that is not a link, e.g. a total. */
   action?: React.ReactNode;
-  /** A small figure beside the label — how many, how much. */
   count?: React.ReactNode;
   className?: string;
 }) {
   const body = (
     <>
-      <span className="display text-[1.0625rem]">{children}</span>
-      {count != null && <span className="tnum ml-2 text-[0.8125rem] text-ink-3">{count}</span>}
+      <span className="text-[0.9375rem] font-semibold text-ink">{children}</span>
+      {count != null && <span className="tnum ml-2 text-[0.8125rem] text-ink-4">{count}</span>}
       {(to || onClick) && (
-        <ChevronRight className="ml-auto size-4 text-ink-4 transition-transform group-hover:translate-x-0.5" />
+        <ChevronRight className="ml-auto size-3.5 text-ink-4 transition-transform group-hover:translate-x-0.5" />
       )}
     </>
   );
@@ -197,7 +193,7 @@ export function ExpandingRow({
         aria-expanded={open}
         aria-controls={id}
         className={cn(
-          'flex min-h-12 w-full items-center gap-3 px-3 py-2.5 text-left transition-colors',
+          'flex min-h-[3.25rem] w-full items-center gap-3 px-3 py-2.5 text-left transition-colors',
           open ? 'bg-surface-2/60' : 'hover:bg-surface-2/60',
         )}
       >
@@ -226,22 +222,19 @@ type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'quiet';
 type ButtonSize = 'sm' | 'md' | 'lg';
 
 const BUTTON_VARIANTS: Record<ButtonVariant, string> = {
-  // The gold of a 5000 note, with ink on it. Reads as money, not as "submit".
   primary:
-    'bg-accent-fill text-[--accent-ink] hover:bg-accent-hover active:scale-[0.985] shadow-[var(--shadow-sm)]',
+    'bg-accent-fill text-[--accent-ink] hover:bg-accent-hover active:scale-[0.985] shadow-[0_1px_3px_rgb(0_0_0/0.12),0_4px_12px_-2px_rgb(0_0_0/0.08)]',
   secondary:
     'bg-surface text-ink border border-line-strong hover:bg-surface-2 active:scale-[0.985]',
-  ghost: 'text-ink-2 hover:text-ink hover:bg-surface-2',
+  ghost: 'text-ink-3 hover:text-ink hover:bg-surface-2',
   danger: 'bg-negative-fill text-white hover:opacity-90 active:scale-[0.985]',
   quiet: 'text-accent hover:bg-accent-soft',
 };
 
 const BUTTON_SIZES: Record<ButtonSize, string> = {
-  // The coarse-pointer bump keeps desktop density as designed while giving a
-  // finger a target it can actually hit.
   sm: 'h-8 [@media(pointer:coarse)]:h-9 px-3 text-[0.8125rem] rounded-[--radius-sm] gap-1.5',
-  md: 'h-10 px-4 text-sm rounded-[--radius] gap-2',
-  lg: 'h-12 px-5 text-[0.9375rem] rounded-[--radius] gap-2',
+  md: 'h-9 px-4 text-[0.875rem] rounded-[--radius] gap-2',
+  lg: 'h-11 px-5 text-[0.9375rem] rounded-[--radius] gap-2',
 };
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
@@ -411,11 +404,6 @@ export function Progress({
 // Empty and loading states
 // ---------------------------------------------------------------------------
 
-/**
- * An empty space is an invitation to act, not an essay. One line and, where
- * there is something to do, one button. The `body` is still accepted for the
- * few places that genuinely need a second line, and is otherwise dropped.
- */
 export function EmptyState({
   icon,
   title,
@@ -435,18 +423,18 @@ export function EmptyState({
     <div
       className={cn(
         'flex flex-col items-center justify-center text-center',
-        compact ? 'px-4 py-6' : 'px-6 py-10',
+        compact ? 'px-4 py-8' : 'px-8 py-12',
         className,
       )}
     >
       {icon && (
-        <div className="mb-3 flex size-10 items-center justify-center rounded-[--radius] bg-surface-2 text-ink-3">
+        <div className="mb-3 flex size-9 items-center justify-center rounded-[--radius] bg-surface-2 text-ink-4">
           {icon}
         </div>
       )}
       <h3 className="text-[0.9375rem] font-semibold text-ink">{title}</h3>
       {body && !compact && (
-        <p className="mt-1 max-w-[36ch] text-[0.8125rem] leading-snug text-ink-3">{body}</p>
+        <p className="mt-1.5 max-w-[34ch] text-[0.8125rem] leading-relaxed text-ink-3">{body}</p>
       )}
       {action && <div className="mt-4">{action}</div>}
     </div>
@@ -464,15 +452,15 @@ export function Skeleton({ className }: { className?: string }) {
 
 export function SkeletonRows({ rows = 3, className }: { rows?: number; className?: string }) {
   return (
-    <div className={cn('space-y-3', className)} aria-busy="true" aria-label="Loading">
+    <div className={cn('space-y-4', className)} aria-busy="true" aria-label="Loading">
       {Array.from({ length: rows }).map((_, i) => (
         <div key={i} className="flex items-center gap-3">
-          <Skeleton className="size-9 rounded-[--radius]" />
-          <div className="flex-1 space-y-1.5">
+          <Skeleton className="size-8 rounded-[--radius]" />
+          <div className="flex-1 space-y-2">
             <Skeleton className="h-3 w-1/3" />
-            <Skeleton className="h-2.5 w-1/4" />
+            <Skeleton className="h-2.5 w-1/5" />
           </div>
-          <Skeleton className="h-3.5 w-16" />
+          <Skeleton className="h-3 w-14" />
         </div>
       ))}
     </div>

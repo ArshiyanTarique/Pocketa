@@ -7,7 +7,7 @@ import {
   RotateCcw,
   TriangleAlert,
   Repeat } from 'lucide-react';
-import { Card, CardHeader, Badge, Button, EmptyState, ExpandingRow, Notice, SectionLabel, Segmented } from '../ui/primitives';
+import { Badge, Button, EmptyState, ExpandingRow, Notice, Segmented } from '../ui/primitives';
 import { Money } from '../ui/Money';
 import { Sheet, Confirm } from '../ui/Sheet';
 import { AmountInput, DateInput, Field, Select, TextInput, Textarea, Toggle } from '../ui/fields';
@@ -45,10 +45,10 @@ export function Bills() {
     .reduce((sum, r) => sum + (r.amount * occurrencesPerYear(r)) / 12, 0);
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <section>
-        <p className="label">Bills · a month</p>
-        <div className="count-in mt-2 flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
+        <p className="text-[0.6875rem] font-semibold uppercase tracking-widest text-ink-4 mb-3">Bills · a month</p>
+        <div className="count-in flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
           <Money
             value={Math.round(monthlyCost)}
             currency={settings.baseCurrency}
@@ -83,20 +83,18 @@ export function Bills() {
       />
 
       {tab === 'due' && (
-        <div className="space-y-4">
+        <div className="space-y-5">
           {overdue.length === 0 && upcoming.length === 0 ? (
-            <Card>
-              <EmptyState
-                icon={<CalendarClock className="size-5" />}
-                title="Nothing due"
-                body="Rent, utilities, subscriptions — add them and they are reserved."
-                action={
-                  <Button variant="primary" icon={<Plus className="size-4" />} onClick={() => setEditing('new')}>
-                    Add a bill
-                  </Button>
-                }
-              />
-            </Card>
+            <EmptyState
+              icon={<CalendarClock className="size-5" />}
+              title="Nothing due"
+              body="Rent, utilities, subscriptions — add them and they are reserved."
+              action={
+                <Button variant="primary" icon={<Plus className="size-4" />} onClick={() => setEditing('new')}>
+                  Add a bill
+                </Button>
+              }
+            />
           ) : (
             <>
               {overdue.length > 0 && (
@@ -137,39 +135,42 @@ export function Bills() {
       )}
 
       {tab === 'templates' && (
-        <Card>
-          <CardHeader title="Every bill" eyebrow={`${recurrences.filter((r) => !r.archived).length} active`} />
+        <section>
+          <div className="mb-2 flex items-center justify-between px-0.5">
+            <span className="text-[0.6875rem] font-semibold uppercase tracking-widest text-ink-4">Every bill</span>
+            <span className="tnum text-xs text-ink-4">{recurrences.filter((r) => !r.archived).length} active</span>
+          </div>
           {recurrences.length === 0 ? (
             <EmptyState compact title="No bills set up" />
           ) : (
-            <ul className="pb-2">
+            <ul className="divide-y divide-line rounded-[--radius-lg] border border-line bg-surface overflow-hidden">
               {recurrences.map((rec) => (
                 <li key={rec.id}>
                   <button
                     onClick={() => setEditing(rec)}
                     className={cn(
-                      'flex w-full items-center gap-3 px-5 py-3 text-left transition-colors hover:bg-surface-2',
+                      'flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors hover:bg-surface-2/60 sm:px-5',
                       rec.archived && 'opacity-55',
                     )}
                   >
-                    <span className="flex size-9 shrink-0 items-center justify-center rounded-[11px] bg-surface-2 text-ink-3">
+                    <span className="flex size-9 shrink-0 items-center justify-center rounded-[--radius] bg-surface-2 text-ink-3">
                       <Repeat className="size-4" />
                     </span>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
-                        <span className="truncate text-sm font-medium text-ink">{rec.name}</span>
+                        <span className="truncate text-[0.9375rem] font-medium text-ink">{rec.name}</span>
                         {rec.archived && <Badge tone="neutral">Stopped</Badge>}
                         {rec.kind === 'income' && <Badge tone="positive">Income</Badge>}
                       </div>
                       <p className="mt-0.5 truncate text-xs text-ink-3">{describeRecurrence(rec)}</p>
                     </div>
-                    <Money value={rec.amount} currency={rec.currency} hidden={hidden} size="sm" weight="medium" symbol={false} />
+                    <Money value={rec.amount} currency={rec.currency} hidden={hidden} size="sm" weight="semibold" symbol={false} />
                   </button>
                 </li>
               ))}
             </ul>
           )}
-        </Card>
+        </section>
       )}
 
       {editing && (
@@ -211,11 +212,14 @@ function OccurrenceList({
    */
   return (
     <section>
-      <SectionLabel count={items.length}>{title}</SectionLabel>
+      <div className="mb-2 flex items-center gap-2 px-0.5">
+        <span className="text-[0.6875rem] font-semibold uppercase tracking-widest text-ink-4">{title}</span>
+        {items.length > 0 && <span className="tnum text-xs text-ink-4">{items.length}</span>}
+      </div>
       {items.length === 0 ? (
         <EmptyState compact title={emptyMessage ?? 'Nothing here'} />
       ) : (
-        <ul className="mt-1 divide-y divide-line rounded-[--radius] border border-line bg-surface">
+        <ul className="divide-y divide-line rounded-[--radius-lg] border border-line bg-surface overflow-hidden">
           {items.map((occurrence) => {
             const settled = occurrence.status === 'paid' || occurrence.status === 'skipped';
             const late = occurrence.status === 'overdue';

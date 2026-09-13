@@ -17,7 +17,7 @@ import {
   Upload,
   Coins,
   Pencil } from 'lucide-react';
-import { Card, CardHeader, Badge, Button, Notice, Progress, Segmented } from '../ui/primitives';
+import { Badge, Button, Notice, Progress, Segmented } from '../ui/primitives';
 import { Sheet, Confirm } from '../ui/Sheet';
 import { Field, Select, TextInput, Toggle } from '../ui/fields';
 import { ImportWizard } from '../components/ImportWizard';
@@ -125,9 +125,14 @@ function SyncSection() {
 
   if (!syncConfigured) {
     return (
-      <Card>
-        <CardHeader eyebrow="Your account" title="Sync across devices" />
-        <div className="px-5 pb-5">
+      <div className="overflow-hidden rounded-[--radius-lg] border border-line bg-surface">
+        <div className="flex items-center justify-between border-b border-line px-5 py-4">
+          <div>
+            <p className="text-[0.625rem] font-semibold uppercase tracking-widest text-ink-4 mb-0.5">Your account</p>
+            <h2 className="text-[0.9375rem] font-semibold text-ink">Sync across devices</h2>
+          </div>
+        </div>
+        <div className="px-5 py-5">
           <Notice tone="neutral" icon={<Info className="size-4" />} title="Not set up in this build">
             Pocketa works fully offline on this device without an account. To sync a phone and a
             laptop, connect a Supabase project by setting <code className="tnum text-[0.75rem]">VITE_SUPABASE_URL</code> and{' '}
@@ -183,35 +188,33 @@ function SyncSection() {
             </div>
           </div>
         </Sheet>
-      </Card>
+      </div>
     );
   }
 
   return (
-    <Card>
-      <CardHeader
-        eyebrow="Your account"
-        title={session ? session.user.email ?? 'Signed in' : 'Sync across devices'}
-        action={
-          session && (
-            <Button
-              size="sm"
-              variant="ghost"
-              icon={<LogOut className="size-3.5" />}
-              onClick={async () => {
-                // The engine watches auth and moves the app back to the local
-                // ledger on its own; this only has to end the session.
-                await signOut();
-                setSession(null);
-                toast.show('Signed out', 'Your data stays on this device.');
-              }}
-            >
-              Sign out
-            </Button>
-          )
-        }
-      />
-      <div className="px-5 pb-5">
+    <div className="overflow-hidden rounded-[--radius-lg] border border-line bg-surface">
+      <div className="flex items-center justify-between border-b border-line px-5 py-4">
+        <div>
+          <p className="text-[0.625rem] font-semibold uppercase tracking-widest text-ink-4 mb-0.5">Your account</p>
+          <h2 className="text-[0.9375rem] font-semibold text-ink">{session ? session.user.email ?? 'Signed in' : 'Sync across devices'}</h2>
+        </div>
+        {session && (
+          <Button
+            size="sm"
+            variant="ghost"
+            icon={<LogOut className="size-3.5" />}
+            onClick={async () => {
+              await signOut();
+              setSession(null);
+              toast.show('Signed out', 'Your data stays on this device.');
+            }}
+          >
+            Sign out
+          </Button>
+        )}
+      </div>
+      <div className="px-5 py-5">
         {session ? (
           <div className="space-y-3">
             <div className="flex items-center justify-between gap-3 rounded-[--radius] border border-line px-3.5 py-3">
@@ -290,7 +293,7 @@ function SyncSection() {
           </div>
         )}
       </div>
-    </Card>
+    </div>
   );
 }
 
@@ -310,60 +313,61 @@ function AppearanceSection() {
   ];
 
   return (
-    <Card>
-      <CardHeader eyebrow="Appearance" title="How Pocketa looks" />
-      <div className="space-y-4 px-5 pb-5">
-        <Field label="Theme">
-          <Segmented
-            value={settings.theme}
-            onChange={(v) => void updateSettings({ theme: v })}
-            options={[
-              { value: 'system', label: 'System' },
-              { value: 'light', label: 'Light' },
-              { value: 'dark', label: 'Dark' },
-            ]}
+    <div className="space-y-5">
+      <div className="overflow-hidden rounded-[--radius-lg] border border-line bg-surface">
+        <div className="space-y-4 px-5 py-5">
+          <Field label="Theme">
+            <Segmented
+              value={settings.theme}
+              onChange={(v) => void updateSettings({ theme: v })}
+              options={[
+                { value: 'system', label: 'System' },
+                { value: 'light', label: 'Light' },
+                { value: 'dark', label: 'Dark' },
+              ]}
+            />
+          </Field>
+
+          <Field label="Accent color">
+            <div className="flex flex-wrap gap-2 pt-1">
+              {ACCENT_OPTIONS.map((opt) => {
+                const active = (settings.accentColor ?? 'blue') === opt.value;
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    title={opt.label}
+                    aria-label={opt.label}
+                    aria-pressed={active}
+                    onClick={() => void updateSettings({ accentColor: opt.value as Settings['accentColor'] })}
+                    className="flex items-center justify-center rounded-full transition-transform hover:scale-110 active:scale-95"
+                    style={{ width: 32, height: 32, background: opt.fill,
+                      boxShadow: active ? `0 0 0 2px var(--surface), 0 0 0 4px ${opt.fill}` : 'none' }}
+                  />
+                );
+              })}
+            </div>
+          </Field>
+
+          <Toggle
+            checked={settings.hideAmounts}
+            onChange={(v) => void updateSettings({ hideAmounts: v })}
+            label="Hide amounts"
+            description="Replaces every figure with dots. Useful on a shared screen."
           />
-        </Field>
 
-        <Field label="Accent color">
-          <div className="flex flex-wrap gap-2 pt-1">
-            {ACCENT_OPTIONS.map((opt) => {
-              const active = (settings.accentColor ?? 'blue') === opt.value;
-              return (
-                <button
-                  key={opt.value}
-                  type="button"
-                  title={opt.label}
-                  aria-label={opt.label}
-                  aria-pressed={active}
-                  onClick={() => void updateSettings({ accentColor: opt.value as Settings['accentColor'] })}
-                  className="flex items-center justify-center rounded-full transition-transform hover:scale-110 active:scale-95"
-                  style={{ width: 32, height: 32, background: opt.fill,
-                    boxShadow: active ? `0 0 0 2px var(--surface), 0 0 0 4px ${opt.fill}` : 'none' }}
-                />
-              );
-            })}
-          </div>
-        </Field>
-
-        <Toggle
-          checked={settings.hideAmounts}
-          onChange={(v) => void updateSettings({ hideAmounts: v })}
-          label="Hide amounts"
-          description="Replaces every figure with dots. Useful on a shared screen."
-        />
-
-        <Field label="Week starts on">
-          <Select
-            value={String(settings.weekStartsOn)}
-            onChange={(e) => void updateSettings({ weekStartsOn: Number(e.target.value) as 0 | 1 })}
-          >
-            <option value="1">Monday</option>
-            <option value="0">Sunday</option>
-          </Select>
-        </Field>
+          <Field label="Week starts on">
+            <Select
+              value={String(settings.weekStartsOn)}
+              onChange={(e) => void updateSettings({ weekStartsOn: Number(e.target.value) as 0 | 1 })}
+            >
+              <option value="1">Monday</option>
+              <option value="0">Sunday</option>
+            </Select>
+          </Field>
+        </div>
       </div>
-    </Card>
+    </div>
   );
 }
 
@@ -384,9 +388,8 @@ function MoneySection() {
   const missing = usedCurrencies.filter((c) => !settings.fxRates[c]);
 
   return (
-    <Card>
-      <CardHeader eyebrow="Money" title="Currency" />
-      <div className="space-y-4 px-5 pb-5">
+    <div className="overflow-hidden rounded-[--radius-lg] border border-line bg-surface">
+      <div className="space-y-4 px-5 py-5">
         <Field
           label="Base currency"
           hint="Totals, budgets and net worth are reported in this currency. Each transaction keeps the currency it happened in."
@@ -436,7 +439,7 @@ function MoneySection() {
       </div>
 
       {editingRates && <RatesEditor onClose={() => setEditingRates(false)} currencies={usedCurrencies} />}
-    </Card>
+    </div>
   );
 }
 
@@ -503,9 +506,8 @@ function SafeToSpendSection() {
   const updateSettings = useStore((s) => s.updateSettings);
 
   return (
-    <Card>
-      <CardHeader eyebrow="Safe to spend" title="How it is worked out" />
-      <div className="space-y-4 px-5 pb-5">
+    <div className="overflow-hidden rounded-[--radius-lg] border border-line bg-surface">
+      <div className="space-y-4 px-5 py-5">
         <Field label="Look ahead" hint="Bills falling due inside this window are reserved.">
           <Select
             value={String(settings.safeToSpendHorizon)}
@@ -529,7 +531,7 @@ function SafeToSpendSection() {
           always shows the full derivation.
         </Notice>
       </div>
-    </Card>
+    </div>
   );
 }
 
@@ -556,17 +558,14 @@ function CategoriesSection() {
   ).length;
 
   return (
-    <Card>
-      <CardHeader
-        eyebrow="Organisation"
-        title="Categories"
-        action={
-          <Button size="sm" variant="secondary" icon={<Plus className="size-3.5" />} onClick={() => setEditing('new')}>
-            Add
-          </Button>
-        }
-      />
-      <div className="px-5 pb-5">
+    <div className="overflow-hidden rounded-[--radius-lg] border border-line bg-surface">
+      <div className="flex items-center justify-between border-b border-line px-5 py-4">
+        <h2 className="text-[0.9375rem] font-semibold text-ink">Categories</h2>
+        <Button size="sm" variant="secondary" icon={<Plus className="size-3.5" />} onClick={() => setEditing('new')}>
+          Add
+        </Button>
+      </div>
+      <div className="px-5 py-4">
         <Segmented
           label="Report kind"
           size="sm"
@@ -617,7 +616,7 @@ function CategoriesSection() {
           onClose={() => setEditing(null)}
         />
       )}
-    </Card>
+    </div>
   );
 }
 
@@ -937,11 +936,10 @@ function DataSection() {
   }
 
   return (
-    <Card>
-      <CardHeader eyebrow="Your data" title="Import, export and backup" />
-      <div className="space-y-5 px-5 pb-5">
+    <div className="overflow-hidden rounded-[--radius-lg] border border-line bg-surface">
+      <div className="space-y-5 px-5 py-5">
         <div>
-          <h3 className="eyebrow mb-2">Bring data in</h3>
+          <h3 className="eyebrow mb-2.5">Bring data in</h3>
           <Button variant="secondary" full icon={<Upload className="size-4" />} onClick={() => setImporting(true)}>
             Import from CSV
           </Button>
@@ -952,11 +950,11 @@ function DataSection() {
         </div>
 
         <div>
-          <h3 className="eyebrow mb-2">Take data out</h3>
+          <h3 className="eyebrow mb-2.5">Take data out</h3>
           {sharing && (
             <p className="mb-2.5 text-xs leading-relaxed text-ink-3">
               These open your phone&apos;s share sheet, so a file can go straight to Drive,
-              WhatsApp or anywhere else — rather than into a downloads folder to be found later.
+              WhatsApp or anywhere else.
             </p>
           )}
           <div className="grid gap-2 sm:grid-cols-3">
@@ -973,7 +971,7 @@ function DataSection() {
         </div>
 
         <div>
-          <h3 className="eyebrow mb-2">Backup</h3>
+          <h3 className="eyebrow mb-2.5">Backup</h3>
           <div className="grid gap-2 sm:grid-cols-2">
             <Button variant="secondary" icon={<Download className="size-4" />} onClick={() => void exportBackup(true)}>
               Save a backup
@@ -995,8 +993,6 @@ function DataSection() {
             type="file"
             accept=".json,.gz,application/json,application/gzip"
             className="sr-only"
-            // Opened by the visible button above; keeping it out of the tab
-            // order stops a keyboard user landing on an unnamed control.
             tabIndex={-1}
             aria-hidden="true"
             onChange={(e) => {
@@ -1016,7 +1012,7 @@ function DataSection() {
         <DataAudit />
 
         <div className="border-t border-line pt-4">
-          <h3 className="eyebrow mb-2">Start over</h3>
+          <h3 className="eyebrow mb-2.5">Start over</h3>
           <Button variant="secondary" className="text-negative" icon={<ShieldAlert className="size-4" />} onClick={() => setConfirmReset(true)}>
             Erase everything on this device
           </Button>
@@ -1073,7 +1069,7 @@ function DataSection() {
           toast.show('Everything erased', 'Pocketa has started fresh.');
         }}
       />
-    </Card>
+    </div>
   );
 }
 
@@ -1234,9 +1230,12 @@ function AboutSection() {
     ops: store.ops.length };
 
   return (
-    <Card>
-      <CardHeader eyebrow="About" title="Pocketa" />
-      <div className="px-5 pb-5">
+    <div className="overflow-hidden rounded-[--radius-lg] border border-line bg-surface">
+      <div className="border-b border-line px-5 py-4">
+        <p className="text-[0.625rem] font-semibold uppercase tracking-widest text-ink-4 mb-0.5">About</p>
+        <h2 className="text-[0.9375rem] font-semibold text-ink">Pocketa</h2>
+      </div>
+      <div className="px-5 py-5">
         <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {Object.entries(counts).map(([key, value]) => (
             <div key={key} className="rounded-[--radius] border border-line px-3 py-2.5 text-center">
@@ -1254,6 +1253,6 @@ function AboutSection() {
           a record of what changed, and nothing leaves this device unless you sign in.
         </p>
       </div>
-    </Card>
+    </div>
   );
 }

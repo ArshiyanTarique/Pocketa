@@ -77,13 +77,12 @@ export function Shell({
       <div
         className={cn(
           'lg:pl-[4.5rem] transition-[padding] duration-200 ease-out overflow-x-hidden',
-          // A detail panel sits beside the page, not on top of it.
           panels > 0 && 'lg:pr-[26rem]',
         )}
       >
         <TopBar />
         <main
-          className="mx-auto w-full max-w-[80rem] px-4 pb-32 pt-3 sm:px-6 lg:pb-12 lg:pt-4"
+          className="mx-auto w-full max-w-[68rem] px-4 pb-28 pt-4 sm:px-6 lg:pb-10 lg:pt-5"
           key={route.path}
         >
           <div className="rise">{children}</div>
@@ -105,32 +104,30 @@ function Rail({ current, onQuickAdd }: { current: string; onQuickAdd: () => void
     <aside
       className={cn(
         'group/rail fixed inset-y-0 left-0 z-30 hidden w-[4.5rem] flex-col border-r border-line bg-surface lg:flex',
-        // Widens on hover, and for keyboard focus — but not for the focus a
-        // mouse click leaves behind, or it would never close again.
-        'transition-[width] duration-200 ease-out hover:w-[13.5rem] [&:has(:focus-visible)]:w-[13.5rem]',
+        'transition-[width] duration-200 ease-out hover:w-[13rem] [&:has(:focus-visible)]:w-[13rem]',
       )}
     >
-      <div className="flex h-16 items-center px-4">
+      <div className="flex h-14 items-center px-[1.125rem]">
         <Wordmark compact />
       </div>
 
-      <div className="px-3">
+      <div className="px-2.5">
         <button
           onClick={onQuickAdd}
           className={cn(
-            'flex h-11 w-full items-center gap-3 overflow-hidden rounded-[--radius] bg-accent-fill px-3',
+            'flex h-10 w-full items-center gap-3 overflow-hidden rounded-[--radius] bg-accent-fill px-3',
             'font-semibold text-[--accent-ink] transition-all hover:bg-accent-hover active:scale-[0.98]',
           )}
           aria-label="Add transaction (N)"
         >
-          <Plus className="size-5 shrink-0" strokeWidth={2.5} />
-          <span className="whitespace-nowrap text-sm opacity-0 transition-opacity group-hover/rail:opacity-100 group-has-[:focus-visible]/rail:opacity-100">
+          <Plus className="size-4 shrink-0" strokeWidth={2.5} />
+          <span className="whitespace-nowrap text-[0.8125rem] opacity-0 transition-opacity group-hover/rail:opacity-100 group-has-[:focus-visible]/rail:opacity-100">
             Add
           </span>
         </button>
       </div>
 
-      <nav className="mt-4 flex-1 space-y-1 overflow-y-auto px-3 pb-4">
+      <nav className="mt-3 flex-1 space-y-0.5 overflow-y-auto px-2.5 pb-4">
         {PRIMARY.map((item) => (
           <RailLink
             key={item.path}
@@ -151,12 +148,12 @@ function RailLink({ item, active }: { item: NavItem; active: boolean }) {
       title={item.label}
       aria-current={active ? 'page' : undefined}
       className={cn(
-        'flex h-11 items-center gap-3 overflow-hidden rounded-[--radius] px-3 transition-colors',
-        active ? 'bg-ink text-paper' : 'text-ink-2 hover:bg-surface-2 hover:text-ink',
+        'flex h-10 items-center gap-3 overflow-hidden rounded-[--radius] px-3 transition-colors',
+        active ? 'bg-ink text-paper' : 'text-ink-3 hover:bg-surface-2 hover:text-ink',
       )}
     >
-      <Icon className="size-5 shrink-0" strokeWidth={active ? 2.3 : 1.9} />
-      <span className="whitespace-nowrap text-sm font-semibold opacity-0 transition-opacity group-hover/rail:opacity-100 group-has-[:focus-visible]/rail:opacity-100">
+      <Icon className="size-[1.1rem] shrink-0" strokeWidth={active ? 2.2 : 1.8} />
+      <span className="whitespace-nowrap text-[0.8125rem] font-semibold opacity-0 transition-opacity group-hover/rail:opacity-100 group-has-[:focus-visible]/rail:opacity-100">
         {item.label}
       </span>
     </Link>
@@ -165,9 +162,9 @@ function RailLink({ item, active }: { item: NavItem; active: boolean }) {
 
 function Wordmark({ compact = false }: { compact?: boolean }) {
   return (
-    <Link to="/" className="flex items-center gap-2.5" aria-label="Pocketa home">
-      <img src="/favicon.svg" alt="Pocketa" className="size-9 rounded-[--radius]" />
-      {!compact && <span className="display text-[1.25rem]">Pocketa</span>}
+    <Link to="/" className="flex items-center gap-2" aria-label="Pocketa home">
+      <img src="/favicon.svg" alt="Pocketa" className="size-8 rounded-[--radius-sm]" />
+      {!compact && <span className="display text-[1.125rem]">Pocketa</span>}
     </Link>
   );
 }
@@ -192,8 +189,24 @@ export function useOnline(): boolean {
 // Top bar
 // ---------------------------------------------------------------------------
 
+const PAGE_NAMES: Record<string, string> = {
+  '/': 'Pocketa',
+  '/transactions': 'Activity',
+  '/accounts': 'Accounts',
+  '/budgets': 'Budgets',
+  '/bills': 'Bills',
+  '/carpool': 'Carpool',
+  '/goals': 'Goals',
+  '/debts': 'Debts',
+  '/analytics': 'Analytics',
+  '/settings': 'Settings',
+  '/me': 'Me',
+  '/join': 'Join',
+};
+
 function TopBar() {
   const online = useOnline();
+  const route = useRoute();
   useSyncEngine();
   const sync = useSync();
   const settings = useStore((s) => s.settings);
@@ -206,25 +219,26 @@ function TopBar() {
   }
 
   const ThemeIcon = settings.theme === 'light' ? Sun : settings.theme === 'dark' ? Moon : MonitorSmartphone;
+  const pageTitle = PAGE_NAMES[route.path] ?? 'Pocketa';
 
   return (
-    <header className="safe-top sticky top-0 z-20 bg-paper/80 backdrop-blur-md">
-      <div className="mx-auto flex h-14 w-full max-w-[80rem] items-center px-4 sm:px-6">
-        {/* Logo — mobile only (desktop has the rail) */}
-        <div className="lg:hidden">
-          <img src="/favicon.svg" alt="Pocketa" className="size-8 rounded-[--radius]" />
+    <header className="safe-top sticky top-0 z-20 border-b border-line/60 bg-paper/92 backdrop-blur-md">
+      <div className="mx-auto flex h-12 w-full max-w-[68rem] items-center px-4 sm:px-6">
+        {/* Logo — mobile only */}
+        <div className="flex items-center gap-2 lg:hidden">
+          <img src="/favicon.svg" alt="Pocketa" className="size-7 rounded-[--radius-sm]" />
         </div>
 
-        {/* Centred title */}
-        <span className="pointer-events-none absolute left-1/2 -translate-x-1/2 display text-[1.15rem]">
-          Pocketa
+        {/* Page title — centred */}
+        <span className="pointer-events-none absolute left-1/2 -translate-x-1/2 text-[0.9375rem] font-semibold text-ink tracking-[-0.01em]">
+          {pageTitle}
         </span>
 
-        {/* Right controls — always flush right */}
+        {/* Right controls */}
         <div className="ml-auto flex items-center gap-0.5">
           {!online && (
             <span
-              className="mr-1 flex items-center gap-1 rounded-full bg-surface-2 px-2 py-1 text-[0.625rem] font-semibold text-ink-4"
+              className="mr-1.5 flex items-center gap-1 rounded-full bg-surface-2 px-2 py-1 text-[0.625rem] font-semibold text-ink-4"
               title="Working offline"
             >
               <CloudOff className="size-3" />
@@ -234,7 +248,7 @@ function TopBar() {
             <AccountBadge sync={sync} />
           </span>
           <IconButton label={`Theme: ${settings.theme}`} onClick={cycleTheme}>
-            <ThemeIcon className="size-[1.05rem]" />
+            <ThemeIcon className="size-4" />
           </IconButton>
         </div>
       </div>
@@ -256,10 +270,10 @@ function PillBar({ current, onQuickAdd }: { current: string; onQuickAdd: () => v
 
   return (
     <nav
-      className="safe-bottom fixed inset-x-0 bottom-0 z-30 flex justify-center px-3 pb-3 lg:hidden"
+      className="safe-bottom fixed inset-x-0 bottom-0 z-30 flex justify-center px-4 pb-3 lg:hidden"
       aria-label="Main"
     >
-      <div className="flex items-center gap-0.5 rounded-full border border-line bg-surface/95 px-2 py-2 shadow-[var(--shadow-lg)] backdrop-blur-xl">
+      <div className="flex items-center gap-0.5 rounded-full border border-line/80 bg-surface/96 px-1.5 py-1.5 shadow-[var(--shadow-lg)] backdrop-blur-xl">
         {PRIMARY.slice(0, 2).map((item) => (
           <PillLink key={item.path} item={item} active={isActive(item)} />
         ))}
@@ -268,11 +282,11 @@ function PillBar({ current, onQuickAdd }: { current: string; onQuickAdd: () => v
           onClick={onQuickAdd}
           aria-label="Add transaction"
           className={cn(
-            'mx-1.5 flex size-13 items-center justify-center rounded-full bg-accent-fill text-[--accent-ink]',
+            'mx-1 flex size-11 items-center justify-center rounded-full bg-accent-fill text-[--accent-ink]',
             'shadow-[var(--shadow-md)] transition-transform active:scale-90',
           )}
         >
-          <Plus className="size-[1.375rem]" strokeWidth={2.5} />
+          <Plus className="size-5" strokeWidth={2.5} />
         </button>
 
         {PRIMARY.slice(2).map((item) => (
@@ -291,7 +305,7 @@ function PillLink({ item, active }: { item: NavItem; active: boolean }) {
       aria-label={item.label}
       aria-current={active ? 'page' : undefined}
       className={cn(
-        'relative isolate flex h-12 items-center gap-2 rounded-full px-4 transition-colors duration-200',
+        'relative isolate flex h-10 items-center gap-1.5 rounded-full px-3.5 transition-colors duration-200',
         active ? 'text-paper' : 'text-ink-3 hover:text-ink',
       )}
     >
@@ -303,8 +317,8 @@ function PillLink({ item, active }: { item: NavItem; active: boolean }) {
           aria-hidden="true"
         />
       )}
-      <Icon className="size-[1.2rem]" strokeWidth={active ? 2.3 : 1.8} />
-      {active && <span className="text-[0.8125rem] font-semibold">{item.label}</span>}
+      <Icon className="size-[1.1rem]" strokeWidth={active ? 2.2 : 1.8} />
+      {active && <span className="text-[0.75rem] font-semibold">{item.label}</span>}
     </Link>
   );
 }
@@ -325,11 +339,11 @@ export function MoreNav({ onNavigate }: { onNavigate: () => void }) {
               onNavigate();
             }}
             className={cn(
-              'flex aspect-square flex-col items-center justify-center gap-2 rounded-[--radius-lg] border text-[0.8125rem] font-semibold transition-colors',
-              active ? 'border-ink bg-ink text-paper' : 'border-line bg-surface text-ink hover:bg-surface-2',
+              'flex aspect-square flex-col items-center justify-center gap-1.5 rounded-[--radius-lg] border text-[0.75rem] font-semibold transition-colors',
+              active ? 'border-ink bg-ink text-paper' : 'border-line bg-surface text-ink-2 hover:bg-surface-2 hover:text-ink',
             )}
           >
-            <Icon className={cn('size-6', active ? 'text-paper' : 'text-ink-2')} strokeWidth={1.9} />
+            <Icon className={cn('size-5', active ? 'text-paper' : 'text-ink-3')} strokeWidth={1.8} />
             {item.label}
           </button>
         );

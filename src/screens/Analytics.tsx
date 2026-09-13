@@ -116,7 +116,7 @@ export function Analytics() {
       </div>
 
       {/* The three figures -------------------------------------------------- */}
-      <div className="grid grid-cols-3 divide-x divide-line">
+      <div className="grid grid-cols-3 divide-x divide-line rounded-[--radius-lg] border border-line bg-surface overflow-hidden">
         <Figure label="In">
           <Money value={summary.income} currency={currency} hidden={hidden} size="base" weight="semibold" symbol={false} animate tone="positive" />
         </Figure>
@@ -205,7 +205,7 @@ export function Analytics() {
           ]}
         />
 
-        <div className="mt-3 rounded-[--radius] border border-line bg-surface">
+        <div className="mt-3 divide-y divide-line rounded-[--radius-lg] border border-line bg-surface overflow-hidden">
           {list === 'categories' &&
             (breakdown.length === 0 ? (
               <EmptyState compact title="No spending in this period" />
@@ -238,15 +238,15 @@ export function Analytics() {
                     <button
                       type="button"
                       onClick={() => navigate(`/transactions?q=${encodeURIComponent(m.merchant)}`)}
-                      className="flex w-full items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-surface-2/60"
+                      className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-surface-2/60 sm:px-5"
                     >
                       <span className="min-w-0 flex-1">
-                        <span className="block truncate text-sm font-medium text-ink">{m.merchant}</span>
+                        <span className="block truncate text-[0.9375rem] font-medium text-ink">{m.merchant}</span>
                         <span className="block text-xs text-ink-3">
                           <Num size="xs">{m.txnCount}</Num> {m.txnCount === 1 ? 'visit' : 'visits'} · last {formatDate(m.lastDate, 'short')}
                         </span>
                       </span>
-                      <Money value={m.amount} currency={currency} hidden={hidden} size="sm" weight="medium" symbol={false} />
+                      <Money value={m.amount} currency={currency} hidden={hidden} size="sm" weight="semibold" symbol={false} />
                     </button>
                   </li>
                 ))}
@@ -267,7 +267,7 @@ export function Analytics() {
                       showDate
                       dateLabel={formatDate(item.txn.date, 'short')}
                       onClick={() => navigate(`/transactions/${item.txn.id}`)}
-                      className="px-3"
+                      className="px-4 sm:px-5"
                     />
                   </li>
                 ))}
@@ -293,7 +293,7 @@ function Figure({
   children: React.ReactNode;
 }) {
   return (
-    <div className="px-3 first:pl-0 last:pr-0">
+    <div className="px-4 py-3.5">
       <span className="label flex items-center gap-1.5">
         {label}
         {hint && <span className="tnum normal-case tracking-normal text-ink-4">{hint}</span>}
