@@ -1,0 +1,27 @@
+- generic [ref=e2]:
+  - generic [ref=e45]:
+    - complementary [ref=e46]:
+      - generic [ref=e47]:
+        - img "Pocketa" [ref=e48]
+        - generic [ref=e49]: Pocketa
+      - button "Add transaction (N)" [ref=e51]:
+        - generic [ref=e53]: Add
+      - navigation [ref=e54]:
+        - link "Home" [ref=e55] [cursor=pointer]:
+          - /url: "#/"
+        - link "Activity" [ref=e62] [cursor=pointer]:
+          - /url: "#/transactions"
+        - link "Carpool" [ref=e67] [cursor=pointer]:
+          - /url: "#/carpool"
+        - link "Me" [ref=e72] [cursor=pointer]:
+          - /url: "#/me"
+    - generic [ref=e78]:
+      - banner [ref=e79]:
+        - generic [ref=e80]:
+          - generic: Goals
+          - generic [ref=e81]:
+            - button "Not signed in" [ref=e83]
+            - 'button "Theme: system" [ref=e87]'
+      - main [ref=e1583]:
+        - generic "Loading" [ref=e1585]
+  - region "Notifications"

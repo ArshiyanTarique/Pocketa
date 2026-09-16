@@ -1,0 +1,190 @@
+- generic [ref=e2]:
+  - generic [ref=e45]:
+    - complementary [ref=e46]:
+      - generic [ref=e47]:
+        - img "Pocketa" [ref=e48]
+        - generic [ref=e49]: Pocketa
+      - button "Add transaction (N)" [ref=e51]:
+        - generic [ref=e53]: Add
+      - navigation [ref=e54]:
+        - link "Home" [ref=e55] [cursor=pointer]:
+          - /url: "#/"
+        - link "Activity" [ref=e62] [cursor=pointer]:
+          - /url: "#/transactions"
+        - link "Carpool" [ref=e67] [cursor=pointer]:
+          - /url: "#/carpool"
+        - link "Me" [ref=e72] [cursor=pointer]:
+          - /url: "#/me"
+    - generic [ref=e78]:
+      - banner [ref=e79]:
+        - generic [ref=e80]:
+          - generic: Pocketa
+          - generic [ref=e81]:
+            - button "Not signed in" [ref=e83]
+            - 'button "Theme: system" [ref=e87]'
+      - main [ref=e91]:
+        - generic [ref=e93]:
+          - generic [ref=e94]:
+            - generic [ref=e95]:
+              - paragraph [ref=e96]: Left to spend
+              - generic [ref=e97]:
+                - generic [ref=e98]: Rs. 4,52,822.99
+                - button "How is this calculated?" [ref=e99]
+            - generic [ref=e105]:
+              - list "Your accounts" [ref=e106]:
+                - listitem "Meezan Bank, Bank" [ref=e107]:
+                  - generic [ref=e109]:
+                    - paragraph [ref=e110]: Meezan Bank
+                    - paragraph [ref=e111]: Meezan
+                  - generic "Rs. 5,10,900.00" [ref=e116]
+                - listitem "Cash, Cash" [ref=e117]:
+                  - generic [ref=e119]:
+                    - paragraph [ref=e120]: Cash
+                    - paragraph [ref=e121]: Cash
+                  - generic "Rs. 80,450.00" [ref=e127]
+                - listitem "SadaPay, Wallet" [ref=e128]:
+                  - generic [ref=e130]:
+                    - paragraph [ref=e131]: SadaPay
+                    - paragraph [ref=e132]: Wallet
+                  - generic "Rs. 75,320.00" [ref=e137]
+                - listitem "HBL Platinum, Credit card" [ref=e138]:
+                  - generic [ref=e140]:
+                    - paragraph [ref=e141]: HBL Platinum
+                    - paragraph [ref=e142]: Credit card · 4417
+                  - generic [ref=e146]:
+                    - generic "Rs. 1,00,195.00" [ref=e147]
+                    - paragraph [ref=e148]: 1,49,805.00 available
+                - listitem "Savings, Savings" [ref=e149]:
+                  - generic [ref=e151]:
+                    - paragraph [ref=e152]: Savings
+                    - paragraph [ref=e153]: Savings
+                  - generic "Rs. 3,20,000.00" [ref=e159]
+                - listitem "Add an account" [ref=e160]:
+                  - generic [ref=e162]: Add account
+              - tablist "Which card is in view" [ref=e163]:
+                - tab "Card 1 of 6" [ref=e164]
+                - tab "Card 2 of 6" [selected] [ref=e166]
+                - tab "Card 3 of 6" [ref=e168]
+                - tab "Card 4 of 6" [ref=e170]
+                - tab "Card 5 of 6" [ref=e172]
+                - tab "Card 6 of 6" [ref=e174]
+            - generic [ref=e176]:
+              - paragraph [ref=e177]: This month
+              - generic [ref=e178]:
+                - button "In 3.4L" [ref=e179]:
+                  - generic [ref=e180]: In
+                  - generic "3.4L" [ref=e181]
+                - button "Out 1.58L" [ref=e182]:
+                  - generic [ref=e183]: Out
+                  - generic "1.58L" [ref=e184]
+                - button "Kept 1.82L" [ref=e185]:
+                  - generic [ref=e186]: Kept
+                  - generic "1.82L" [ref=e187]
+            - generic [ref=e189]:
+              - generic [ref=e190]:
+                - button "Electricity overdue 11,200.00" [ref=e191]:
+                  - generic [ref=e194]: Electricity overdue
+                  - generic [ref=e195]: 11,200.00
+                - generic [ref=e198]:
+                  - list [ref=e199]:
+                    - listitem [ref=e200]:
+                      - generic [ref=e201]: Electricity
+                      - generic [ref=e202]:
+                        - generic [ref=e203]: 4d late
+                        - generic "11,200.00" [ref=e204]
+                  - link "Record them" [ref=e205] [cursor=pointer]:
+                    - /url: "#/bills"
+              - generic [ref=e208]:
+                - button "3 budgets at risk → 35,907.69" [ref=e209]:
+                  - generic [ref=e213]: 3 budgets at risk
+                  - generic [ref=e215]:
+                    - text: →
+                    - generic "35,907.69" [ref=e218]
+                - generic [ref=e221]:
+                  - list [ref=e222]:
+                    - listitem [ref=e223]:
+                      - generic [ref=e224]:
+                        - generic [ref=e225]: Transport
+                        - generic [ref=e226]:
+                          - text: →
+                          - generic "35,907.69" [ref=e229]
+                      - progressbar "Transport budget" [ref=e230]
+                    - listitem [ref=e233]:
+                      - generic [ref=e234]:
+                        - generic [ref=e235]: Groceries
+                        - generic [ref=e236]:
+                          - text: →
+                          - generic "64,038.46" [ref=e239]
+                      - progressbar "Groceries budget" [ref=e240]
+                    - listitem [ref=e243]:
+                      - generic [ref=e244]:
+                        - generic [ref=e245]: Everything
+                        - generic [ref=e246]:
+                          - text: →
+                          - generic "3,65,446.15" [ref=e249]
+                      - progressbar "Everything budget" [ref=e250]
+                  - link "All budgets" [ref=e253] [cursor=pointer]:
+                    - /url: "#/budgets"
+              - generic [ref=e256]:
+                - button "1 owe you · you owe 1 −5,800.00" [ref=e257]:
+                  - generic [ref=e265]:
+                    - generic [ref=e266]: 1 owe you
+                    - generic [ref=e267]: · you owe 1
+                  - generic [ref=e268]: −5,800.00
+                - generic [ref=e271]:
+                  - list [ref=e272]:
+                    - listitem [ref=e273]:
+                      - generic [ref=e274]: Bilal
+                      - generic "+4,200.00" [ref=e275]
+                    - listitem [ref=e276]:
+                      - generic [ref=e277]: Bilal
+                      - generic "−10,000.00" [ref=e278]
+                  - link "Settle up" [ref=e279] [cursor=pointer]:
+                    - /url: "#/debts"
+          - complementary [ref=e282]:
+            - generic [ref=e283]:
+              - generic [ref=e284]:
+                - generic [ref=e285]: Recent
+                - link "See all" [ref=e286] [cursor=pointer]:
+                  - /url: "#/transactions"
+              - list [ref=e287]:
+                - listitem [ref=e288]:
+                  - button "Imtiaz TodayGroceries · HBL Platinum −7,250.00" [ref=e289]:
+                    - generic [aria-hidden] [ref=e290]: I
+                    - generic [ref=e291]:
+                      - generic [ref=e292]: Imtiaz
+                      - generic [ref=e294]: Today·Groceries · HBL Platinum
+                    - generic [ref=e295]: −7,250.00
+                - listitem [ref=e296]:
+                  - button "Kababjees TodayDining out · HBL Platinum −3,400.00" [ref=e297]:
+                    - generic [aria-hidden] [ref=e298]: K
+                    - generic [ref=e299]:
+                      - generic [ref=e300]: Kababjees
+                      - generic [ref=e302]: Today·Dining out · HBL Platinum
+                    - generic [ref=e303]: −3,400.00
+                - listitem [ref=e304]:
+                  - button "Careem TodayRide-hailing · SadaPay −940.00" [ref=e305]:
+                    - generic [aria-hidden] [ref=e306]: C
+                    - generic [ref=e307]:
+                      - generic [ref=e308]: Careem
+                      - generic [ref=e310]: Today·Ride-hailing · SadaPay
+                    - generic [ref=e311]: −940.00
+                - listitem [ref=e312]:
+                  - button "Servaid TodayPharmacy · Cash −2,150.00" [ref=e313]:
+                    - generic [aria-hidden] [ref=e314]: S
+                    - generic [ref=e315]:
+                      - generic [ref=e316]: Servaid
+                      - generic [ref=e318]: Today·Pharmacy · Cash
+                    - generic [ref=e319]: −2,150.00
+                - listitem [ref=e320]:
+                  - button "Imtiaz TodayGroceries · HBL Platinum −8,100.00" [ref=e321]:
+                    - generic [aria-hidden] [ref=e322]: I
+                    - generic [ref=e323]:
+                      - generic [ref=e324]: Imtiaz
+                      - generic [ref=e326]: Today·Groceries · HBL Platinum
+                    - generic [ref=e327]: −8,100.00
+  - region "Notifications":
+    - generic [ref=e328]:
+      - paragraph [ref=e330]: Loaded 80 sample transactions
+      - button "Start fresh" [ref=e331]
+      - button "Dismiss" [ref=e332]

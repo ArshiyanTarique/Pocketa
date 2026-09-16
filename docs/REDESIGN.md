@@ -412,4 +412,20 @@ decoration on top of that.
 | i18n | Added 'Join' and 'Pocketa' Urdu translations; page title in topbar runs through `useT()` |
 | Supabase Realtime | `alter publication supabase_realtime add table public.ops` — push notifications for cross-device sync |
 
-Remaining: a contrast pass in both themes at 375px and 1280px.
+Remaining: ~~a contrast pass in both themes at 375px and 1280px.~~ Done — see Phase 8 below.
+
+### Phase 8 — contrast pass (done)
+
+WCAG AA audit at 375px and 1280px, both light and dark themes.
+
+| Finding | Fix |
+|---|---|
+| `--ink-4` light theme: `#9896a0` on `#f7f6f4` = 2.70:1 ❌ | Darkened to `#706e78` → 4.64:1 ✅ |
+| Accent button label: blue `#3b74f5` = 4.20:1 ❌ | Darkened fill to `#386ee9` → 4.59:1 ✅ |
+| Accent button label: red `#e84040` = 4.01:1 ❌ | Darkened fill to `#d53b3b` → 4.65:1 ✅ |
+| Accent button label: purple `#a072cf` = 3.62:1 ❌ | Darkened fill to `#8b63b4` → 4.62:1 ✅ |
+| Accent button label: teal `#0891b2` = 3.68:1 ❌ | Darkened fill to `#07809d` → 4.58:1 ✅ |
+| Accent button label: orange `#f97316` = 2.80:1 ❌ | Darkened fill to `#bd5711` → 4.63:1 ✅ |
+| Accent button label: pink `#ec4899` = 3.53:1 ❌ | Darkened fill to `#cb3e84` → 4.60:1 ✅ |
+
+All other tokens (ink, ink-2, ink-3, jade, rust, cerulean, plum, gold text, semantic soft backgrounds) already passed in both themes. Dark theme `--ink-4` was already 5.51:1. Gold accent fill (#e3b53a) correctly uses dark ink and passes at 9.51:1.

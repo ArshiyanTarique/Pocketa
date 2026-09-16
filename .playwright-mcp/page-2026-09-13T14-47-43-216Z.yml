@@ -1,0 +1,63 @@
+- generic [ref=e2]:
+  - generic [ref=e45]:
+    - complementary [ref=e46]:
+      - generic [ref=e47]:
+        - img "Pocketa" [ref=e48]
+        - generic [ref=e49]: Pocketa
+      - button "Add transaction (N)" [ref=e51]:
+        - generic [ref=e53]: Add
+      - navigation [ref=e54]:
+        - link "Home" [ref=e55] [cursor=pointer]:
+          - /url: "#/"
+        - link "Activity" [ref=e62] [cursor=pointer]:
+          - /url: "#/transactions"
+        - link "Carpool" [ref=e67] [cursor=pointer]:
+          - /url: "#/carpool"
+        - link "Me" [ref=e72] [cursor=pointer]:
+          - /url: "#/me"
+    - generic [ref=e78]:
+      - banner [ref=e79]:
+        - generic [ref=e80]:
+          - generic: Goals
+          - generic [ref=e81]:
+            - button "Not signed in" [ref=e83]
+            - 'button "Theme: system" [ref=e87]'
+      - main [ref=e1989]:
+        - generic [ref=e1991]:
+          - generic [ref=e1992]:
+            - paragraph [ref=e1993]: Set aside
+            - generic [ref=e1994]:
+              - generic "Rs. 75,000.00" [ref=e1995]
+              - generic [ref=e1997]:
+                - generic [ref=e1998]: Target
+                - generic "4,50,000.00" [ref=e1999]
+            - progressbar "Overall goal progress" [ref=e2000]
+          - generic [ref=e2002]:
+            - heading "Goals" [level=2] [ref=e2003]
+            - button "New goal" [ref=e2004]
+          - list [ref=e2006]:
+            - listitem [ref=e2007]:
+              - generic [ref=e2008]:
+                - button "MacBook by 13 Apr 2027 17 75,000.00 of 4,50,000.00" [ref=e2009]:
+                  - generic [ref=e2011]:
+                    - generic [ref=e2012]:
+                      - generic [ref=e2013]: MacBook
+                      - generic [ref=e2015]: by 13 Apr 2027
+                    - progressbar "MacBook progress" [ref=e2016]
+                  - generic [ref=e2019]:
+                    - generic "75,000.00" [ref=e2020]
+                    - generic [ref=e2021]: of 4,50,000.00
+                - generic [ref=e2024]:
+                  - table "Still needed · 7 months" [ref=e2025]:
+                    - row [ref=e2026]:
+                      - cell "Each week" [ref=e2027]
+                      - cell "12,382.08" [ref=e2028]
+                    - row [ref=e2029]:
+                      - cell "Each month" [ref=e2030]
+                      - cell "53,844.34" [ref=e2031]
+                    - generic [ref=e2033]: 3,75,000.00
+                  - generic [ref=e2034]:
+                    - button "Add money" [ref=e2035]
+                    - button "Take out" [ref=e2038]
+                    - button "Edit MacBook" [ref=e2041]: Edit
+  - region "Notifications"

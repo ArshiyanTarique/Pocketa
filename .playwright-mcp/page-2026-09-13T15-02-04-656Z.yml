@@ -1,0 +1,283 @@
+- generic [ref=e2]:
+  - generic [ref=e45]:
+    - complementary [ref=e46]:
+      - generic [ref=e47]:
+        - img "Pocketa" [ref=e48]
+        - generic [ref=e49]: Pocketa
+      - button "Add transaction (N)" [ref=e51]:
+        - generic [ref=e53]: Add
+      - navigation [ref=e54]:
+        - link "Home" [ref=e55] [cursor=pointer]:
+          - /url: "#/"
+        - link "Activity" [ref=e62] [cursor=pointer]:
+          - /url: "#/transactions"
+        - link "Carpool" [ref=e67] [cursor=pointer]:
+          - /url: "#/carpool"
+        - link "Me" [ref=e72] [cursor=pointer]:
+          - /url: "#/me"
+    - generic [ref=e78]:
+      - banner [ref=e79]:
+        - generic [ref=e80]:
+          - generic: Analytics
+          - generic [ref=e81]:
+            - button "Not signed in" [ref=e83]
+            - 'button "Theme: system" [ref=e87]'
+      - main [ref=e2096]:
+        - generic [ref=e2098]:
+          - generic [ref=e2099]:
+            - tablist "Period" [ref=e2100]:
+              - tab "Month" [selected] [ref=e2102]
+              - tab "Year" [ref=e2103]
+            - generic [ref=e2104]:
+              - button "Previous period" [ref=e2105]
+              - generic [ref=e2108]: September 2026
+              - button "Next period" [disabled]
+          - generic [ref=e2109]:
+            - generic [ref=e2110]:
+              - generic [ref=e2111]: In
+              - generic "3,40,000.00" [ref=e2113]
+            - generic [ref=e2114]:
+              - generic [ref=e2115]: Out
+              - generic [ref=e2116]:
+                - generic "1,58,360.00" [ref=e2117]
+                - generic [ref=e2118]:
+                  - text: −
+                  - generic [ref=e2119]: 7%
+            - generic [ref=e2120]:
+              - generic [ref=e2121]:
+                - text: Kept
+                - generic [ref=e2122]: 53%
+              - generic "1,81,640.00" [ref=e2125]
+          - generic [ref=e2126]:
+            - generic [ref=e2127]:
+              - tablist "Chart" [ref=e2128]:
+                - tab "Cash flow" [selected] [ref=e2130]
+                - tab "Net worth" [ref=e2131]
+                - tab "Daily" [ref=e2132]
+              - generic [ref=e2133]: Last 12 months
+            - generic [ref=e2134]:
+              - generic [ref=e2135]:
+                - generic [ref=e2136]:
+                  - generic:
+                    - generic "Income Rs. 0.00"
+                    - generic "Expenses Rs. 0.00"
+                  - generic [ref=e2137]: Oct 25
+                - generic [ref=e2138]:
+                  - generic:
+                    - generic "Income Rs. 0.00"
+                    - generic "Expenses Rs. 0.00"
+                  - generic [ref=e2139]: Nov 25
+                - generic [ref=e2140]:
+                  - generic:
+                    - generic "Income Rs. 0.00"
+                    - generic "Expenses Rs. 0.00"
+                  - generic [ref=e2141]: Dec 25
+                - generic [ref=e2142]:
+                  - generic:
+                    - generic "Income Rs. 0.00"
+                    - generic "Expenses Rs. 0.00"
+                  - generic [ref=e2143]: Jan 26
+                - generic [ref=e2144]:
+                  - generic:
+                    - generic "Income Rs. 0.00"
+                    - generic "Expenses Rs. 0.00"
+                  - generic [ref=e2145]: Feb 26
+                - generic [ref=e2146]:
+                  - generic:
+                    - generic "Income Rs. 0.00"
+                    - generic "Expenses Rs. 0.00"
+                  - generic [ref=e2147]: Mar 26
+                - generic [ref=e2148]:
+                  - generic:
+                    - generic "Income Rs. 0.00"
+                    - generic "Expenses Rs. 0.00"
+                  - generic [ref=e2149]: Apr 26
+                - generic [ref=e2150]:
+                  - generic:
+                    - generic "Income Rs. 0.00"
+                    - generic "Expenses Rs. 0.00"
+                  - generic [ref=e2151]: May 26
+                - generic [ref=e2152]:
+                  - generic:
+                    - generic "Income Rs. 0.00"
+                    - generic "Expenses Rs. 0.00"
+                  - generic [ref=e2153]: Jun 26
+                - generic [ref=e2154]:
+                  - generic:
+                    - generic "Income Rs. 3,27,000.00"
+                    - generic "Expenses Rs. 1,70,760.00"
+                  - generic [ref=e2155]: Jul 26
+                - generic [ref=e2156]:
+                  - generic:
+                    - generic "Income Rs. 2,85,000.00"
+                    - generic "Expenses Rs. 1,71,055.00"
+                  - generic [ref=e2157]: Aug 26
+                - generic [ref=e2158]:
+                  - generic:
+                    - generic "Income Rs. 3,40,000.00"
+                    - generic "Expenses Rs. 1,58,360.00"
+                  - generic [ref=e2159]: Sep 26
+              - generic [ref=e2160]:
+                - generic [ref=e2161]: In
+                - generic [ref=e2163]: Out
+          - generic [ref=e2165]:
+            - tablist "Breakdown" [ref=e2166]:
+              - tab "Categories" [selected] [ref=e2168]
+              - tab "Merchants" [ref=e2169]
+              - tab "Largest" [ref=e2170]
+            - list [ref=e2172]:
+              - listitem [ref=e2173]:
+                - generic [ref=e2174]:
+                  - button "Housing 64% 1,00,700.00" [ref=e2175]:
+                    - generic [ref=e2179]:
+                      - generic [ref=e2180]: Housing
+                      - generic [ref=e2181]: 64%
+                    - generic "1,00,700.00" [ref=e2187]
+                  - generic [ref=e2190]:
+                    - list [ref=e2191]:
+                      - listitem [ref=e2192]:
+                        - button "Rent Rs. 85,000" [ref=e2193]:
+                          - generic [ref=e2194]:
+                            - generic [ref=e2195]: Rent
+                            - generic [ref=e2198]: Rs. 85,000
+                      - listitem [ref=e2201]:
+                        - button "Utilities Rs. 11,200" [ref=e2202]:
+                          - generic [ref=e2203]:
+                            - generic [ref=e2204]: Utilities
+                            - generic [ref=e2207]: Rs. 11,200
+                      - listitem [ref=e2210]:
+                        - button "Internet Rs. 4,500" [ref=e2211]:
+                          - generic [ref=e2212]:
+                            - generic [ref=e2213]: Internet
+                            - generic [ref=e2216]: Rs. 4,500
+                    - generic [ref=e2219]:
+                      - generic [ref=e2220]: Not enough history to compare · 3 transactions
+                      - button "Transactions" [ref=e2221]
+              - listitem [ref=e2222]:
+                - generic [ref=e2223]:
+                  - button "Food & Drink 21% 32,600.00" [ref=e2224]:
+                    - generic [ref=e2228]:
+                      - generic [ref=e2229]: Food & Drink
+                      - generic [ref=e2230]: 21%
+                    - generic "32,600.00" [ref=e2236]
+                  - generic [ref=e2239]:
+                    - list [ref=e2240]:
+                      - listitem [ref=e2241]:
+                        - button "Groceries Rs. 27,750" [ref=e2242]:
+                          - generic [ref=e2243]:
+                            - generic [ref=e2244]: Groceries
+                            - generic [ref=e2247]: Rs. 27,750
+                      - listitem [ref=e2250]:
+                        - button "Dining out Rs. 4,250" [ref=e2251]:
+                          - generic [ref=e2252]:
+                            - generic [ref=e2253]: Dining out
+                            - generic [ref=e2256]: Rs. 4,250
+                      - listitem [ref=e2259]:
+                        - button "Coffee & snacks Rs. 600" [ref=e2260]:
+                          - generic [ref=e2261]:
+                            - generic [ref=e2262]: Coffee & snacks
+                            - generic [ref=e2265]: Rs. 600
+                    - generic [ref=e2268]:
+                      - generic [ref=e2269]: Not enough history to compare · 8 transactions
+                      - button "Transactions" [ref=e2270]
+              - listitem [ref=e2271]:
+                - generic [ref=e2272]:
+                  - button "Transport 10% 15,560.00" [ref=e2273]:
+                    - generic [ref=e2277]:
+                      - generic [ref=e2278]: Transport
+                      - generic [ref=e2279]: 10%
+                    - generic "15,560.00" [ref=e2285]
+                  - generic [ref=e2288]:
+                    - list [ref=e2289]:
+                      - listitem [ref=e2290]:
+                        - button "Fuel Rs. 14,000" [ref=e2291]:
+                          - generic [ref=e2292]:
+                            - generic [ref=e2293]: Fuel
+                            - generic [ref=e2296]: Rs. 14,000
+                      - listitem [ref=e2299]:
+                        - button "Ride-hailing Rs. 1,560" [ref=e2300]:
+                          - generic [ref=e2301]:
+                            - generic [ref=e2302]: Ride-hailing
+                            - generic [ref=e2305]: Rs. 1,560
+                    - generic [ref=e2308]:
+                      - generic [ref=e2309]: Not enough history to compare · 4 transactions
+                      - button "Transactions" [ref=e2310]
+              - listitem [ref=e2311]:
+                - generic [ref=e2312]:
+                  - button "Education 2% 3,600.00" [ref=e2313]:
+                    - generic [ref=e2317]:
+                      - generic [ref=e2318]: Education
+                      - generic [ref=e2319]: 2%
+                    - generic "3,600.00" [ref=e2325]
+                  - generic [ref=e2328]:
+                    - list [ref=e2329]:
+                      - listitem [ref=e2330]:
+                        - button "Books Rs. 3,600" [ref=e2331]:
+                          - generic [ref=e2332]:
+                            - generic [ref=e2333]: Books
+                            - generic [ref=e2336]: Rs. 3,600
+                    - generic [ref=e2339]:
+                      - generic [ref=e2340]: Not enough history to compare · 1 transaction
+                      - button "Transactions" [ref=e2341]
+              - listitem [ref=e2342]:
+                - generic [ref=e2343]:
+                  - button "Health 1% 2,150.00" [ref=e2344]:
+                    - generic [ref=e2348]:
+                      - generic [ref=e2349]: Health
+                      - generic [ref=e2350]: 1%
+                    - generic "2,150.00" [ref=e2356]
+                  - generic [ref=e2359]:
+                    - list [ref=e2360]:
+                      - listitem [ref=e2361]:
+                        - button "Pharmacy Rs. 2,150" [ref=e2362]:
+                          - generic [ref=e2363]:
+                            - generic [ref=e2364]: Pharmacy
+                            - generic [ref=e2367]: Rs. 2,150
+                    - generic [ref=e2370]:
+                      - generic [ref=e2371]: Not enough history to compare · 1 transaction
+                      - button "Transactions" [ref=e2372]
+              - listitem [ref=e2373]:
+                - generic [ref=e2374]:
+                  - button "Entertainment 1% 1,750.00" [ref=e2375]:
+                    - generic [ref=e2379]:
+                      - generic [ref=e2380]: Entertainment
+                      - generic [ref=e2381]: 1%
+                    - generic "1,750.00" [ref=e2387]
+                  - generic [ref=e2390]:
+                    - list [ref=e2391]:
+                      - listitem [ref=e2392]:
+                        - button "Subscriptions Rs. 1,750" [ref=e2393]:
+                          - generic [ref=e2394]:
+                            - generic [ref=e2395]: Subscriptions
+                            - generic [ref=e2398]: Rs. 1,750
+                    - generic [ref=e2401]:
+                      - generic [ref=e2402]: Not enough history to compare · 1 transaction
+                      - button "Transactions" [ref=e2403]
+              - listitem [ref=e2404]:
+                - generic [ref=e2405]:
+                  - button "Shopping 1% 1,200.00" [ref=e2406]:
+                    - generic [ref=e2410]:
+                      - generic [ref=e2411]: Shopping
+                      - generic [ref=e2412]: 1%
+                    - generic "1,200.00" [ref=e2418]
+                  - generic [ref=e2421]:
+                    - list [ref=e2422]:
+                      - listitem [ref=e2423]:
+                        - button "Household Rs. 1,200" [ref=e2424]:
+                          - generic [ref=e2425]:
+                            - generic [ref=e2426]: Household
+                            - generic [ref=e2429]: Rs. 1,200
+                    - generic [ref=e2432]:
+                      - generic [ref=e2433]: Not enough history to compare · 1 transaction
+                      - button "Transactions" [ref=e2434]
+              - listitem [ref=e2435]:
+                - generic [ref=e2436]:
+                  - button "Personal 1% 800.00" [ref=e2437]:
+                    - generic [ref=e2441]:
+                      - generic [ref=e2442]: Personal
+                      - generic [ref=e2443]: 1%
+                    - generic "800.00" [ref=e2451]
+                  - generic [ref=e2455]:
+                    - generic [ref=e2456]: About the same as usual · 1 transaction
+                    - button "Transactions" [ref=e2457]
+  - region "Notifications"

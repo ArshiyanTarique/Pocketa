@@ -35,15 +35,16 @@ type AccentColor = 'gold' | 'blue' | 'green' | 'red' | 'purple' | 'slate' | 'tea
 const ACCENTS: Record<AccentColor, {
   accent: string; fill: string; hover: string; soft: string; ink: string;
 }> = {
+  // fill values are calibrated so that white ink (#ffffff) clears 4.5:1 WCAG AA.
   gold:   { accent: '#7a5c07', fill: '#e3b53a', hover: '#d4a52a', soft: '#f7edcf', ink: '#1c1400' },
-  blue:   { accent: '#1a4fd6', fill: '#3b74f5', hover: '#2a63e8', soft: '#dce8ff', ink: '#ffffff' },
+  blue:   { accent: '#1a4fd6', fill: '#386ee9', hover: '#2a5fd8', soft: '#dce8ff', ink: '#ffffff' },
   green:  { accent: '#1c7a52', fill: '#37b47e', hover: '#2da06e', soft: '#dcf2e7', ink: '#04160e' },
-  red:    { accent: '#b52b2b', fill: '#e84040', hover: '#d43030', soft: '#fde8e8', ink: '#ffffff' },
-  purple: { accent: '#683c8d', fill: '#a072cf', hover: '#8f60bc', soft: '#ede2f6', ink: '#ffffff' },
+  red:    { accent: '#b52b2b', fill: '#d53b3b', hover: '#c43030', soft: '#fde8e8', ink: '#ffffff' },
+  purple: { accent: '#683c8d', fill: '#8b63b4', hover: '#7a56a0', soft: '#ede2f6', ink: '#ffffff' },
   slate:  { accent: '#374151', fill: '#4b5563', hover: '#374151', soft: '#e5e7eb', ink: '#ffffff' },
-  teal:   { accent: '#0e7490', fill: '#0891b2', hover: '#0e7490', soft: '#cffafe', ink: '#ffffff' },
-  orange: { accent: '#c2410c', fill: '#f97316', hover: '#ea6d04', soft: '#ffedd5', ink: '#ffffff' },
-  pink:   { accent: '#be185d', fill: '#ec4899', hover: '#db2777', soft: '#fce7f3', ink: '#ffffff' },
+  teal:   { accent: '#0e7490', fill: '#07809d', hover: '#06708a', soft: '#cffafe', ink: '#ffffff' },
+  orange: { accent: '#c2410c', fill: '#bd5711', hover: '#a84c0e', soft: '#ffedd5', ink: '#ffffff' },
+  pink:   { accent: '#be185d', fill: '#cb3e84', hover: '#b83375', soft: '#fce7f3', ink: '#ffffff' },
 };
 
 export function applyAccent(color: string) {

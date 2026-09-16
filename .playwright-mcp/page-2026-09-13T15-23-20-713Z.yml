@@ -1,0 +1,77 @@
+- generic [ref=f16e2]:
+  - generic [ref=f16e45]:
+    - complementary [ref=f16e46]:
+      - generic [ref=f16e47]:
+        - img "Pocketa" [ref=f16e48]
+        - generic [ref=f16e49]: Pocketa
+      - button "Add transaction (N)" [ref=f16e51]:
+        - generic [ref=f16e53]: Add
+      - navigation [ref=f16e54]:
+        - link "Home" [ref=f16e55] [cursor=pointer]:
+          - /url: "#/"
+        - link "Activity" [ref=f16e62] [cursor=pointer]:
+          - /url: "#/transactions"
+        - link "Carpool" [ref=f16e67] [cursor=pointer]:
+          - /url: "#/carpool"
+        - link "Me" [ref=f16e72] [cursor=pointer]:
+          - /url: "#/me"
+    - generic [ref=f16e78]:
+      - banner [ref=f16e79]:
+        - generic [ref=f16e80]:
+          - generic: Pocketa
+          - generic [ref=f16e81]:
+            - button "Not signed in" [ref=f16e83]
+            - 'button "Theme: dark" [ref=f16e87]'
+      - main [ref=f16e90]:
+        - generic [ref=f16e92]:
+          - generic [ref=f16e93]:
+            - generic [ref=f16e94]:
+              - paragraph [ref=f16e95]: Start here
+              - heading "Where do you stand?" [level=1] [ref=f16e96]: Where do youstand?
+              - generic [ref=f16e97]:
+                - button "Explore with sample data" [ref=f16e98]
+                - button "Import a CSV instead" [ref=f16e101]
+            - generic [aria-hidden] [ref=f16e102]:
+              - generic [ref=f16e103]:
+                - listitem:
+                  - generic:
+                    - generic:
+                      - paragraph: Wallet
+                      - paragraph: Cash
+                  - generic: Rs. 12,400.00
+              - generic [ref=f16e104]:
+                - listitem:
+                  - generic:
+                    - generic:
+                      - paragraph: Meezan
+                      - paragraph: Current
+                  - generic: Rs. 3,10,200.00
+              - generic [ref=f16e105]:
+                - listitem:
+                  - generic:
+                    - generic:
+                      - paragraph: HBL Card
+                      - paragraph: ···· 4412
+                  - generic:
+                    - generic: Rs. 18,420.00
+                    - paragraph: 11,580.00 available
+          - list [ref=f16e106]:
+            - listitem [ref=f16e107]:
+              - button "1 Add an account What is in it today" [ref=f16e108]:
+                - generic [ref=f16e109]: "1"
+                - generic [ref=f16e114]:
+                  - generic [ref=f16e115]: Add an account
+                  - generic [ref=f16e116]: What is in it today
+            - listitem [ref=f16e117]:
+              - button "2 Record a spend Amount, category, done" [ref=f16e118]:
+                - generic [ref=f16e119]: "2"
+                - generic [ref=f16e122]:
+                  - generic [ref=f16e123]: Record a spend
+                  - generic [ref=f16e124]: Amount, category, done
+            - listitem [ref=f16e125]:
+              - button "3 Add your bills So they are reserved before you spend" [ref=f16e126]:
+                - generic [ref=f16e127]: "3"
+                - generic [ref=f16e133]:
+                  - generic [ref=f16e134]: Add your bills
+                  - generic [ref=f16e135]: So they are reserved before you spend
+  - region "Notifications"

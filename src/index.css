@@ -40,7 +40,7 @@
     --ink: #111113;
     --ink-2: #3d3b44;
     --ink-3: #65636b;
-    --ink-4: #9896a0;
+    --ink-4: #706e78;   /* was #9896a0 — darkened to clear 4.5:1 on --paper */
     --line: #e4dfd7;
     --line-strong: #cec8be;
 
@@ -328,30 +328,31 @@
   }
 
   /*
-    Text size scaling: we only change the body font-size.
-    Layout dimensions (sidebar width, max-width, panel offsets) use px in
-    component classes so they are immune to this scaling. Only text/padding
-    specified in em will grow. Components use Tailwind rem classes which are
-    computed at build time as px, so they don't change with body font-size —
-    the scaling effect is therefore limited to elements that use font-size:inherit
-    (inputs, textareas, buttons) and a small number of explicitly em-sized elements.
-    This is intentional: it enlarges readable text without breaking layout boxes.
+    Text size scaling: we scale html font-size so that all rem-based Tailwind
+    text classes grow. Layout-critical fixed dimensions (sidebar, panels) use
+    the Tailwind arbitrary-value px classes which are unaffected by rem scaling.
   */
-  html.text-scale-large body {
+  html.text-scale-large {
     font-size: 1.0625rem; /* ~17px */
   }
-  html.text-scale-xlarge body {
+  html.text-scale-xlarge {
     font-size: 1.125rem; /* ~18px */
   }
 
   /* Compact density */
   :root[data-density='compact'] {
     --density-px: 0.75rem;
-    --density-py: 0.625rem;
+    --density-py: 0.375rem;
   }
   :root:not([data-density='compact']) {
     --density-px: 1.25rem;
-    --density-py: 1rem;
+    --density-py: 0.625rem;
+  }
+
+  /* Apply density to transaction rows and list cards */
+  .density-row {
+    padding-top: var(--density-py);
+    padding-bottom: var(--density-py);
   }
 
   /* Every number in Pocketa is tabular. Columns of figures must align, or the
@@ -619,6 +620,12 @@
 }
 
 @layer utilities {
+  /* Density-aware row padding — overrides any py-* utility via layer order */
+  .density-row {
+    padding-top: var(--density-py);
+    padding-bottom: var(--density-py);
+  }
+
   /* Height that animates without measuring: a grid track from 0fr to 1fr.
      Used by anything that opens in place. */
   .disclose {

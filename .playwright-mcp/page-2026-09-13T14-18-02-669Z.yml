@@ -1,0 +1,80 @@
+- generic [ref=e2]:
+  - generic [ref=e45]:
+    - complementary [ref=e46]:
+      - generic [ref=e47]:
+        - img "Pocketa" [ref=e48]
+        - generic [ref=e49]: Pocketa
+      - button "Add transaction (N)" [ref=e51]:
+        - generic [ref=e53]: Add
+      - navigation [ref=e54]:
+        - link "Home" [ref=e55] [cursor=pointer]:
+          - /url: "#/"
+        - link "Activity" [ref=e62] [cursor=pointer]:
+          - /url: "#/transactions"
+        - link "Carpool" [ref=e67] [cursor=pointer]:
+          - /url: "#/carpool"
+        - link "Me" [ref=e72] [cursor=pointer]:
+          - /url: "#/me"
+    - generic [ref=e78]:
+      - banner [ref=e79]:
+        - generic [ref=e80]:
+          - generic: Settings
+          - generic [ref=e81]:
+            - button "Not signed in" [ref=e83]
+            - 'button "Theme: system" [ref=e87]'
+      - main [ref=e335]:
+        - generic [ref=e362]:
+          - tablist "Settings section" [ref=e363]:
+            - tab "Account" [ref=e365]
+            - tab "Appearance" [selected] [ref=e366]
+            - tab "Money" [ref=e367]
+            - tab "Categories" [ref=e368]
+            - tab "Data" [ref=e369]
+          - generic [ref=e373]:
+            - generic [ref=e374]:
+              - generic [ref=e375]: Language / زبان
+              - generic [ref=e376]:
+                - button "English" [ref=e377]
+                - button "اردو" [ref=e378]
+            - generic [ref=e379]:
+              - generic [ref=e380]: Theme
+              - tablist "Theme" [ref=e381]:
+                - tab "System" [selected] [ref=e383]
+                - tab "Light" [ref=e384]
+                - tab "Dark" [ref=e385]
+            - generic [ref=e386]:
+              - generic [ref=e387]: Accent color
+              - generic [ref=e388]:
+                - button "Blue" [pressed] [ref=e389]
+                - button "Green" [ref=e390]
+                - button "Purple" [ref=e391]
+                - button "Red" [ref=e392]
+                - button "Slate" [ref=e393]
+                - button "Gold" [ref=e394]
+                - button "Teal" [ref=e395]
+                - button "Orange" [ref=e396]
+                - button "Pink" [ref=e397]
+            - generic [ref=e398]:
+              - generic [ref=e399]: Text size
+              - tablist "Text size" [ref=e400]:
+                - tab "Normal" [ref=e402]
+                - tab "Large" [selected] [ref=e403]
+                - tab "Very Large" [ref=e404]
+              - paragraph [ref=e405]: Makes all text and numbers larger — helpful on a small screen.
+            - generic [ref=e406]:
+              - generic [ref=e407]: Display density
+              - tablist "Display density" [ref=e408]:
+                - tab "Comfortable" [ref=e410]
+                - tab "Compact" [active] [selected] [ref=e411]
+              - paragraph [ref=e412]: Comfortable gives more breathing room; compact fits more on screen.
+            - generic [ref=e413] [cursor=pointer]:
+              - generic [ref=e414]:
+                - generic [ref=e415]: Hide amounts
+                - generic [ref=e416]: Replaces every figure with dots. Useful on a shared screen.
+              - switch "Hide amounts" [ref=e417]
+            - generic [ref=e419]:
+              - generic [ref=e420]: Week starts on
+              - combobox "Week starts on" [ref=e422]:
+                - option "Monday" [selected]
+                - option "Sunday"
+  - region "Notifications"

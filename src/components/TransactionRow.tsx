@@ -30,7 +30,7 @@ export function TransactionRow({
     <Tag
       {...(onClick ? { onClick, type: 'button' as const } : {})}
       className={cn(
-        'flex w-full items-center gap-3 px-4 py-2 text-left transition-colors',
+        'flex w-full items-center gap-3 px-4 text-left transition-colors density-row',
         onClick && 'hover:bg-surface-2 active:bg-surface-2',
         txn.voided && 'opacity-40',
         className,

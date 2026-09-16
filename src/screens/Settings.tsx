@@ -303,16 +303,17 @@ function AppearanceSection() {
   const settings = useStore((s) => s.settings);
   const updateSettings = useStore((s) => s.updateSettings);
 
+  // fill values match ACCENTS in App.tsx — both must stay in sync
   const ACCENT_OPTIONS: Array<{ value: string; label: string; fill: string }> = [
-    { value: 'blue',   label: 'Blue',   fill: '#3b74f5' },
+    { value: 'blue',   label: 'Blue',   fill: '#386ee9' },
     { value: 'green',  label: 'Green',  fill: '#37b47e' },
-    { value: 'purple', label: 'Purple', fill: '#a072cf' },
-    { value: 'red',    label: 'Red',    fill: '#e84040' },
+    { value: 'purple', label: 'Purple', fill: '#8b63b4' },
+    { value: 'red',    label: 'Red',    fill: '#d53b3b' },
     { value: 'slate',  label: 'Slate',  fill: '#4b5563' },
     { value: 'gold',   label: 'Gold',   fill: '#e3b53a' },
-    { value: 'teal',   label: 'Teal',   fill: '#0891b2' },
-    { value: 'orange', label: 'Orange', fill: '#f97316' },
-    { value: 'pink',   label: 'Pink',   fill: '#ec4899' },
+    { value: 'teal',   label: 'Teal',   fill: '#07809d' },
+    { value: 'orange', label: 'Orange', fill: '#bd5711' },
+    { value: 'pink',   label: 'Pink',   fill: '#cb3e84' },
   ];
 
   return (

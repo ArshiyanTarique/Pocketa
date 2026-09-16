@@ -109,21 +109,16 @@ export function Shell({
 function Rail({ current, onQuickAdd }: { current: string; onQuickAdd: () => void }) {
   const secondaryActive = SECONDARY.some((n) => n.path === current);
   return (
-    /*
-      inset-y-0 + start-0 = sticks to the logical start edge (left in LTR, right in RTL).
-      Collapsed: 3.5rem wide, icons centered.
-      Expanded on hover: 13rem wide, items left-aligned with px-3.
-    */
     <aside
       className={cn(
         'group/rail fixed inset-y-0 start-0 z-30 hidden w-[3.5rem] flex-col border-e border-line bg-surface lg:flex',
-        'transition-[width] duration-200 ease-out hover:w-[13rem] [&:has(:focus-visible)]:w-[13rem]',
+        'overflow-hidden transition-[width] duration-200 ease-out hover:w-[13rem] [&:has(:focus-visible)]:w-[13rem]',
       )}
     >
       {/* Logo row */}
-      <div className="flex h-14 shrink-0 items-center justify-center overflow-hidden px-0 group-hover/rail:justify-start group-hover/rail:px-3">
+      <div className="flex h-14 w-[13rem] shrink-0 items-center ps-[1rem]">
         <img src="/favicon.svg" alt="Pocketa" className="size-7 shrink-0 rounded-[--radius-sm]" />
-        <span className="display ms-2.5 whitespace-nowrap text-[1.0625rem] opacity-0 transition-opacity group-hover/rail:opacity-100 group-has-[:focus-visible]/rail:opacity-100">
+        <span className="display ms-2.5 whitespace-nowrap text-[1.0625rem] opacity-0 transition-opacity duration-200 group-hover/rail:opacity-100 group-has-[:focus-visible]/rail:opacity-100">
           Pocketa
         </span>
       </div>
@@ -133,21 +128,20 @@ function Rail({ current, onQuickAdd }: { current: string; onQuickAdd: () => void
         <button
           onClick={onQuickAdd}
           className={cn(
-            'flex h-9 w-full items-center justify-center overflow-hidden rounded-[--radius] bg-accent-fill',
+            'flex h-9 w-[calc(13rem-1rem)] items-center rounded-[--radius] bg-accent-fill ps-[0.875rem]',
             'font-semibold text-[--accent-ink] transition-all hover:bg-accent-hover active:scale-[0.98]',
-            'group-hover/rail:justify-start group-hover/rail:gap-3 group-hover/rail:px-3',
           )}
           aria-label="Add transaction (N)"
         >
           <Plus className="size-4 shrink-0" strokeWidth={2.5} />
-          <span className="whitespace-nowrap text-[0.8125rem] opacity-0 transition-opacity group-hover/rail:opacity-100 group-has-[:focus-visible]/rail:opacity-100">
+          <span className="ms-3 whitespace-nowrap text-[0.8125rem] opacity-0 transition-opacity duration-200 group-hover/rail:opacity-100 group-has-[:focus-visible]/rail:opacity-100">
             Add
           </span>
         </button>
       </div>
 
       {/* Nav links */}
-      <nav className="mt-2 flex-1 space-y-0.5 overflow-y-auto px-2 pb-4">
+      <nav className="mt-2 flex-1 space-y-0.5 pb-4 ps-2">
         {PRIMARY.map((item) => (
           <RailLink
             key={item.path}
@@ -168,14 +162,12 @@ function RailLink({ item, active }: { item: NavItem; active: boolean }) {
       title={item.label}
       aria-current={active ? 'page' : undefined}
       className={cn(
-        // Collapsed: full width, icon centered. Expanded: left-aligned with gap+padding.
-        'flex h-9 w-full items-center justify-center overflow-hidden rounded-[--radius] transition-colors',
-        'group-hover/rail:justify-start group-hover/rail:gap-3 group-hover/rail:px-3',
+        'flex h-9 w-[calc(13rem-1rem)] items-center rounded-[--radius] ps-[0.875rem] transition-colors',
         active ? 'bg-ink text-paper' : 'text-ink-3 hover:bg-surface-2 hover:text-ink',
       )}
     >
       <Icon className="size-[1.05rem] shrink-0" strokeWidth={active ? 2.2 : 1.8} />
-      <span className="whitespace-nowrap text-[0.8125rem] font-semibold opacity-0 transition-opacity group-hover/rail:opacity-100 group-has-[:focus-visible]/rail:opacity-100">
+      <span className="ms-3 whitespace-nowrap text-[0.8125rem] font-semibold opacity-0 transition-opacity duration-200 group-hover/rail:opacity-100 group-has-[:focus-visible]/rail:opacity-100">
         {item.label}
       </span>
     </Link>

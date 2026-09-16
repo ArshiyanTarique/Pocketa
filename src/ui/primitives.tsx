@@ -646,7 +646,7 @@ export function Row({
     <Tag
       {...(onClick ? { onClick, type: 'button' as const } : {})}
       className={cn(
-        'flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors sm:px-5',
+        'flex w-full items-center gap-3 px-4 text-left transition-colors density-row sm:px-5',
         onClick && 'hover:bg-surface-2 active:bg-surface-2',
         dimmed && 'opacity-55',
         className,

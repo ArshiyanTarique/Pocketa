@@ -1,0 +1,5 @@
+- generic [ref=f16e2]:
+  - generic [ref=f16e4]:
+    - generic "Loading" [ref=f16e6]
+    - generic "Loading" [ref=f16e20]
+  - region "Notifications"

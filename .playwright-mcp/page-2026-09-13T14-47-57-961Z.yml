@@ -1,0 +1,71 @@
+- generic [ref=e2]:
+  - generic [ref=e45]:
+    - complementary [ref=e46]:
+      - generic [ref=e47]:
+        - img "Pocketa" [ref=e48]
+        - generic [ref=e49]: Pocketa
+      - button "Add transaction (N)" [ref=e51]:
+        - generic [ref=e53]: Add
+      - navigation [ref=e54]:
+        - link "Home" [ref=e55] [cursor=pointer]:
+          - /url: "#/"
+        - link "Activity" [ref=e62] [cursor=pointer]:
+          - /url: "#/transactions"
+        - link "Carpool" [ref=e67] [cursor=pointer]:
+          - /url: "#/carpool"
+        - link "Me" [ref=e72] [cursor=pointer]:
+          - /url: "#/me"
+    - generic [ref=e78]:
+      - banner [ref=e79]:
+        - generic [ref=e80]:
+          - generic: Debts
+          - generic [ref=e81]:
+            - button "Not signed in" [ref=e83]
+            - 'button "Theme: system" [ref=e87]'
+      - main [ref=e2042]:
+        - generic [ref=e2044]:
+          - generic [ref=e2045]:
+            - paragraph [ref=e2046]: Net you owe
+            - generic [ref=e2047]:
+              - generic "Rs. 5,800.00" [ref=e2048]
+              - generic [ref=e2049]:
+                - generic [ref=e2050]:
+                  - generic [ref=e2051]: Owed to you
+                  - generic "4,200.00" [ref=e2052]
+                - generic [ref=e2053]:
+                  - generic [ref=e2054]: You owe
+                  - generic "10,000.00" [ref=e2055]
+          - generic [ref=e2056]:
+            - heading "People" [level=2] [ref=e2057]
+            - generic [ref=e2058]:
+              - button "Add person" [ref=e2059]
+              - button "Borrow" [ref=e2063]
+              - button "Lend" [ref=e2064]
+          - list [ref=e2066]:
+            - listitem [ref=e2067]:
+              - generic [ref=e2068]:
+                - button "B Bilal you owe Rs. 5,800 you owe" [ref=e2069]:
+                  - generic [ref=e2070]: B
+                  - generic [ref=e2071]:
+                    - paragraph [ref=e2072]: Bilal
+                    - paragraph [ref=e2073]: you owe
+                  - generic [ref=e2074]:
+                    - paragraph [ref=e2075]: Rs. 5,800
+                    - paragraph [ref=e2076]: you owe
+                - generic [ref=e2077]:
+                  - table "Net, you owe" [ref=e2078]:
+                    - row [ref=e2079]:
+                      - cell "They owe you" [ref=e2080]
+                      - cell "4,200.00" [ref=e2081]
+                    - row [ref=e2082]:
+                      - cell "You owe them" [ref=e2083]
+                      - cell "10,000.00" [ref=e2084]
+                    - generic [ref=e2086]: 5,800.00
+                  - generic [ref=e2087]:
+                    - button "Pay back" [ref=e2088]
+                    - button "Lend" [ref=e2089]
+                    - button "Borrow more" [ref=e2090]
+                    - button "History" [ref=e2091]
+                    - button "WhatsApp" [ref=e2092]
+          - button "Show 1 settled person" [ref=e2095]
+  - region "Notifications"

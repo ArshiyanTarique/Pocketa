@@ -1,0 +1,64 @@
+- generic [ref=e2]:
+  - generic [ref=e45]:
+    - complementary [ref=e46]:
+      - generic [ref=e47]:
+        - img "Pocketa" [ref=e48]
+        - generic [ref=e49]: Pocketa
+      - button "Add transaction (N)" [ref=e51]:
+        - generic [ref=e53]: Add
+      - navigation [ref=e54]:
+        - link "Home" [ref=e55] [cursor=pointer]:
+          - /url: "#/"
+        - link "Activity" [ref=e62] [cursor=pointer]:
+          - /url: "#/transactions"
+        - link "Carpool" [ref=e67] [cursor=pointer]:
+          - /url: "#/carpool"
+        - link "Me" [ref=e72] [cursor=pointer]:
+          - /url: "#/me"
+    - generic [ref=e78]:
+      - banner [ref=e79]:
+        - generic [ref=e80]:
+          - generic: Me
+          - generic [ref=e81]:
+            - button "Not signed in" [ref=e83]
+            - 'button "Theme: system" [ref=e87]'
+      - main [ref=e1718]:
+        - generic [ref=e1720]:
+          - generic [ref=e1721]:
+            - generic [ref=e1722]:
+              - paragraph [ref=e1723]: Net worth
+              - text: 9.56L
+            - button "Hide amounts" [ref=e1724]
+          - list [ref=e1728]:
+            - listitem [ref=e1729]:
+              - link "Accounts 9.56L" [ref=e1730] [cursor=pointer]:
+                - /url: "#/accounts"
+                - generic [ref=e1735]: Accounts
+                - generic [ref=e1736]: 9.56L
+            - listitem [ref=e1739]:
+              - link "Budgets 3 at risk" [ref=e1740] [cursor=pointer]:
+                - /url: "#/budgets"
+                - generic [ref=e1745]: Budgets
+                - generic [ref=e1746]: 3 at risk
+            - listitem [ref=e1749]:
+              - link "Bills 1 overdue" [ref=e1750] [cursor=pointer]:
+                - /url: "#/bills"
+                - generic [ref=e1756]: Bills
+                - generic [ref=e1757]: 1 overdue
+            - listitem [ref=e1760]:
+              - link "Debts −5.8k" [ref=e1761] [cursor=pointer]:
+                - /url: "#/debts"
+                - generic [ref=e1769]: Debts
+                - generic [ref=e1770]: −5.8k
+            - listitem [ref=e1773]:
+              - link "Goals 17%" [ref=e1774] [cursor=pointer]:
+                - /url: "#/goals"
+                - generic [ref=e1780]: Goals
+                - generic [ref=e1781]: 17%
+            - listitem [ref=e1784]:
+              - link "Analytics" [ref=e1785] [cursor=pointer]:
+                - /url: "#/analytics"
+            - listitem [ref=e1792]:
+              - link "Settings" [ref=e1793] [cursor=pointer]:
+                - /url: "#/settings"
+  - region "Notifications"

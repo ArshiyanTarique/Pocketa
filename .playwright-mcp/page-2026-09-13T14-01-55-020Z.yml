@@ -1,0 +1,5 @@
+- generic [ref=e2]:
+  - generic [ref=e4]:
+    - generic "Loading" [ref=e6]
+    - generic "Loading" [ref=e20]
+  - region "Notifications"
