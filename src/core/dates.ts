@@ -244,40 +244,64 @@ export function eachDay(from: CalendarDate, to: CalendarDate): CalendarDate[] {
 // Display
 // ---------------------------------------------------------------------------
 
-const MONTHS_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-const MONTHS_LONG = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
-];
-const DOW_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+/**
+ * The language dates are written in. Set once by the app shell when the UI
+ * language changes; the core stays free of any store import.
+ */
+export type DateLanguage = 'en' | 'ur';
+let dateLanguage: DateLanguage = 'en';
+export function setDateLanguage(lang: DateLanguage): void {
+  dateLanguage = lang;
+}
+export function getDateLanguage(): DateLanguage {
+  return dateLanguage;
+}
+
+const NAMES: Record<DateLanguage, { monthsShort: string[]; monthsLong: string[]; dowShort: string[] }> = {
+  en: {
+    monthsShort: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+    monthsLong: [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December',
+    ],
+    dowShort: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+  },
+  ur: {
+    monthsShort: ['جنوری', 'فروری', 'مارچ', 'اپریل', 'مئی', 'جون', 'جولائی', 'اگست', 'ستمبر', 'اکتوبر', 'نومبر', 'دسمبر'],
+    monthsLong: ['جنوری', 'فروری', 'مارچ', 'اپریل', 'مئی', 'جون', 'جولائی', 'اگست', 'ستمبر', 'اکتوبر', 'نومبر', 'دسمبر'],
+    dowShort: ['اتوار', 'پیر', 'منگل', 'بدھ', 'جمعرات', 'جمعہ', 'ہفتہ'],
+  },
+};
 
 export function formatDate(date: CalendarDate, style: 'short' | 'medium' | 'long' | 'month' = 'medium'): string {
   const { y, m, d } = parseDate(date);
+  const n = NAMES[dateLanguage];
   switch (style) {
     case 'short':
-      return `${d} ${MONTHS_SHORT[m - 1]}`;
+      return `${d} ${n.monthsShort[m - 1]}`;
     case 'long':
-      return `${DOW_SHORT[dayOfWeek(date)]}, ${d} ${MONTHS_LONG[m - 1]} ${y}`;
+      return `${n.dowShort[dayOfWeek(date)]}, ${d} ${n.monthsLong[m - 1]} ${y}`;
     case 'month':
-      return `${MONTHS_LONG[m - 1]} ${y}`;
+      return `${n.monthsLong[m - 1]} ${y}`;
     default:
-      return `${d} ${MONTHS_SHORT[m - 1]} ${y}`;
+      return `${d} ${n.monthsShort[m - 1]} ${y}`;
   }
 }
 
 export function formatMonthShort(date: CalendarDate): string {
   const { y, m } = parseDate(date);
-  return `${MONTHS_SHORT[m - 1]} ${String(y).slice(2)}`;
+  return `${NAMES[dateLanguage].monthsShort[m - 1]} ${String(y).slice(2)}`;
 }
 
 /** "Today", "Yesterday", "Tomorrow", or a formatted date. */
 export function formatRelativeDay(date: CalendarDate, ref: CalendarDate = today()): string {
   const diff = daysBetween(ref, date);
-  if (diff === 0) return 'Today';
-  if (diff === -1) return 'Yesterday';
-  if (diff === 1) return 'Tomorrow';
-  if (diff > 1 && diff <= 6) return `In ${diff} days`;
-  if (diff < -1 && diff >= -6) return `${-diff} days ago`;
+  const ur = dateLanguage === 'ur';
+  if (diff === 0) return ur ? 'آج' : 'Today';
+  if (diff === -1) return ur ? 'کل (گزشتہ)' : 'Yesterday';
+  if (diff === 1) return ur ? 'کل (آئندہ)' : 'Tomorrow';
+  if (diff > 1 && diff <= 6) return ur ? `${diff} دن میں` : `In ${diff} days`;
+  if (diff < -1 && diff >= -6) return ur ? `${-diff} دن پہلے` : `${-diff} days ago`;
   return formatDate(date, parseDate(date).y === parseDate(ref).y ? 'short' : 'medium');
 }
 

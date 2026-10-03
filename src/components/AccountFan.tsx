@@ -28,6 +28,7 @@ import { useStore } from '../store/useStore';
 import { availableCredit, balanceOf } from '../core/projections';
 import { LIABILITY_CLASSES, type Account, type AccountClass, type ID } from '../core/types';
 
+import { tr } from '../app/i18n';
 /**
  * Which note each kind of account is printed on, and the ink that reads on it.
  *
@@ -89,7 +90,7 @@ export function AccountFan({
         ref={fan}
         className={cn('fan stagger', drag.dragging && 'cursor-grabbing select-none [scroll-snap-type:none]')}
         role="list"
-        aria-label="Your accounts"
+        aria-label={tr('Your accounts')}
         {...drag.handlers}
       >
         {visible.map((account) => (
@@ -108,7 +109,7 @@ export function AccountFan({
             type="button"
             onClick={onAdd}
             role="listitem"
-            aria-label="Add an account"
+            aria-label={tr('Add an account')}
             className={cn(
               'flex flex-col items-center justify-center gap-2 rounded-[--radius-xl] border-2 border-dashed border-line-strong text-ink-3',
               'transition-colors hover:border-accent hover:text-accent',
@@ -116,13 +117,13 @@ export function AccountFan({
             )}
           >
             <Plus className="size-5" />
-            <span className="text-xs font-semibold">Add account</span>
+            <span className="text-xs font-semibold">{tr('Add account')}</span>
           </button>
         )}
       </div>
 
       {count > 1 && (
-        <div className="flex justify-center gap-1.5 px-4 sm:px-6" role="tablist" aria-label="Which card is in view">
+        <div className="flex justify-center gap-1.5 px-4 sm:px-6" role="tablist" aria-label={tr('Which card is in view')}>
           {Array.from({ length: count }, (_, i) => (
             <button
               key={i}
@@ -269,7 +270,7 @@ export function NoteCard({
       type="button"
       role="listitem"
       onClick={onClick}
-      aria-label={`${account.name}, ${note.label}`}
+      aria-label={`${account.name}, ${tr(note.label)}`}
       style={{ ['--note' as string]: color, ['--note-ink' as string]: note.ink }}
       className={cn(
         'note-card flex flex-col justify-between p-4 text-left',
@@ -281,13 +282,11 @@ export function NoteCard({
         <div className="min-w-0">
           <p className="truncate text-[0.8125rem] font-semibold leading-tight">{account.name}</p>
           <p className="mt-0.5 text-[0.6875rem] font-semibold uppercase tracking-wide opacity-80">
-            {account.institution || note.label}
+            {account.institution || tr(note.label)}
             {account.last4 && ` · ${account.last4}`}
           </p>
         </div>
-        <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-[--note-ink]/15">
-          <Icon className="size-3.5" />
-        </span>
+        <Icon className="size-4 shrink-0 opacity-70" aria-hidden="true" />
       </div>
 
       <div>
@@ -301,7 +300,7 @@ export function NoteCard({
         />
         {credit != null && (
           <p className="mt-0.5 text-[0.6875rem] font-medium opacity-80">
-            {hidden ? '••••' : <><Money value={credit} currency={account.currency} size="xs" symbol={false} className="text-[--note-ink]" /> available</>}
+            {hidden ? '••••' : <><Money value={credit} currency={account.currency} size="xs" symbol={false} className="text-[--note-ink]" /> {tr('available')}</>}
           </p>
         )}
       </div>

@@ -24,6 +24,7 @@ import {
 import { addMonths, formatDate, monthRange, yearRange, type DateRange } from '../core/dates';
 import type { ID } from '../core/types';
 
+import { tr } from '../app/i18n';
 type Period = 'month' | 'year';
 type ChartKind = 'flow' | 'worth' | 'daily';
 type ListKind = 'categories' | 'merchants' | 'largest';
@@ -81,9 +82,9 @@ export function Analytics() {
     return (
       <EmptyState
         icon={<ChartNoAxesCombined className="size-5" />}
-        title="Nothing to analyse yet"
-        body="A few weeks of activity and this page will show where the money goes."
-        action={<Button variant="primary" onClick={() => navigate('/')}>Home</Button>}
+        title={tr('Nothing to analyse yet')}
+        body={tr('A few weeks of activity and this page will show where the money goes.')}
+        action={<Button variant="primary" onClick={() => navigate('/')}>{tr('Home')}</Button>}
       />
     );
   }
@@ -93,35 +94,35 @@ export function Analytics() {
       {/* Period ------------------------------------------------------------ */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Segmented
-          label="Period"
+          label={tr('Period')}
           value={period}
           onChange={(v) => {
             setPeriod(v);
             setOffset(0);
           }}
           options={[
-            { value: 'month', label: 'Month' },
-            { value: 'year', label: 'Year' },
+            { value: 'month', label: tr('Month') },
+            { value: 'year', label: tr('Year') },
           ]}
         />
-        <div className="flex items-center gap-1">
-          <IconButton label="Previous period" onClick={() => setOffset((o) => o + 1)}>
-            <ChevronLeft className="size-4" />
+        <div className="flex items-center rounded-[--radius] border border-line">
+          <IconButton label={tr('Previous period')} onClick={() => setOffset((o) => o + 1)} className="size-8 rounded-e-none">
+            <ChevronLeft className="size-4 rtl-flip" />
           </IconButton>
-          <span className="display min-w-[8rem] text-center text-[1.0625rem]">{label}</span>
-          <IconButton label="Next period" onClick={() => setOffset((o) => Math.max(0, o - 1))} disabled={offset === 0}>
-            <ChevronRight className="size-4" />
+          <span className="display min-w-[8rem] text-center text-[1rem]">{label}</span>
+          <IconButton label={tr('Next period')} onClick={() => setOffset((o) => Math.max(0, o - 1))} disabled={offset === 0} className="size-8 rounded-s-none">
+            <ChevronRight className="size-4 rtl-flip" />
           </IconButton>
         </div>
       </div>
 
       {/* The three figures -------------------------------------------------- */}
       <div className="grid grid-cols-3 divide-x divide-line rounded-[--radius-lg] border border-line bg-surface overflow-hidden">
-        <Figure label="In">
+        <Figure label={tr('Earned')}>
           <Money value={summary.income} currency={currency} hidden={hidden} size="base" weight="semibold" symbol={false} animate tone="positive" />
         </Figure>
         <Figure
-          label="Out"
+          label={tr('Out')}
           badge={
             expenseChange != null && Math.abs(expenseChange) > 0.005 ? (
               <Badge tone={expenseChange > 0 ? 'negative' : 'positive'}>
@@ -133,7 +134,7 @@ export function Analytics() {
         >
           <Money value={summary.expenses} currency={currency} hidden={hidden} size="base" weight="semibold" symbol={false} animate />
         </Figure>
-        <Figure label={summary.savings >= 0 ? 'Kept' : 'Overspent'} hint={summary.savingsRate != null ? <Percent value={Math.abs(summary.savingsRate)} size="xs" /> : null}>
+        <Figure label={summary.savings >= 0 ? 'Saved' : 'Overspent'} hint={summary.savingsRate != null ? <Percent value={Math.abs(summary.savingsRate)} size="xs" /> : null}>
           <Money
             value={Math.abs(summary.savings)}
             currency={currency}
@@ -150,13 +151,13 @@ export function Analytics() {
       <section>
         <div className="flex flex-wrap items-center justify-between gap-2">
           <Segmented
-            label="Chart"
+            label={tr('Chart')}
             value={chart}
             onChange={setChart}
             options={[
-              { value: 'flow', label: 'Cash flow' },
-              { value: 'worth', label: 'Net worth' },
-              { value: 'daily', label: 'Daily' },
+              { value: 'flow', label: tr('Cash flow') },
+              { value: 'worth', label: tr('Net worth') },
+              { value: 'daily', label: tr('Daily') },
             ]}
           />
           <span className="text-xs text-ink-4">
@@ -170,11 +171,9 @@ export function Analytics() {
               <IncomeExpenseBars data={trend} currency={currency} hidden={hidden} height={150} />
               <div className="mt-3 flex gap-4 text-xs text-ink-3">
                 <span className="flex items-center gap-1.5">
-                  <span className="size-2 rounded-sm bg-positive-fill/85" aria-hidden="true" /> In
-                </span>
+                  <span className="size-2 rounded-sm bg-positive-fill/85" aria-hidden="true" />{tr('In')}</span>
                 <span className="flex items-center gap-1.5">
-                  <span className="size-2 rounded-sm bg-negative-fill/75" aria-hidden="true" /> Out
-                </span>
+                  <span className="size-2 rounded-sm bg-negative-fill/75" aria-hidden="true" />{tr('Out')}</span>
               </div>
             </>
           )}
@@ -195,20 +194,20 @@ export function Analytics() {
       {/* One list ----------------------------------------------------------- */}
       <section>
         <Segmented
-          label="Breakdown"
+          label={tr('Breakdown')}
           value={list}
           onChange={setList}
           options={[
-            { value: 'categories', label: 'Categories' },
-            { value: 'merchants', label: 'Merchants' },
-            { value: 'largest', label: 'Largest' },
+            { value: 'categories', label: tr('Categories') },
+            { value: 'merchants', label: tr('Merchants') },
+            { value: 'largest', label: tr('Largest') },
           ]}
         />
 
         <div className="mt-3 divide-y divide-line rounded-[--radius-lg] border border-line bg-surface overflow-hidden">
           {list === 'categories' &&
             (breakdown.length === 0 ? (
-              <EmptyState compact title="No spending in this period" />
+              <EmptyState compact title={tr('No spending in this period')} />
             ) : (
               <ul className="divide-y divide-line">
                 {breakdown.map((slice) => (
@@ -230,7 +229,7 @@ export function Analytics() {
 
           {list === 'merchants' &&
             (merchants.length === 0 ? (
-              <EmptyState compact icon={<Store className="size-5" />} title="No merchants recorded" body="Name the place when you record an expense and it ranks here." />
+              <EmptyState compact icon={<Store className="size-5" />} title={tr('No merchants recorded')} body={tr('Name the place when you record an expense and it ranks here.')} />
             ) : (
               <ul className="divide-y divide-line">
                 {merchants.map((m) => (
@@ -255,7 +254,7 @@ export function Analytics() {
 
           {list === 'largest' &&
             (largest.length === 0 ? (
-              <EmptyState compact title="No expenses in this period" />
+              <EmptyState compact title={tr('No expenses in this period')} />
             ) : (
               <ul className="divide-y divide-line">
                 {largest.map((item) => (
@@ -382,16 +381,14 @@ function CategoryRow({
           {change == null
             ? 'Not enough history to compare'
             : up
-              ? <>Above its six-month average by <Percent value={change} size="xs" className="text-negative" /></>
+              ? <>{tr('Above its six-month average by')}<Percent value={change} size="xs" className="text-negative" /></>
               : down
-                ? <>Below its six-month average by <Percent value={-change} size="xs" className="text-positive" /></>
+                ? <>{tr('Below its six-month average by')}<Percent value={-change} size="xs" className="text-positive" /></>
                 : 'About the same as usual'}
           {' · '}
           <Num size="xs">{slice.txnCount}</Num> {slice.txnCount === 1 ? 'transaction' : 'transactions'}
         </span>
-        <Button size="sm" variant="secondary" onClick={() => navigate(`/transactions?category=${slice.accountId}`)}>
-          Transactions
-        </Button>
+        <Button size="sm" variant="secondary" onClick={() => navigate(`/transactions?category=${slice.accountId}`)}>{tr('Transactions')}</Button>
       </div>
     </ExpandingRow>
   );

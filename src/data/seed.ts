@@ -155,6 +155,7 @@ export function defaultSettings(deviceId: string, currency: string): Settings {
     language: 'en',
     fontSize: 'normal',
     density: 'comfortable',
+    fontFamily: 'classic',
     createdAt: ts,
     updatedAt: ts,
   };

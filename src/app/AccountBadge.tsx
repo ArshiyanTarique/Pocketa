@@ -6,7 +6,9 @@ import { cn } from '../ui/cn';
 import { navigate } from './router';
 import { describeSync, type SyncState } from './useSync';
 import { useStore } from '../store/useStore';
+import { useT } from './i18n';
 
+import { tr } from '../app/i18n';
 // ---------------------------------------------------------------------------
 // Avatar — Google photo › custom upload › letter initial
 // ---------------------------------------------------------------------------
@@ -57,6 +59,7 @@ export function Avatar({
 export function AccountBadge({ sync }: { sync: SyncState & { syncNow: () => void } }) {
   const [open, setOpen] = React.useState(false);
   const settings = useStore((s) => s.settings);
+  const t = useT();
 
   if (sync.phase === 'unavailable') return null;
 
@@ -66,20 +69,26 @@ export function AccountBadge({ sync }: { sync: SyncState & { syncNow: () => void
     <>
       <button
         onClick={() => setOpen(true)}
-        aria-label={signedIn ? `Account: ${sync.email}` : 'Not signed in'}
         title={describeSync(sync)}
         className={cn(
-          'flex items-center justify-center rounded-full border transition-colors overflow-hidden',
-          'size-9',
+          'flex h-9 items-center gap-2 rounded-full border transition-colors overflow-hidden',
           signedIn
-            ? 'border-line hover:border-line-strong'
-            : 'border-accent bg-accent-soft hover:bg-accent-soft/70',
+            ? 'ps-1 pe-3 border-line hover:border-line-strong'
+            : 'px-3.5 border-accent bg-accent-soft hover:bg-accent-soft/70',
         )}
       >
         {signedIn ? (
-          <Avatar sync={sync} size="sm" customUrl={settings.avatarUrl} />
+          <>
+            <Avatar sync={sync} size="sm" customUrl={settings.avatarUrl} />
+            <span className="hidden max-w-[9rem] truncate text-[0.8125rem] font-semibold text-ink sm:inline">
+              {sync.displayName ?? sync.email}
+            </span>
+          </>
         ) : (
-          <LogIn className="size-4 text-accent" />
+          <>
+            <LogIn className="size-4 text-accent" />
+            <span className="text-[0.8125rem] font-semibold text-accent">{t('Sign in')}</span>
+          </>
         )}
       </button>
 
@@ -137,7 +146,7 @@ function SignedIn({ sync }: { sync: SyncState & { syncNow: () => void } }) {
             onClick={() => fileRef.current?.click()}
             disabled={uploading}
             className="absolute -bottom-1 -right-1 flex size-7 items-center justify-center rounded-full border-2 border-surface bg-surface-2 text-ink-3 transition-colors hover:bg-accent-soft hover:text-accent"
-            aria-label="Change profile picture"
+            aria-label={tr('Change profile picture')}
           >
             <Camera className="size-3.5" />
           </button>
@@ -158,9 +167,7 @@ function SignedIn({ sync }: { sync: SyncState & { syncNow: () => void } }) {
             type="button"
             onClick={() => void updateSettings({ avatarUrl: null })}
             className="text-xs text-ink-4 hover:text-negative"
-          >
-            Remove custom photo
-          </button>
+          >{tr('Remove custom photo')}</button>
         )}
       </div>
 
@@ -170,13 +177,13 @@ function SignedIn({ sync }: { sync: SyncState & { syncNow: () => void } }) {
       </div>
 
       {sync.adopted > 0 && (
-        <Notice tone="positive" title="Your ledger came with you">
+        <Notice tone="positive" title={tr('Your ledger came with you')}>
           {sync.adopted} record{sync.adopted === 1 ? '' : 's'} from this device are now on your account.
         </Notice>
       )}
 
       {sync.phase === 'failed' && sync.online && (
-        <Notice tone="warn" title="Not reaching your account">
+        <Notice tone="warn" title={tr('Not reaching your account')}>
           <p>{sync.error}</p>
         </Notice>
       )}
@@ -190,9 +197,7 @@ function SignedIn({ sync }: { sync: SyncState & { syncNow: () => void } }) {
       >
         {sync.phase === 'syncing' ? 'Syncing' : 'Sync now'}
       </Button>
-      <Button variant="ghost" full onClick={() => navigate('/settings/account')}>
-        Account settings
-      </Button>
+      <Button variant="ghost" full onClick={() => navigate('/settings/account')}>{tr('Account settings')}</Button>
     </>
   );
 }
@@ -207,15 +212,11 @@ function SignedOut({ onGo }: { onGo: () => void }) {
       <div className="flex items-start gap-3 rounded-[--radius] border border-line bg-surface-2 px-3.5 py-3">
         <User className="mt-0.5 size-5 shrink-0 text-ink-3" />
         <div>
-          <p className="text-sm font-medium text-ink">Everything is saved on this device</p>
-          <p className="mt-0.5 text-xs leading-relaxed text-ink-3">
-            Sign in to back up your data and access it on other devices.
-          </p>
+          <p className="text-sm font-medium text-ink">{tr('Everything is saved on this device')}</p>
+          <p className="mt-0.5 text-xs leading-relaxed text-ink-3">{tr('Sign in to back up your data and access it on other devices.')}</p>
         </div>
       </div>
-      <Button variant="primary" full icon={<LogIn className="size-4" />} onClick={onGo}>
-        Sign in
-      </Button>
+      <Button variant="primary" full icon={<LogIn className="size-4" />} onClick={onGo}>{tr('Sign in')}</Button>
     </>
   );
 }

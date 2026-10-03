@@ -25,6 +25,7 @@ import { summarisePeriod as summariseCarpool } from '../core/carpool';
 import { balanceOfBase, live } from '../core/projections';
 import { formatDate, formatRelativeDay, monthRange } from '../core/dates';
 import { cn } from '../ui/cn';
+import { tr, trf, useT } from '../app/i18n';
 import type { Account, Transaction } from '../core/types';
 import type { BudgetStatus } from '../core/projections';
 
@@ -77,11 +78,12 @@ function SafeToSpendHero() {
   const { safeToSpend } = useOverview();
   const hidden = settings.hideAmounts;
   const currency = settings.baseCurrency;
+  const t = useT();
 
   return (
     <section>
-      <p className="text-[0.6875rem] font-semibold uppercase tracking-widest text-ink-4 mb-3">Left to spend</p>
-      <div className="flex items-end justify-between gap-4">
+      <p className="text-[0.6875rem] font-semibold uppercase tracking-widest text-ink-4 mb-3">{t('Safe to spend')}</p>
+      <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-2">
         <div className="count-in min-w-0">
           <Money
             value={safeToSpend.amount}
@@ -94,13 +96,10 @@ function SafeToSpendHero() {
         </div>
         <button
           onClick={() => setExplaining(true)}
-          className={cn(
-            'mb-2 flex shrink-0 items-center justify-center rounded-full border border-line size-7',
-            'text-ink-4 transition-colors hover:border-accent hover:text-accent',
-          )}
-          aria-label="How is this calculated?"
+          className="mb-2 flex shrink-0 items-center gap-1.5 rounded-full border border-line px-3 py-1.5 text-[0.75rem] font-semibold text-ink-3 transition-colors hover:border-accent hover:text-accent"
         >
-          <Info className="size-3" />
+          <Info className="size-3.5" />
+          {t('How is this worked out?')}
         </button>
       </div>
       <div className="reckoning-rule reckoning-rule--total mt-4" aria-hidden="true" />
@@ -108,8 +107,7 @@ function SafeToSpendHero() {
       <Sheet
         open={explaining}
         onClose={() => setExplaining(false)}
-        title="How this is worked out"
-        description="A budgeting calculation, not financial advice."
+        title={t('How is this worked out?')}
       >
         <div className="space-y-4 pb-2">
           <Reckoning
@@ -122,10 +120,10 @@ function SafeToSpendHero() {
               amount: l.amount,
               emphasis: l.kind === 'start',
             }))}
-            total={{ label: 'Safe to spend', amount: safeToSpend.amount }}
+            total={{ label: tr('Safe to spend'), amount: safeToSpend.amount }}
           />
           <p className="text-xs text-ink-4">
-            Horizon ends {formatDate(safeToSpend.horizonDate)}. Change it in Settings.
+            Counted up to {formatDate(safeToSpend.horizonDate)}.
           </p>
         </div>
       </Sheet>
@@ -156,14 +154,15 @@ function MonthFigures() {
   const currency = settings.baseCurrency;
   const kept = month.savings >= 0;
   const shared = { currency, hidden };
+  const t = useT();
 
   return (
     <section>
-      <p className="text-[0.6875rem] font-semibold uppercase tracking-widest text-ink-4 mb-3">This month</p>
+      <p className="text-[0.6875rem] font-semibold uppercase tracking-widest text-ink-4 mb-3">{t('This month')}</p>
       <div className="grid grid-cols-3 divide-x divide-line rounded-[--radius-lg] border border-line bg-surface overflow-hidden">
-        <MonthFigure label="In" value={month.income} tone="positive" {...shared} />
-        <MonthFigure label="Out" value={month.expenses} {...shared} />
-        <MonthFigure label={kept ? 'Kept' : 'Over'} value={Math.abs(month.savings)} tone={kept ? 'default' : 'negative'} {...shared} />
+        <MonthFigure label={t('Earned')} value={month.income} tone="positive" {...shared} />
+        <MonthFigure label={t('Spent')} value={month.expenses} {...shared} />
+        <MonthFigure label={kept ? t('Saved') : t('Overspent')} value={Math.abs(month.savings)} tone={kept ? 'default' : 'negative'} {...shared} />
       </div>
     </section>
   );
@@ -273,8 +272,8 @@ function StatusLines() {
         summary={
           <span className="text-sm font-semibold text-ink">
             {overdue.length === 1
-              ? `${overdue[0].recurrence.name} overdue`
-              : `${overdue.length} bills overdue`}
+              ? trf('{name} overdue', { name: overdue[0].recurrence.name })
+              : trf('{n} bills overdue', { n: overdue.length })}
           </span>
         }
         trailing={<Money value={overdue.reduce((s, b) => s + b.amount, 0)} currency={currency} hidden={hidden} size="sm" weight="semibold" symbol={false} tone="negative" />}
@@ -284,13 +283,13 @@ function StatusLines() {
             <li key={b.key} className="flex items-center justify-between py-2 text-sm">
               <span className="text-ink">{b.recurrence.name}</span>
               <span className="flex items-center gap-3">
-                <span className="text-xs text-negative">{Math.abs(b.daysUntilDue)}d late</span>
+                <span className="text-xs text-negative">{trf('{n}d late', { n: Math.abs(b.daysUntilDue) })}</span>
                 <Money value={b.amount} currency={currency} hidden={hidden} size="sm" symbol={false} />
               </span>
             </li>
           ))}
         </ul>
-        <Through to="/bills">Record them</Through>
+        <Through to="/bills">{tr('Open Bills')}</Through>
       </ExpandingRow>,
     );
   }
@@ -323,7 +322,7 @@ function StatusLines() {
             </li>
           ))}
         </ul>
-        <Through to="/bills">All bills</Through>
+        <Through to="/bills">{tr('Open Bills')}</Through>
       </ExpandingRow>,
     );
   }
@@ -340,8 +339,8 @@ function StatusLines() {
         summary={
           <span className="text-sm font-semibold text-ink">
             {atRisk.length === 1
-              ? `${atRisk[0].budget.name} ${atRisk[0].health === 'over' ? 'over budget' : 'heading over'}`
-              : `${atRisk.length} budgets at risk`}
+              ? trf(atRisk[0].health === 'over' ? '{name} over budget' : '{name} heading over', { name: atRisk[0].budget.name })
+              : trf('{n} budgets at risk', { n: atRisk.length })}
           </span>
         }
         trailing={<BudgetHint status={atRisk[0]} currency={currency} hidden={hidden} />}
@@ -362,13 +361,13 @@ function StatusLines() {
             </li>
           ))}
         </ul>
-        <Through to="/budgets">All budgets</Through>
+        <Through to="/budgets">{tr('Open Budgets')}</Through>
       </ExpandingRow>,
     );
   } else if (overview.budgets.length > 0) {
     lines.push(
       <QuietLine key="budgets-ok" to="/budgets" icon={<PieChart className="size-3.5 text-ink-4" />}>
-        {overview.budgets.length} budget{overview.budgets.length === 1 ? '' : 's'} on track
+        {overview.budgets.length === 1 ? tr('1 budget on track') : trf('{n} budgets on track', { n: overview.budgets.length })}
       </QuietLine>,
     );
   }
@@ -389,12 +388,12 @@ function StatusLines() {
             {one ? (
               <>
                 <span className="font-semibold">{one.name}</span>
-                <span className="text-ink-3">{owed.length ? ' owes you' : ' is owed'}</span>
+                <span className="text-ink-3"> {owed.length ? tr('owes you') : tr('is owed')}</span>
               </>
             ) : (
               <>
-                <span className="font-semibold">{owed.length} owe you</span>
-                {owing.length > 0 && <span className="text-ink-3"> · you owe {owing.length}</span>}
+                <span className="font-semibold">{trf('{n} owe you', { n: owed.length })}</span>
+                {owing.length > 0 && <span className="text-ink-3"> · {trf('you owe {n}', { n: owing.length })}</span>}
               </>
             )}
           </span>
@@ -409,7 +408,7 @@ function StatusLines() {
             <PersonLine key={r.id} name={r.name} amount={-r.amount} tone="negative" hidden={hidden} currency={currency} />
           ))}
         </ul>
-        <Through to="/debts">Settle up</Through>
+        <Through to="/debts">{tr('Open People')}</Through>
       </ExpandingRow>,
     );
   }
@@ -425,7 +424,7 @@ function StatusLines() {
         leading={<CarFront className="size-3.5 text-accent" />}
         summary={
           <span className="text-sm text-ink">
-            <span className="font-semibold">Carpool</span>
+            <span className="font-semibold">{tr('Carpool')}</span>
             <span className="text-ink-3">
               {' '}
               <Num size="sm">{tally.unbilledTripCount}</Num> trip{tally.unbilledTripCount === 1 ? '' : 's'} unbilled
@@ -446,7 +445,7 @@ function StatusLines() {
               </li>
             ))}
         </ul>
-        <Through to="/carpool">Bill the month</Through>
+        <Through to="/carpool">{tr('Open Carpool')}</Through>
       </ExpandingRow>,
     );
   }
@@ -475,10 +474,15 @@ function QuietLine({ to, icon, children }: { to: string; icon: React.ReactNode; 
   );
 }
 
+/** The way out of an expanded line: a real button, so the second tap is obvious. */
 function Through({ to, children }: { to: string; children: React.ReactNode }) {
+  const t = useT();
   return (
-    <Link to={to} className="mt-3 inline-flex items-center gap-1 text-[0.8125rem] font-semibold text-accent hover:underline">
-      {children}
+    <Link
+      to={to}
+      className="mt-3 inline-flex h-8 items-center gap-1.5 rounded-[--radius-sm] border border-line-strong bg-surface px-3 text-[0.8125rem] font-semibold text-ink transition-colors hover:bg-surface-2"
+    >
+      {t(String(children))}
       <ArrowRight className="size-3.5 rtl-flip" />
     </Link>
   );
@@ -523,10 +527,8 @@ function RecentPanel({
   return (
     <div className="overflow-hidden rounded-[--radius-lg] border border-line bg-surface">
       <div className="flex items-center justify-between px-4 py-3 border-b border-line">
-        <span className="text-[0.8125rem] font-semibold text-ink">Recent</span>
-        <Link to="/transactions" className="text-xs font-semibold text-accent hover:underline underline-offset-2">
-          See all
-        </Link>
+        <span className="text-[0.8125rem] font-semibold text-ink">{tr('Recent')}</span>
+        <Link to="/transactions" className="text-xs font-semibold text-accent hover:underline underline-offset-2">{tr('See all')}</Link>
       </div>
       <ul className="divide-y divide-line">
         {recent.map((txn) => (
@@ -544,7 +546,7 @@ function RecentPanel({
         ))}
       </ul>
       {recent.length === 0 && (
-        <p className="px-4 py-8 text-center text-sm text-ink-4">No transactions yet</p>
+        <p className="px-4 py-8 text-center text-sm text-ink-4">{tr('No transactions yet')}</p>
       )}
     </div>
   );
@@ -563,8 +565,7 @@ export function BudgetHint({
     return (
       <span className="flex shrink-0 items-center gap-1 text-xs font-semibold text-negative">
         <CircleAlert className="size-3" />
-        <Money value={-status.remaining} currency={currency} hidden={hidden} size="xs" symbol={false} className="text-negative" /> over
-      </span>
+        <Money value={-status.remaining} currency={currency} hidden={hidden} size="xs" symbol={false} className="text-negative" />{tr('over')}</span>
     );
   }
   if (status.health === 'projected_over' && status.projectionReliable) {
@@ -577,8 +578,7 @@ export function BudgetHint({
   }
   return (
     <span className="shrink-0 text-xs text-ink-3">
-      <Money value={status.remaining} currency={currency} hidden={hidden} size="xs" symbol={false} /> left
-    </span>
+      <Money value={status.remaining} currency={currency} hidden={hidden} size="xs" symbol={false} />{tr('left')}</span>
   );
 }
 
@@ -588,26 +588,21 @@ export function BudgetHint({
 
 function FirstRun({ onQuickAdd }: { onQuickAdd: () => void }) {
   const steps = [
-    { title: 'Add an account', hint: 'What is in it today', icon: Wallet, to: '/accounts' },
-    { title: 'Record a spend', hint: 'Amount, category, done', icon: Plus, onClick: onQuickAdd },
-    { title: 'Add your bills', hint: 'So they are reserved before you spend', icon: CalendarClock, to: '/bills' },
+    { title: tr('Add an account'), hint: 'What is in it today', icon: Wallet, to: '/accounts' },
+    { title: tr('Record a spend'), hint: 'Amount, category, done', icon: Plus, onClick: onQuickAdd },
+    { title: tr('Add your bills'), hint: 'So they are reserved before you spend', icon: CalendarClock, to: '/bills' },
   ];
 
   return (
     <div className="py-2 sm:py-8">
       <div className="grid items-center gap-8 lg:grid-cols-[1.1fr_1fr] lg:gap-12">
         <div>
-          <p className="text-[0.6875rem] font-semibold uppercase tracking-widest text-ink-4">Start here</p>
-          <h1 className="display mt-3 text-[2.5rem] leading-[0.95] sm:text-[3.25rem]">
-            Where do you
-            <br />
-            stand?
+          <p className="text-[0.6875rem] font-semibold uppercase tracking-widest text-ink-4">{tr('Start here')}</p>
+          <h1 className="display mt-3 text-[2.5rem] leading-[0.95] sm:text-[3.25rem]">{tr('Where do you stand?')}
           </h1>
           <div className="mt-6 flex flex-wrap items-center gap-3">
             <SampleDataButton />
-            <button onClick={() => navigate('/settings/data')} className="text-[0.8125rem] font-semibold text-accent hover:underline">
-              Import a CSV instead
-            </button>
+            <button onClick={() => navigate('/settings/data')} className="text-[0.8125rem] font-semibold text-accent hover:underline">{tr('Import a CSV instead')}</button>
           </div>
         </div>
         <PreviewFan />
@@ -704,10 +699,8 @@ function SampleDataButton() {
         setLoading(true);
         const result = await loadSampleData();
         setLoading(false);
-        toast.saved(`Loaded ${result.created} sample transactions`, { label: 'Start fresh', run: () => navigate('/settings/data') });
+        toast.saved(`Loaded ${result.created} sample transactions`, { label: tr('Start fresh'), run: () => navigate('/settings/data') });
       }}
-    >
-      Explore with sample data
-    </Button>
+    >{tr('Explore with sample data')}</Button>
   );
 }

@@ -5,6 +5,7 @@ import { Field, TextInput } from '../ui/fields';
 import { cn } from '../ui/cn';
 import { distanceMetres, formatDistance, isValidLatLng, type LatLng, type Place } from '../core/geo';
 
+import { tr } from '../app/i18n';
 /**
  * Choosing a point on the map, without a map.
  *
@@ -110,9 +111,7 @@ export function PlacePicker({
                 type="button"
                 onClick={() => onSave(value)}
                 className="rounded-[8px] px-2 py-1 text-xs font-medium text-accent hover:bg-surface"
-              >
-                Save
-              </button>
+              >{tr('Save')}</button>
             )}
             <button
               type="button"
@@ -140,17 +139,13 @@ export function PlacePicker({
                 loading={locating}
                 icon={<Crosshair className="size-3.5" />}
                 onClick={useCurrentLocation}
-              >
-                Use where I am
-              </Button>
+              >{tr('Use where I am')}</Button>
               <Button
                 type="button"
                 size="sm"
                 variant={manual ? 'quiet' : 'secondary'}
                 onClick={() => setManual((v) => !v)}
-              >
-                Enter coordinates
-              </Button>
+              >{tr('Enter coordinates')}</Button>
             </div>
 
             {manual && (
@@ -159,18 +154,16 @@ export function PlacePicker({
                   value={coords}
                   onChange={(e) => setCoords(e.target.value)}
                   placeholder="24.9204, 67.0942"
-                  aria-label="Latitude and longitude"
+                  aria-label={tr('Latitude and longitude')}
                   className="tnum"
                 />
-                <Button type="button" variant="secondary" onClick={applyManual}>
-                  Set
-                </Button>
+                <Button type="button" variant="secondary" onClick={applyManual}>{tr('Set')}</Button>
               </div>
             )}
 
             {saved.length > 0 && (
               <div>
-                <p className="eyebrow mb-1.5">Saved places</p>
+                <p className="eyebrow mb-1.5">{tr('Saved places')}</p>
                 <div className="flex flex-wrap gap-1.5">
                   {saved.map((place) => (
                     <span key={place.id} className="group relative">
@@ -233,9 +226,7 @@ export function RoutePreview({
           className,
         )}
         style={{ height }}
-      >
-        Add a start and a destination to see the route
-      </div>
+      >{tr('Add a start and a destination to see the route')}</div>
     );
   }
 

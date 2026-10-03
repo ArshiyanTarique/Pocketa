@@ -2,7 +2,8 @@ import * as React from 'react';
 import { createPortal } from 'react-dom';
 import { create } from 'zustand';
 import { cn } from './cn';
-import { Button, IconButton } from './primitives';
+import { Button } from './primitives';
+import { useT } from '../app/i18n';
 
 /**
  * One overlay component, three presentations.
@@ -66,6 +67,17 @@ export const usePanelState = create<{ open: number; add(): void; remove(): void 
   remove: () => set((s) => ({ open: Math.max(0, s.open - 1) })),
 }));
 
+/** undefined: no sheet around us. null: a sheet whose footer has not mounted yet. */
+const SheetFooterContext = React.createContext<HTMLElement | null | undefined>(undefined);
+
+/** Renders its children in the enclosing sheet's footer; inline when there is no sheet. */
+export function SheetFooter({ children }: { children: React.ReactNode }) {
+  const host = React.useContext(SheetFooterContext);
+  if (host === undefined) return <>{children}</>;
+  if (host === null) return null;
+  return createPortal(children, host);
+}
+
 export function Sheet({
   open,
   onClose,
@@ -78,12 +90,14 @@ export function Sheet({
   presentation = 'auto',
 }: SheetProps) {
   const wide = useIsWide();
+  const t = useT();
   const mode: Exclude<Presentation, 'auto'> =
     presentation === 'auto' ? (wide ? 'panel' : 'sheet') : presentation;
   const modal = mode !== 'panel';
 
   const panelRef = React.useRef<HTMLDivElement>(null);
   const previouslyFocused = React.useRef<Element | null>(null);
+  const [footerHost, setFooterHost] = React.useState<HTMLElement | null>(null);
 
   // Tell the shell a panel is open, so the page shifts instead of hiding.
   const add = usePanelState((s) => s.add);
@@ -165,19 +179,36 @@ export function Sheet({
         {description && <p className="mt-1 text-[0.8125rem] text-ink-3">{description}</p>}
       </div>
       {dismissable && (
-        <IconButton label="Close" onClick={onClose} className="-me-1.5 -mt-1">
-          <svg viewBox="0 0 24 24" className="size-4.5" fill="none" aria-hidden="true">
+        <button
+          type="button"
+          onClick={onClose}
+          className="-me-2 -mt-1 flex h-9 shrink-0 items-center gap-1.5 rounded-[--radius] px-2.5 text-[0.8125rem] font-semibold text-ink-2 transition-colors hover:bg-surface-2 hover:text-ink"
+        >
+          <svg viewBox="0 0 24 24" className="size-4" fill="none" aria-hidden="true">
             <path d="M18 6 6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
           </svg>
-        </IconButton>
+          {t('Close')}
+        </button>
       )}
     </header>
   );
 
-  const body = <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-5 sm:px-6">{children}</div>;
+  const body = (
+    <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-5 sm:px-6">
+      <SheetFooterContext.Provider value={footerHost}>{children}</SheetFooterContext.Provider>
+    </div>
+  );
 
-  const foot = footer && (
-    <footer className="safe-bottom border-t border-line bg-surface px-5 py-3.5 sm:px-6">{footer}</footer>
+  // The footer sits outside the scroll area, so it never covers the last
+  // field. It is also a portal target: a form deep inside the sheet can place
+  // its save buttons here with <SheetFooter>. Empty, it takes no space.
+  const foot = (
+    <footer
+      ref={setFooterHost}
+      className="border-t border-line bg-surface px-5 pt-3.5 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] empty:hidden sm:px-6"
+    >
+      {footer}
+    </footer>
   );
 
   if (mode === 'panel') {

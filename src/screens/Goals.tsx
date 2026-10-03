@@ -13,6 +13,7 @@ import { addDays, daysBetween, formatDate, nowIso } from '../core/dates';
 import { newId } from '../core/ids';
 import type { Account, Goal, ID } from '../core/types';
 
+import { tr } from '../app/i18n';
 export function Goals() {
   const goals = useStore((s) => s.goals);
   const settings = useStore((s) => s.settings);
@@ -33,7 +34,7 @@ export function Goals() {
     <div className="space-y-6">
       {active.length > 0 && (
         <section>
-          <p className="text-[0.6875rem] font-semibold uppercase tracking-widest text-ink-4 mb-3">Set aside</p>
+          <p className="text-[0.6875rem] font-semibold uppercase tracking-widest text-ink-4 mb-3">{tr('Set aside')}</p>
           <div className="count-in flex flex-wrap items-end justify-between gap-x-6 gap-y-2">
             <Money
               value={totalSaved}
@@ -44,38 +45,34 @@ export function Goals() {
             />
             <div className="flex gap-5 pb-1.5">
               <span className="flex flex-col gap-0.5">
-                <span className="text-[0.625rem] font-semibold uppercase tracking-widest text-ink-4">Target</span>
+                <span className="text-[0.625rem] font-semibold uppercase tracking-widest text-ink-4">{tr('Target')}</span>
                 <Money value={totalTarget} currency={settings.baseCurrency} hidden={hidden} size="sm" weight="semibold" symbol={false} />
               </span>
               {done.length > 0 && (
                 <span className="flex flex-col gap-0.5">
-                  <span className="text-[0.625rem] font-semibold uppercase tracking-widest text-ink-4">Reached</span>
+                  <span className="text-[0.625rem] font-semibold uppercase tracking-widest text-ink-4">{tr('Reached')}</span>
                   <span className="tnum text-[0.8125rem] font-semibold text-positive">{done.length}</span>
                 </span>
               )}
             </div>
           </div>
-          <Progress value={totalTarget > 0 ? totalSaved / totalTarget : 0} tone="accent" label="Overall goal progress" className="mt-4" />
+          <Progress value={totalTarget > 0 ? totalSaved / totalTarget : 0} tone="accent" label={tr('Overall goal progress')} className="mt-4" />
           <div className="reckoning-rule reckoning-rule--total mt-4" aria-hidden="true" />
         </section>
       )}
 
       <div className="flex items-center justify-between">
-        <h2 className="display text-[1.0625rem]">Goals</h2>
-        <Button size="sm" variant="primary" icon={<Plus className="size-3.5" />} onClick={() => setEditing('new')}>
-          New goal
-        </Button>
+        <h2 className="display text-[1.0625rem]">{tr('Goals')}</h2>
+        <Button variant="primary" icon={<Plus className="size-4" />} onClick={() => setEditing('new')}>{tr('Add a goal')}</Button>
       </div>
 
       {active.length === 0 ? (
         <EmptyState
           icon={<Target className="size-5" />}
           title="No goals yet"
-          body="Money set aside, without pretending you spent it."
+          body={tr('Money set aside, without pretending you spent it.')}
           action={
-            <Button variant="primary" icon={<Plus className="size-4" />} onClick={() => setEditing('new')}>
-              Create a goal
-            </Button>
+            <Button variant="primary" icon={<Plus className="size-4" />} onClick={() => setEditing('new')}>{tr('Create a goal')}</Button>
           }
         />
       ) : (
@@ -163,7 +160,7 @@ function GoalCard({
           <span className="flex items-center justify-between gap-3">
             <span className="flex items-center gap-2 truncate">
               <span className="truncate text-sm font-semibold text-ink">{goal.name}</span>
-              {reached && <Badge tone="positive" icon={<Trophy className="size-3" />}>Reached</Badge>}
+              {reached && <Badge tone="positive" icon={<Trophy className="size-3" />}>{tr('Reached')}</Badge>}
             </span>
             <span className="tnum shrink-0 text-xs text-ink-3">
               {goal.targetDate ? `by ${formatDate(goal.targetDate)}` : 'no date'}
@@ -188,29 +185,22 @@ function GoalCard({
           hidden={hidden}
           showSigns={false}
           lines={[
-            { key: 'week', label: 'Each week', amount: plan.perWeek },
-            { key: 'month', label: 'Each month', amount: plan.perMonth },
+            { key: 'week', label: tr('Each week'), amount: plan.perWeek },
+            { key: 'month', label: tr('Each month'), amount: plan.perMonth },
           ]}
           total={{ label: `Still needed · ${Math.round(plan.months)} months`, amount: remaining }}
         />
       )}
       {plan?.overdue && (
-        <Notice tone="warn">
-          Target date passed with <Money value={remaining} currency={goal.currency} hidden={hidden} size="sm" /> to go.
+        <Notice tone="warn">{tr('Target date passed with')}<Money value={remaining} currency={goal.currency} hidden={hidden} size="sm" /> to go.
         </Notice>
       )}
-      {reached && <p className="text-sm text-ink-2">Fully funded. Withdraw it whenever you need it.</p>}
+      {reached && <p className="text-sm text-ink-2">{tr('Fully funded. Withdraw it whenever you need it.')}</p>}
 
       <div className="mt-4 flex gap-2">
-        <Button size="sm" variant="primary" icon={<ArrowDownToLine className="size-3.5" />} onClick={() => onMove('in')}>
-          Add money
-        </Button>
-        <Button size="sm" variant="secondary" icon={<ArrowUpFromLine className="size-3.5" />} onClick={() => onMove('out')} disabled={saved <= 0}>
-          Take out
-        </Button>
-        <Button size="sm" variant="ghost" onClick={onEdit} aria-label={`Edit ${goal.name}`}>
-          Edit
-        </Button>
+        <Button size="sm" variant="primary" icon={<ArrowDownToLine className="size-3.5" />} onClick={() => onMove('in')}>{tr('Add money')}</Button>
+        <Button size="sm" variant="secondary" icon={<ArrowUpFromLine className="size-3.5" />} onClick={() => onMove('out')} disabled={saved <= 0}>{tr('Take out')}</Button>
+        <Button size="sm" variant="ghost" onClick={onEdit} aria-label={`Edit ${goal.name}`}>{tr('Edit')}</Button>
       </div>
     </ExpandingRow>
   );
@@ -294,9 +284,7 @@ function GoalEditor({ goal, onClose }: { goal: Goal | null; onClose: () => void 
       footer={
         <div className="flex gap-2.5">
           {!isNew && (
-            <Button variant="secondary" icon={<Archive className="size-4" />} onClick={() => setConfirmArchive(true)}>
-              Archive
-            </Button>
+            <Button variant="secondary" icon={<Archive className="size-4" />} onClick={() => setConfirmArchive(true)}>{tr('Archive')}</Button>
           )}
           <Button variant="primary" full onClick={() => void save()}>
             {isNew ? 'Create goal' : 'Save changes'}
@@ -305,33 +293,29 @@ function GoalEditor({ goal, onClose }: { goal: Goal | null; onClose: () => void 
       }
     >
       <div className="space-y-4 pb-2">
-        <Field label="What are you saving for?" htmlFor="g-name">
+        <Field label={tr('What are you saving for?')} htmlFor="g-name">
           <TextInput
             id="g-name"
             data-autofocus
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Laptop"
+            placeholder={tr('Laptop')}
           />
         </Field>
 
-        <Field label="Target amount">
+        <Field label={tr('Target amount')}>
           <AmountInput value={target} onChange={setTarget} currency={settings.baseCurrency} size="hero" />
         </Field>
 
-        <Field label="Target date" optional hint="Pocketa works out what you would need to put aside.">
+        <Field label={tr('Target date')} optional>
           <DateInput value={targetDate} onChange={setTargetDate} min={asOf} />
         </Field>
 
-        <Field
-          label="Planned monthly contribution"
-          optional
-          hint="Reserved from your safe-to-spend until you have made it each month."
-        >
+        <Field label={tr('Put aside each month')} optional>
           <AmountInput value={planned} onChange={setPlanned} currency={settings.baseCurrency} />
         </Field>
 
-        <Field label="Notes" optional>
+        <Field label={tr('Notes')} optional>
           <Textarea value={notes} rows={2} onChange={(e) => setNotes(e.target.value)} />
         </Field>
 
@@ -343,7 +327,7 @@ function GoalEditor({ goal, onClose }: { goal: Goal | null; onClose: () => void 
         onClose={() => setConfirmArchive(false)}
         title={`Archive ${goal?.name}?`}
         confirmLabel="Archive"
-        body="The goal stops appearing, but the money stays where it is and every contribution is kept."
+        body={tr('The goal stops appearing, but the money stays where it is and every contribution is kept.')}
         onConfirm={async () => {
           await archiveGoal(goal!.id, true);
           toast.saved('Goal archived');
@@ -411,12 +395,9 @@ function MoveMoney({
       open
       onClose={onClose}
       title={direction === 'in' ? `Add to ${goal.name}` : `Take from ${goal.name}`}
-      description="Moving money to a goal is a transfer, not spending — your expenses for the month are unaffected."
       footer={
         <div className="flex gap-2.5">
-          <Button variant="secondary" full onClick={onClose}>
-            Cancel
-          </Button>
+          <Button variant="secondary" full onClick={onClose}>{tr('Cancel')}</Button>
           <Button variant="primary" full loading={saving} onClick={() => void submit()}>
             {direction === 'in' ? 'Add money' : 'Take money out'}
           </Button>
@@ -424,26 +405,25 @@ function MoveMoney({
       }
     >
       <div className="space-y-4 pb-2">
-        <Field label="Amount">
+        <Field label={tr('Amount')}>
           <AmountInput value={amount} onChange={setAmount} currency={goal.currency} size="hero" autoFocus />
         </Field>
 
         <Field label={direction === 'in' ? 'From account' : 'Into account'}>
           <Select value={accountId} onChange={(e) => setAccountId(e.target.value as ID)}>
-            <option value="">Choose an account</option>
+            <option value="">{tr('Choose an account')}</option>
             {accounts.map((a) => (
               <option key={a.id} value={a.id}>{a.name}</option>
             ))}
           </Select>
         </Field>
 
-        <Field label="Date">
+        <Field label={tr('Date')}>
           <DateInput value={date} onChange={setDate} />
         </Field>
 
         {direction === 'out' && (
-          <Notice tone="neutral" icon={<Flag className="size-4" />}>
-            This goal holds <Money value={saved} currency={goal.currency} size="sm" />.
+          <Notice tone="neutral" icon={<Flag className="size-4" />}>{tr('This goal holds')}<Money value={saved} currency={goal.currency} size="sm" />.
           </Notice>
         )}
 

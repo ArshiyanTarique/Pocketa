@@ -22,6 +22,7 @@ import { nowIso } from '../core/dates';
 import type { TxnDraft } from '../core/draft';
 import type { ID } from '../core/types';
 
+import { tr } from '../app/i18n';
 const ROLES: Array<{ value: ColumnRole; label: string }> = [
   { value: 'ignore', label: 'Ignore' },
   { value: 'date', label: 'Date' },
@@ -195,26 +196,26 @@ export function ImportWizard({ onClose }: { onClose: () => void }) {
     <Sheet
       open
       onClose={onClose}
-      title="Import transactions"
+      title={tr('Import transactions')}
       description={step === 'file' ? 'From a CSV or Excel file your bank or another app exported.' : fileName}
       size="xl"
       footer={
         step === 'map' ? (
           <div className="flex gap-2.5">
-            <Button variant="secondary" onClick={() => setStep('file')}>Back</Button>
+            <Button variant="secondary" onClick={() => setStep('file')}>{tr('Back')}</Button>
             <Button variant="primary" full onClick={preview} disabled={!canPreview}>
               Preview {grid.length - (hasHeader ? 1 : 0)} rows
             </Button>
           </div>
         ) : step === 'review' ? (
           <div className="flex gap-2.5">
-            <Button variant="secondary" onClick={() => setStep('map')}>Back</Button>
+            <Button variant="secondary" onClick={() => setStep('map')}>{tr('Back')}</Button>
             <Button variant="primary" full loading={busy} onClick={() => void commit()} disabled={selected.length === 0}>
               Import {selected.length} transaction{selected.length === 1 ? '' : 's'}
             </Button>
           </div>
         ) : step === 'done' ? (
-          <Button variant="primary" full onClick={onClose}>Done</Button>
+          <Button variant="primary" full onClick={onClose}>{tr('Done')}</Button>
         ) : undefined
       }
     >
@@ -222,13 +223,10 @@ export function ImportWizard({ onClose }: { onClose: () => void }) {
 
       {step === 'map' && (
         <div className="space-y-4 pb-2">
-          <Notice tone="neutral">
-            Check that each column is understood correctly. Nothing is imported until you have seen
-            the preview.
-          </Notice>
+          <Notice tone="neutral">{tr("Check that each column is understood correctly. Nothing is imported until you have seen the preview.")}</Notice>
 
           {sheets.length > 1 && (
-            <Field label="Sheet" hint="This workbook has more than one.">
+            <Field label={tr('Sheet')}>
               <Select
                 value={String(sheetIndex)}
                 onChange={(e) => {
@@ -247,34 +245,33 @@ export function ImportWizard({ onClose }: { onClose: () => void }) {
           )}
 
           <div className="grid gap-3 sm:grid-cols-2">
-            <Field label="Import into account">
+            <Field label={tr('Import into account')}>
               <Select value={accountId} onChange={(e) => setAccountId(e.target.value as ID)}>
-                <option value="">Choose an account</option>
+                <option value="">{tr('Choose an account')}</option>
                 {accounts.map((a) => (
                   <option key={a.id} value={a.id}>{a.name}</option>
                 ))}
               </Select>
             </Field>
-            <Field label="Date format" hint="03/04/2026 means different days in different countries.">
+            <Field label={tr('Date format')} hint="03/04/2026 means different days in different countries.">
               <Select value={dayFirst ? 'dmy' : 'mdy'} onChange={(e) => setDayFirst(e.target.value === 'dmy')}>
-                <option value="dmy">Day first — 03/04 is 3 April</option>
-                <option value="mdy">Month first — 03/04 is 4 March</option>
+                <option value="dmy">{tr('Day first — 03/04 is 3 April')}</option>
+                <option value="mdy">{tr('Month first — 03/04 is 4 March')}</option>
               </Select>
             </Field>
           </div>
 
           <div className="space-y-2 rounded-[--radius] border border-line p-3">
-            <Toggle checked={hasHeader} onChange={setHasHeader} label="First row is a header" />
+            <Toggle checked={hasHeader} onChange={setHasHeader} label={tr('First row is a header')} />
             <Toggle
               checked={invertAmount}
               onChange={setInvertAmount}
-              label="Flip the sign of every amount"
-              description="Use this if spending shows as positive and income as negative."
+              label={tr('Flip the sign of every amount')}
             />
           </div>
 
           <div>
-            <h3 className="eyebrow mb-2">Columns</h3>
+            <h3 className="eyebrow mb-2">{tr('Columns')}</h3>
             <div className="overflow-x-auto rounded-[--radius] border border-line">
               <table className="w-full text-left text-[0.8125rem]">
                 <thead>
@@ -287,7 +284,7 @@ export function ImportWizard({ onClose }: { onClose: () => void }) {
                           onChange={(e) => setMapping({ ...mapping, [i]: e.target.value as ColumnRole })}
                           className="h-8 text-xs"
                         >
-                          {ROLES.map((r) => (
+                          {ROLES.map((r) => ({ ...r, label: tr(r.label) })).map((r) => (
                             <option key={r.value} value={r.value}>{r.label}</option>
                           ))}
                         </Select>
@@ -311,10 +308,7 @@ export function ImportWizard({ onClose }: { onClose: () => void }) {
           </div>
 
           {!canPreview && (
-            <Notice tone="warn">
-              Map a date column and at least one amount column, and choose an account, before
-              continuing.
-            </Notice>
+            <Notice tone="warn">{tr("Map a date column and at least one amount column, and choose an account, before continuing.")}</Notice>
           )}
         </div>
       )}
@@ -322,13 +316,13 @@ export function ImportWizard({ onClose }: { onClose: () => void }) {
       {step === 'review' && (
         <div className="space-y-4 pb-2">
           <div className="grid grid-cols-3 gap-2">
-            <Stat label="Ready" value={selected.length} tone="positive" />
-            <Stat label="Duplicates" value={duplicates.length} tone={duplicates.length ? 'warn' : 'neutral'} />
-            <Stat label="Problems" value={problems.length} tone={problems.length ? 'negative' : 'neutral'} />
+            <Stat label={tr('Ready')} value={selected.length} tone="positive" />
+            <Stat label={tr('Duplicates')} value={duplicates.length} tone={duplicates.length ? 'warn' : 'neutral'} />
+            <Stat label={tr('Problems')} value={problems.length} tone={problems.length ? 'negative' : 'neutral'} />
           </div>
 
           {duplicates.length > 0 && (
-            <Notice tone="warn" icon={<Copy className="size-4" />} title="Possible duplicates found">
+            <Notice tone="warn" icon={<Copy className="size-4" />} title={tr('Possible duplicates found')}>
               {duplicates.length} row{duplicates.length === 1 ? '' : 's'} match something already in
               your ledger on date, amount, account and merchant. They are unticked by default — tick
               one only if it is genuinely a separate transaction.
@@ -336,14 +330,14 @@ export function ImportWizard({ onClose }: { onClose: () => void }) {
           )}
 
           <div className="grid gap-3 sm:grid-cols-2">
-            <Field label="Category for uncategorised expenses">
+            <Field label={tr('Category for uncategorised expenses')}>
               <Select value={fallbackCategory} onChange={(e) => setFallbackCategory(e.target.value as ID)}>
                 {categories.map((c) => (
                   <option key={c.id} value={c.id}>{c.path}</option>
                 ))}
               </Select>
             </Field>
-            <Field label="Category for uncategorised income">
+            <Field label={tr('Category for uncategorised income')}>
               <Select value={fallbackIncome} onChange={(e) => setFallbackIncome(e.target.value as ID)}>
                 {incomeCategories.map((c) => (
                   <option key={c.id} value={c.id}>{c.path}</option>
@@ -353,14 +347,10 @@ export function ImportWizard({ onClose }: { onClose: () => void }) {
           </div>
 
           <div className="flex items-center justify-between">
-            <h3 className="eyebrow">Rows</h3>
+            <h3 className="eyebrow">{tr('Rows')}</h3>
             <div className="flex gap-2">
-              <Button size="sm" variant="ghost" onClick={() => setRows(rows.map((r) => ({ ...r, include: r.problem == null })))}>
-                Select all
-              </Button>
-              <Button size="sm" variant="ghost" onClick={() => setRows(rows.map((r) => ({ ...r, include: false })))}>
-                Select none
-              </Button>
+              <Button size="sm" variant="ghost" onClick={() => setRows(rows.map((r) => ({ ...r, include: r.problem == null })))}>{tr('Select all')}</Button>
+              <Button size="sm" variant="ghost" onClick={() => setRows(rows.map((r) => ({ ...r, include: false })))}>{tr('Select none')}</Button>
             </div>
           </div>
 
@@ -385,9 +375,9 @@ export function ImportWizard({ onClose }: { onClose: () => void }) {
                     />
                     <span className="tnum w-[5.5rem] shrink-0 text-xs text-ink-3">{row.date ?? '—'}</span>
                     <span className="min-w-0 flex-1 truncate text-[0.8125rem] text-ink">
-                      {row.merchant || row.description || <span className="text-ink-4">No description</span>}
+                      {row.merchant || row.description || <span className="text-ink-4">{tr('No description')}</span>}
                     </span>
-                    {row.duplicateOf && <Badge tone="warn">Duplicate</Badge>}
+                    {row.duplicateOf && <Badge tone="warn">{tr('Duplicate')}</Badge>}
                     {row.problem && <Badge tone="negative">{row.problem}</Badge>}
                     {row.amount != null && (
                       <Money
@@ -406,9 +396,7 @@ export function ImportWizard({ onClose }: { onClose: () => void }) {
           </div>
 
           {includable.length === 0 && (
-            <Notice tone="negative" icon={<CircleAlert className="size-4" />}>
-              No row could be read. Go back and check the column mapping and date format.
-            </Notice>
+            <Notice tone="negative" icon={<CircleAlert className="size-4" />}>{tr('No row could be read. Go back and check the column mapping and date format.')}</Notice>
           )}
         </div>
       )}
@@ -457,13 +445,9 @@ function FileStep({ onFile }: { onFile: (f: File) => void }) {
         )}
       >
         <FileUp className="mb-3 size-7 text-ink-3" />
-        <p className="text-[0.9375rem] font-semibold text-ink">Drop a CSV or Excel file here</p>
-        <p className="mt-1 max-w-[38ch] text-[0.8125rem] leading-relaxed text-ink-3">
-          You will map the columns and see a full preview before anything is added.
-        </p>
-        <Button variant="secondary" className="mt-4" onClick={() => inputRef.current?.click()}>
-          Choose a file
-        </Button>
+        <p className="text-[0.9375rem] font-semibold text-ink">{tr('Drop a CSV or Excel file here')}</p>
+        <p className="mt-1 max-w-[38ch] text-[0.8125rem] leading-relaxed text-ink-3">{tr('You will map the columns and see a full preview before anything is added.')}</p>
+        <Button variant="secondary" className="mt-4" onClick={() => inputRef.current?.click()}>{tr('Choose a file')}</Button>
         <input
           ref={inputRef}
           type="file"
@@ -479,11 +463,7 @@ function FileStep({ onFile }: { onFile: (f: File) => void }) {
         />
       </div>
 
-      <p className="mt-4 text-xs leading-relaxed text-ink-4">
-        Exports from most banks and finance apps work. Pocketa reads .xlsx workbooks directly, and
-        CSVs using commas, semicolons or tabs. The older binary .xls format needs saving as .xlsx
-        first.
-      </p>
+      <p className="mt-4 text-xs leading-relaxed text-ink-4">{tr("Exports from most banks and finance apps work. Pocketa reads .xlsx workbooks directly, and CSVs using commas, semicolons or tabs. The older binary .xls format needs saving as .xlsx first.")}</p>
     </div>
   );
 }

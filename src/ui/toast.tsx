@@ -2,6 +2,7 @@ import * as React from 'react';
 import { create } from 'zustand';
 import { cn } from './cn';
 
+import { tr } from '../app/i18n';
 export type ToastTone = 'default' | 'positive' | 'negative' | 'warn';
 
 export interface Toast {
@@ -63,7 +64,7 @@ export function Toaster() {
       className="pointer-events-none fixed inset-x-0 bottom-0 z-[60] flex flex-col items-center gap-2 px-4 pb-[calc(env(safe-area-inset-bottom,0px)+5.5rem)] sm:items-end sm:pe-6 sm:pb-6"
       role="region"
       aria-live="polite"
-      aria-label="Notifications"
+      aria-label={tr('Notifications')}
     >
       {toasts.map((t) => (
         <ToastRow key={t.id} toast={t} onDismiss={() => dismiss(t.id)} />
@@ -113,7 +114,7 @@ function ToastRow({ toast: t, onDismiss }: { toast: Toast; onDismiss: () => void
 
       <button
         onClick={onDismiss}
-        aria-label="Dismiss"
+        aria-label={tr('Dismiss')}
         className="-me-1 shrink-0 rounded p-1 text-ink-4 transition-colors hover:text-ink"
       >
         <svg viewBox="0 0 24 24" className="size-3.5" fill="none" aria-hidden="true">

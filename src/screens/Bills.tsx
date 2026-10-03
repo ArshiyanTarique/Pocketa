@@ -21,6 +21,7 @@ import { newId } from '../core/ids';
 import type { ID, Recurrence, RecurrenceFrequency } from '../core/types';
 import type { TxnDraft } from '../core/draft';
 
+import { tr, trf } from '../app/i18n';
 type Tab = 'due' | 'all' | 'templates';
 
 export function Bills() {
@@ -47,7 +48,7 @@ export function Bills() {
   return (
     <div className="space-y-6">
       <section>
-        <p className="text-[0.6875rem] font-semibold uppercase tracking-widest text-ink-4 mb-3">Bills · a month</p>
+        <p className="text-[0.6875rem] font-semibold uppercase tracking-widest text-ink-4 mb-3">{tr('Bills per month')}</p>
         <div className="count-in flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
           <Money
             value={Math.round(monthlyCost)}
@@ -56,9 +57,7 @@ export function Bills() {
             size="display"
             weight="semibold"
           />
-          <Button variant="primary" icon={<Plus className="size-4" />} onClick={() => setEditing('new')} className="mb-1">
-            Add a bill
-          </Button>
+          <Button variant="primary" icon={<Plus className="size-4" />} onClick={() => setEditing('new')} className="mb-1">{tr('Add a bill')}</Button>
         </div>
         <div className="reckoning-rule reckoning-rule--total mt-4" aria-hidden="true" />
       </section>
@@ -67,18 +66,18 @@ export function Bills() {
         <Notice
           tone="negative"
           icon={<TriangleAlert className="size-4" />}
-          title={`${overdue.length} past due, not yet marked paid or skipped`}
+          title={trf('{n} past due, not yet marked paid or skipped', { n: overdue.length })}
         />
       )}
 
       <Segmented
-        label="Filter bills"
+        label={tr('Filter bills')}
         value={tab}
         onChange={setTab}
         options={[
-          { value: 'due', label: `Due (${overdue.length + upcoming.length})` },
-          { value: 'all', label: 'Recently settled' },
-          { value: 'templates', label: 'All bills' },
+          { value: 'due', label: `${tr('Due')} (${overdue.length + upcoming.length})` },
+          { value: 'all', label: tr('Paid') },
+          { value: 'templates', label: tr('All') },
         ]}
       />
 
@@ -87,19 +86,17 @@ export function Bills() {
           {overdue.length === 0 && upcoming.length === 0 ? (
             <EmptyState
               icon={<CalendarClock className="size-5" />}
-              title="Nothing due"
-              body="Rent, utilities, subscriptions — add them and they are reserved."
+              title={tr('Nothing due')}
+              body={tr('Rent, utilities, subscriptions — add them and they are reserved.')}
               action={
-                <Button variant="primary" icon={<Plus className="size-4" />} onClick={() => setEditing('new')}>
-                  Add a bill
-                </Button>
+                <Button variant="primary" icon={<Plus className="size-4" />} onClick={() => setEditing('new')}>{tr('Add a bill')}</Button>
               }
             />
           ) : (
             <>
               {overdue.length > 0 && (
                 <OccurrenceList
-                  title="Overdue"
+                  title={tr('Overdue')}
                   items={overdue}
                   hidden={hidden}
                   currency={settings.baseCurrency}
@@ -109,7 +106,7 @@ export function Bills() {
               )}
               {upcoming.length > 0 && (
                 <OccurrenceList
-                  title="Coming up"
+                  title={tr('Coming up')}
                   items={upcoming}
                   hidden={hidden}
                   currency={settings.baseCurrency}
@@ -124,24 +121,24 @@ export function Bills() {
 
       {tab === 'all' && (
         <OccurrenceList
-          title="Settled"
+          title={tr('Settled')}
           items={settled.slice(-30).reverse()}
           hidden={hidden}
           currency={settings.baseCurrency}
           asOf={asOf}
           onPay={setPaying}
-          emptyMessage="Nothing has been marked paid or skipped yet."
+          emptyMessage={tr('Nothing has been marked paid or skipped yet.')}
         />
       )}
 
       {tab === 'templates' && (
         <section>
           <div className="mb-2 flex items-center justify-between px-0.5">
-            <span className="text-[0.6875rem] font-semibold uppercase tracking-widest text-ink-4">Every bill</span>
+            <span className="text-[0.6875rem] font-semibold uppercase tracking-widest text-ink-4">{tr('All bills')}</span>
             <span className="tnum text-xs text-ink-4">{recurrences.filter((r) => !r.archived).length} active</span>
           </div>
           {recurrences.length === 0 ? (
-            <EmptyState compact title="No bills set up" />
+            <EmptyState compact title={tr('No bills set up')} />
           ) : (
             <ul className="divide-y divide-line rounded-[--radius-lg] border border-line bg-surface overflow-hidden">
               {recurrences.map((rec) => (
@@ -159,8 +156,8 @@ export function Bills() {
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
                         <span className="truncate text-[0.9375rem] font-medium text-ink">{rec.name}</span>
-                        {rec.archived && <Badge tone="neutral">Stopped</Badge>}
-                        {rec.kind === 'income' && <Badge tone="positive">Income</Badge>}
+                        {rec.archived && <Badge tone="neutral">{tr('Stopped')}</Badge>}
+                        {rec.kind === 'income' && <Badge tone="positive">{tr('Income')}</Badge>}
                       </div>
                       <p className="mt-0.5 truncate text-xs text-ink-3">{describeRecurrence(rec)}</p>
                     </div>
@@ -246,11 +243,11 @@ function OccurrenceList({
                     <span className="block">
                       <span className="flex items-center gap-1.5">
                         <span className="truncate text-sm font-semibold text-ink">{occurrence.recurrence.name}</span>
-                        {occurrence.amountChanged && <Badge tone="info">changed</Badge>}
-                        {occurrence.status === 'skipped' && <Badge tone="neutral">skipped</Badge>}
+                        {occurrence.amountChanged && <Badge tone="info">{tr('changed')}</Badge>}
+                        {occurrence.status === 'skipped' && <Badge tone="neutral">{tr('skipped')}</Badge>}
                       </span>
                       <span className={cn('block text-xs', late ? 'font-semibold text-negative' : 'text-ink-3')}>
-                        {late ? `${Math.abs(occurrence.daysUntilDue)}d overdue` : formatRelativeDay(occurrence.dueDate, asOf)}
+                        {late ? trf('{n}d overdue', { n: Math.abs(occurrence.daysUntilDue) }) : formatRelativeDay(occurrence.dueDate, asOf)}
                       </span>
                     </span>
                   }
@@ -259,13 +256,9 @@ function OccurrenceList({
                   <p className="text-xs text-ink-3">{describeRecurrence(occurrence.recurrence)}</p>
                   <div className="mt-3 flex gap-2">
                     {settled ? (
-                      <Button size="sm" variant="secondary" onClick={() => onPay(occurrence)}>
-                        Change
-                      </Button>
+                      <Button size="sm" variant="secondary" onClick={() => onPay(occurrence)}>{tr('Change')}</Button>
                     ) : (
-                      <Button size="sm" variant="primary" onClick={() => onPay(occurrence)}>
-                        Record payment
-                      </Button>
+                      <Button size="sm" variant="primary" onClick={() => onPay(occurrence)}>{tr('Record payment')}</Button>
                     )}
                   </div>
                 </ExpandingRow>
@@ -400,17 +393,11 @@ function PayOccurrence({
       description={`Due ${formatDate(occurrence.dueDate, 'long')}`}
       footer={
         settled ? (
-          <Button variant="secondary" full icon={<RotateCcw className="size-4" />} onClick={() => void reset()}>
-            Reset to scheduled
-          </Button>
+          <Button variant="secondary" full icon={<RotateCcw className="size-4" />} onClick={() => void reset()}>{tr('Reset to scheduled')}</Button>
         ) : (
           <div className="flex gap-2.5">
-            <Button variant="secondary" icon={<CircleSlash className="size-4" />} onClick={() => void skip()}>
-              Skip
-            </Button>
-            <Button variant="primary" full loading={saving} icon={<Check className="size-4" />} onClick={() => void markPaid()}>
-              Mark paid
-            </Button>
+            <Button variant="secondary" icon={<CircleSlash className="size-4" />} onClick={() => void skip()}>{tr('Skip')}</Button>
+            <Button variant="primary" full loading={saving} icon={<Check className="size-4" />} onClick={() => void markPaid()}>{tr('Mark paid')}</Button>
           </div>
         )
       }
@@ -424,7 +411,7 @@ function PayOccurrence({
         ) : (
           <>
             <Field
-              label="Amount paid"
+              label={tr('Amount paid')}
               hint={
                 differs
                   ? `The usual amount is ${rec.amount / 100}. Changing it here applies to this occurrence only.`
@@ -435,14 +422,14 @@ function PayOccurrence({
             </Field>
 
             {differs && (
-              <Notice tone="info" title="Only this occurrence changes">
+              <Notice tone="info" title={tr('Only this occurrence changes')}>
                 The recurring bill keeps its usual amount of{' '}
                 <Money value={rec.amount} currency={rec.currency} size="sm" />, so next time it will
                 expect that again.
               </Notice>
             )}
 
-            <Field label="Date paid">
+            <Field label={tr('Date paid')}>
               <DateInput value={paidDate} onChange={setPaidDate} />
             </Field>
           </>
@@ -560,20 +547,20 @@ function RecurrenceEditor({
     >
       <div className="space-y-4 pb-2">
         <Segmented
-          label="What kind of bill"
+          label={tr('What kind of bill')}
           value={kind}
           onChange={(v) => {
             setKind(v);
             setCategoryId('');
           }}
           options={[
-            { value: 'expense', label: 'Money out' },
-            { value: 'income', label: 'Money in' },
-            { value: 'transfer', label: 'Transfer' },
+            { value: 'expense', label: tr('Money out') },
+            { value: 'income', label: tr('Money in') },
+            { value: 'transfer', label: tr('Transfer') },
           ]}
         />
 
-        <Field label="Name" htmlFor="r-name">
+        <Field label={tr('Name')} htmlFor="r-name">
           <TextInput
             id="r-name"
             data-autofocus
@@ -583,32 +570,32 @@ function RecurrenceEditor({
           />
         </Field>
 
-        <Field label="Usual amount" hint="Individual months can differ without changing this.">
+        <Field label={tr('Usual amount')}>
           <AmountInput value={amount} onChange={setAmount} currency={settings.baseCurrency} size="hero" />
         </Field>
 
         <div className="grid gap-3 sm:grid-cols-2">
           <Field label={kind === 'income' ? 'Paid into' : 'Paid from'}>
             <Select value={accountId} onChange={(e) => setAccountId(e.target.value as ID)}>
-              <option value="">Choose an account</option>
+              <option value="">{tr('Choose an account')}</option>
               {accounts.map((a) => (
                 <option key={a.id} value={a.id}>{a.name}</option>
               ))}
             </Select>
           </Field>
           {kind === 'transfer' ? (
-            <Field label="Into">
+            <Field label={tr('Into')}>
               <Select value={toAccountId} onChange={(e) => setToAccountId(e.target.value as ID)}>
-                <option value="">Choose an account</option>
+                <option value="">{tr('Choose an account')}</option>
                 {accounts.filter((a) => a.id !== accountId).map((a) => (
                   <option key={a.id} value={a.id}>{a.name}</option>
                 ))}
               </Select>
             </Field>
           ) : (
-            <Field label="Category">
+            <Field label={tr('Category')}>
               <Select value={categoryId} onChange={(e) => setCategoryId(e.target.value as ID)}>
-                <option value="">Choose a category</option>
+                <option value="">{tr('Choose a category')}</option>
                 {categories.map((c) => (
                   <option key={c.id} value={c.id}>{c.path}</option>
                 ))}
@@ -618,16 +605,16 @@ function RecurrenceEditor({
         </div>
 
         <div className="grid gap-3 sm:grid-cols-2">
-          <Field label="Repeats">
+          <Field label={tr('Repeats')}>
             <Select value={frequency} onChange={(e) => setFrequency(e.target.value as RecurrenceFrequency)}>
-              <option value="monthly">Monthly</option>
-              <option value="weekly">Weekly</option>
-              <option value="yearly">Yearly</option>
-              <option value="daily">Daily</option>
-              <option value="custom_days">Every N days</option>
+              <option value="monthly">{tr('Monthly')}</option>
+              <option value="weekly">{tr('Weekly')}</option>
+              <option value="yearly">{tr('Yearly')}</option>
+              <option value="daily">{tr('Daily')}</option>
+              <option value="custom_days">{tr('Every N days')}</option>
             </Select>
           </Field>
-          <Field label="Every">
+          <Field label={tr('Every')}>
             <Select value={interval} onChange={(e) => setInterval(e.target.value)}>
               {[1, 2, 3, 4, 6, 12].map((n) => (
                 <option key={n} value={n}>
@@ -640,7 +627,7 @@ function RecurrenceEditor({
         </div>
 
         {frequency === 'monthly' && (
-          <Field label="On day of month">
+          <Field label={tr('On day of month')}>
             <Select value={byMonthDay} onChange={(e) => setByMonthDay(e.target.value)}>
               {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => (
                 <option key={d} value={d}>{d}</option>
@@ -650,7 +637,7 @@ function RecurrenceEditor({
         )}
 
         {frequency === 'weekly' && (
-          <Field label="On">
+          <Field label={tr('On')}>
             <Select value={byWeekday} onChange={(e) => setByWeekday(e.target.value)}>
               {['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map((d, i) => (
                 <option key={d} value={i}>{d}</option>
@@ -662,15 +649,15 @@ function RecurrenceEditor({
         {note && <Notice tone="info">{note}</Notice>}
 
         <div className="grid gap-3 sm:grid-cols-2">
-          <Field label="Starting">
+          <Field label={tr('Starting')}>
             <DateInput value={startDate} onChange={setStartDate} />
           </Field>
-          <Field label="Ending" optional>
+          <Field label={tr('Ending')} optional>
             <DateInput value={endDate} onChange={setEndDate} min={startDate} />
           </Field>
         </div>
 
-        <Field label="Remind me this many days ahead">
+        <Field label={tr('Remind me this many days ahead')}>
           <Select value={leadDays} onChange={(e) => setLeadDays(e.target.value)}>
             {[1, 3, 5, 7, 14, 30].map((d) => (
               <option key={d} value={d}>{d} days</option>
@@ -681,16 +668,15 @@ function RecurrenceEditor({
         <Toggle
           checked={autoPost}
           onChange={setAutoPost}
-          label="Record this automatically"
-          description="On its due date Pocketa writes the transaction for you and tells you it did. Leave off to confirm each one yourself."
+          label={tr('Record it automatically on the due date')}
         />
 
-        <Field label="Notes" optional>
+        <Field label={tr('Notes')} optional>
           <Textarea value={notes} rows={2} onChange={(e) => setNotes(e.target.value)} />
         </Field>
 
         <div className="rounded-[--radius] border border-line bg-surface-2/50 px-4 py-3">
-          <p className="eyebrow mb-1">Schedule</p>
+          <p className="eyebrow mb-1">{tr('Schedule')}</p>
           <p className="text-[0.8125rem] text-ink">{describeRecurrence(preview)}</p>
         </div>
 

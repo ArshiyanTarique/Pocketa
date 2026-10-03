@@ -12,7 +12,7 @@ import {
   Users,
   Wand2,
 } from 'lucide-react';
-import { Sheet } from '../ui/Sheet';
+import { Sheet, SheetFooter } from '../ui/Sheet';
 import { Button, Badge, Notice, Segmented } from '../ui/primitives';
 import { AmountInput, ChipGroup, DateInput, Field, Select, TagInput, TextInput, Textarea } from '../ui/fields';
 import { ReckoningInline } from '../ui/Reckoning';
@@ -30,7 +30,7 @@ import {
   useTags,
   useToday,
 } from '../app/useLedger';
-import { useT } from '../app/i18n';
+import { tr, useT } from '../app/i18n';
 import { allocateEvenly, sumMinor, CURRENCIES } from '../core/money';
 import { formatDate } from '../core/dates';
 import { parseNaturalLanguage, describeParse } from '../core/nlp';
@@ -39,14 +39,46 @@ import type { TxnDraft } from '../core/draft';
 import { TXN_KIND_LABELS, type ID } from '../core/types';
 
 type Mode = 'expense' | 'income' | 'transfer' | 'debt' | 'refund';
+type DebtKind = 'lend' | 'borrow';
 
-const MODES: Array<{ value: Mode; label: string; icon: React.ReactNode }> = [
+/** The three everyday kinds sit in the open; the rarer three sit behind "More". */
+const PRIMARY_MODES: Array<{ value: Mode; label: string; icon: React.ReactNode }> = [
   { value: 'expense', label: 'Expense', icon: <ArrowUpRight className="size-3.5" /> },
   { value: 'income', label: 'Income', icon: <ArrowDownLeft className="size-3.5" /> },
   { value: 'transfer', label: 'Transfer', icon: <ArrowLeftRight className="size-3.5" /> },
-  { value: 'debt', label: 'Lend / Borrow', icon: <HandCoins className="size-3.5" /> },
+];
+const MORE_MODES: Array<{ value: Mode; debtKind?: DebtKind; label: string; icon: React.ReactNode }> = [
+  { value: 'debt', debtKind: 'lend', label: 'Lent', icon: <HandCoins className="size-3.5" /> },
+  { value: 'debt', debtKind: 'borrow', label: 'Borrowed', icon: <HandCoins className="size-3.5 -scale-x-100" /> },
   { value: 'refund', label: 'Refund', icon: <Undo2 className="size-3.5" /> },
 ];
+
+function ModeChip({
+  active,
+  icon,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  icon: React.ReactNode;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      className={cn(
+        'flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-[0.8125rem] font-medium transition-all',
+        active ? 'border-accent bg-accent-soft text-accent' : 'border-line text-ink-3 hover:border-line-strong hover:text-ink',
+      )}
+    >
+      {icon}
+      {children}
+    </button>
+  );
+}
 
 type Parsed = ReturnType<typeof parseNaturalLanguage>;
 
@@ -74,6 +106,7 @@ export function QuickAdd({
 }
 
 function AddBody({ onClose, editingId }: { onClose: () => void; editingId: ID | null }) {
+  const t = useT();
   const [tab, setTab] = React.useState<'form' | 'sentence'>('form');
   // A sentence the person accepted, handed to the form to pre-fill it.
   const [seed, setSeed] = React.useState<Parsed | null>(null);
@@ -83,16 +116,16 @@ function AddBody({ onClose, editingId }: { onClose: () => void; editingId: ID | 
       {!editingId && (
         <div className="mb-4">
           <Segmented
-            label="Entry mode"
+            label={tr('Entry mode')}
             value={tab}
             onChange={setTab}
             options={[
-              { value: 'form', label: 'Quick' },
+              { value: 'form', label: t('Form') },
               {
                 value: 'sentence',
                 label: (
                   <span className="flex items-center gap-1.5">
-                    <Wand2 className="size-3.5" /> Type a sentence
+                    <Wand2 className="size-3.5" /> {t('Quick type')}
                   </span>
                 ),
               },
@@ -129,6 +162,7 @@ function AddBody({ onClose, editingId }: { onClose: () => void; editingId: ID | 
  * the form, pre-filled, and saving is a separate, deliberate step there.
  */
 function SentenceEntry({ onClose, onAccept }: { onClose: () => void; onAccept: (parsed: Parsed) => void }) {
+  const t = useT();
   const accounts = useStore((s) => s.accounts);
   const addPerson = useStore((s) => s.addPerson);
   const asOf = useToday();
@@ -201,12 +235,12 @@ function SentenceEntry({ onClose, onAccept }: { onClose: () => void; onAccept: (
 
   return (
     <div className="space-y-4 pb-2">
-      <Field label="Say what happened">
+      <Field label={t('Say what happened')}>
         <Textarea
           data-autofocus
           rows={2}
           value={text}
-          placeholder="optp 850 yesterday"
+          placeholder={tr('e.g. Groceries 850 yesterday')}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
@@ -237,14 +271,14 @@ function SentenceEntry({ onClose, onAccept }: { onClose: () => void; onAccept: (
           {/* R11: a parsed transaction is only ever a proposal until confirmed. */}
           <div className="rounded-[--radius] border border-line bg-surface-2 p-4">
             <dl className="space-y-2.5 text-sm">
-              <ParsedRow label="Amount" confident={proposal.found.has('amount')}>
+              <ParsedRow label={tr('Amount')} confident={proposal.found.has('amount')}>
                 {proposal.amount != null ? <Money value={proposal.amount} weight="medium" /> : <Missing />}
               </ParsedRow>
-              <ParsedRow label="Type" confident={proposal.found.has('kind')}>
+              <ParsedRow label={tr('Type')} confident={proposal.found.has('kind')}>
                 {TXN_KIND_LABELS[proposal.kind]}
               </ParsedRow>
               {proposal.kind !== 'transfer' && (
-                <ParsedRow label="Category" confident={proposal.found.has('category')}>
+                <ParsedRow label={tr('Category')} confident={proposal.found.has('category')}>
                   {category ? category.path : <Missing />}
                 </ParsedRow>
               )}
@@ -260,28 +294,28 @@ function SentenceEntry({ onClose, onAccept }: { onClose: () => void; onAccept: (
                 </ParsedRow>
               )}
               {proposal.personName && !from && !to && (
-                <ParsedRow label="Person" confident>
+                <ParsedRow label={tr('Person')} confident>
                   <span className="flex items-center gap-2">
                     {proposal.personName}
                     <Badge tone="accent">new</Badge>
                   </span>
                 </ParsedRow>
               )}
-              <ParsedRow label="Date" confident={proposal.found.has('date')}>
+              <ParsedRow label={tr('Date')} confident={proposal.found.has('date')}>
                 {formatDate(proposal.date, 'long')}
               </ParsedRow>
               {proposal.merchant && (
-                <ParsedRow label="Merchant" confident={proposal.found.has('merchant')}>
+                <ParsedRow label={tr('Merchant')} confident={proposal.found.has('merchant')}>
                   {proposal.merchant}
                 </ParsedRow>
               )}
               {proposal.tags.length > 0 && (
-                <ParsedRow label="Tags" confident>
+                <ParsedRow label={tr('Tags')} confident>
                   {proposal.tags.map((t) => `#${t}`).join(' ')}
                 </ParsedRow>
               )}
               {proposal.notes && (
-                <ParsedRow label="Note" confident>
+                <ParsedRow label={tr('Note')} confident>
                   <span className="text-ink-2">{proposal.notes}</span>
                 </ParsedRow>
               )}
@@ -299,14 +333,12 @@ function SentenceEntry({ onClose, onAccept }: { onClose: () => void; onAccept: (
       )}
 
       <div className="flex gap-2.5">
-        <Button variant="secondary" full onClick={onClose}>
-          Cancel
-        </Button>
+        <Button variant="secondary" full onClick={onClose}>{tr('Cancel')}</Button>
         <Button variant="primary" full onClick={() => void accept()} disabled={!ready} loading={adding}>
           {proposal?.personName && isDebt && !from && !to ? `Add ${proposal.personName} and review` : 'Review and save'}
         </Button>
       </div>
-      <p className="text-center text-[0.6875rem] text-ink-4">Nothing is saved until you confirm the form.</p>
+      <p className="text-center text-[0.6875rem] text-ink-4">{tr('Nothing is saved until you confirm the form.')}</p>
     </div>
   );
 }
@@ -332,7 +364,7 @@ function ParsedRow({
 }
 
 function Missing() {
-  return <span className="text-ink-4">Not found</span>;
+  return <span className="text-ink-4">{tr('Not found')}</span>;
 }
 
 // ===========================================================================
@@ -359,6 +391,7 @@ function TransactionForm({
   const voidTransaction = useStore((s) => s.voidTransaction);
   const linkAttachments = useStore((s) => s.linkAttachments);
   const accountsAll = useStore((s) => s.accounts);
+  const addPerson = useStore((s) => s.addPerson);
 
   const spendable = useSpendableAccounts();
   const expenseCategories = useFlatCategories('expense_category');
@@ -372,6 +405,8 @@ function TransactionForm({
 
   // --- form state --------------------------------------------------------
   const [mode, setMode] = React.useState<Mode>('expense');
+  const [debtKind, setDebtKind] = React.useState<DebtKind>('lend');
+  const [showMoreModes, setShowMoreModes] = React.useState(false);
   const [amount, setAmount] = React.useState<number | null>(null);
   const [title, setTitle] = React.useState('');
   const [categoryId, setCategoryId] = React.useState<ID | null>(null);
@@ -416,6 +451,7 @@ function TransactionForm({
               : debt ? 'debt'
                 : 'expense',
       );
+      setDebtKind(p.kind === 'borrow' || p.kind === 'repay_in' ? 'borrow' : 'lend');
       setAmount(p.amount);
       setCategoryId(p.categoryId);
       // For a borrowing the money arrives in one of my accounts; the parser
@@ -487,6 +523,7 @@ function TransactionForm({
       setRefundOf(txn.linkedTxnId);
     } else {
       setMode(txn.kind === 'lend' || txn.kind === 'borrow' || txn.kind === 'repay_in' || txn.kind === 'repay_out' ? 'debt' : 'transfer');
+      setDebtKind(txn.kind === 'borrow' || txn.kind === 'repay_in' ? 'borrow' : 'lend');
       const from = txn.postings.find((p) => p.amount < 0);
       const to = txn.postings.find((p) => p.amount > 0);
       setAccountId(from?.accountId ?? null);
@@ -623,7 +660,7 @@ function TransactionForm({
     if (attachmentIds.length > 0) await linkAttachments(savedId, attachmentIds);
     toast.saved(
       editingId ? 'Transaction updated' : 'Transaction saved',
-      editingId ? undefined : { label: 'Undo', run: () => void voidTransaction(savedId) },
+      editingId ? undefined : { label: tr('Undo'), run: () => void voidTransaction(savedId) },
     );
 
     if (addAnother && !editingId) {
@@ -653,35 +690,113 @@ function TransactionForm({
   const needsRate =
     txnCurrency !== settings.baseCurrency && !settings.fxRates[txnCurrency];
 
+  const moreModeActive = mode === 'debt' || mode === 'refund';
+  const usualAccount = lastUsed.accountId ?? spendable[0]?.id ?? null;
+
+  function chooseMode(next: Mode, kind?: DebtKind) {
+    setMode(next);
+    if (kind) setDebtKind(kind);
+    setIssues([]);
+    setSplits(null);
+    setShares(null);
+    if (next === 'debt') {
+      // The person goes on the side the money moves towards or away from.
+      if (kind === 'borrow') {
+        setAccountId(null);
+        setToAccountId(usualAccount);
+      } else {
+        setAccountId(usualAccount);
+        setToAccountId(null);
+      }
+    } else if (next === 'transfer') {
+      setAccountId(usualAccount);
+      setToAccountId(null);
+    } else {
+      setAccountId(usualAccount);
+    }
+  }
+
+  // Which side of a movement is a person, and what the two sides are called.
+  const allPeople = [...receivableAccounts, ...payableAccounts];
+  const fromIsPerson = mode === 'debt' && debtKind === 'borrow';
+  const toIsPerson = mode === 'debt' && debtKind === 'lend';
+  const sideLabels =
+    mode === 'debt'
+      ? debtKind === 'lend'
+        ? { from: 'From my account', to: 'To whom' }
+        : { from: 'From whom', to: 'Into my account' }
+      : { from: 'From', to: 'To' };
+  type OptionGroup = { label: string; accounts: typeof spendable };
+  const fromOptions: OptionGroup[] = editingId
+    ? [{ label: tr('Accounts'), accounts: spendable }, { label: tr('People'), accounts: allPeople }]
+    : fromIsPerson
+      ? [{ label: tr('People'), accounts: payableAccounts }]
+      : [{ label: tr('Accounts'), accounts: spendable }];
+  const toOptions: OptionGroup[] = editingId
+    ? [{ label: tr('Accounts'), accounts: spendable }, { label: tr('People'), accounts: allPeople }]
+    : toIsPerson
+      ? [{ label: tr('People'), accounts: receivableAccounts }]
+      : [{ label: tr('Accounts'), accounts: spendable }];
+
   return (
     <div className="space-y-4 pb-2">
       {!editingId && (
-        <div className="flex gap-1.5 overflow-x-auto no-scrollbar">
-          {MODES.map((m) => (
-            <button
-              key={m.value}
-              type="button"
-              onClick={() => {
-                setMode(m.value);
-                setIssues([]);
-                setSplits(null);
-                setShares(null);
-              }}
-              className={cn(
-                'flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-[0.8125rem] font-medium transition-all',
-                mode === m.value
-                  ? 'border-accent bg-accent-soft text-accent'
-                  : 'border-line text-ink-3 hover:border-line-strong hover:text-ink',
-              )}
-            >
-              {m.icon}
-              {m.label}
-            </button>
+        <div className="flex flex-wrap gap-1.5">
+          {PRIMARY_MODES.map((m) => (
+            <ModeChip key={m.label} active={mode === m.value} icon={m.icon} onClick={() => chooseMode(m.value)}>
+              {t(m.label)}
+            </ModeChip>
           ))}
+          {showMoreModes || moreModeActive ? (
+            MORE_MODES.map((m) => (
+              <ModeChip
+                key={m.label}
+                active={mode === m.value && (m.debtKind == null || m.debtKind === debtKind)}
+                icon={m.icon}
+                onClick={() => chooseMode(m.value, m.debtKind)}
+              >
+                {t(m.label)}
+              </ModeChip>
+            ))
+          ) : (
+            <ModeChip active={false} icon={<ChevronDown className="size-3.5" />} onClick={() => setShowMoreModes(true)}>
+              {t('More')}
+            </ModeChip>
+          )}
         </div>
       )}
 
-      {/* Title — what is this for? Simple, human-readable label */}
+      {/* Amount first — the one thing every entry needs */}
+      <div>
+        <div className="mb-1.5 flex items-baseline justify-between gap-2">
+          <label htmlFor="quickadd-amount" className="text-[0.8125rem] font-medium text-ink-2">
+            {t('Amount')}
+          </label>
+          <CurrencyChip
+            value={txnCurrency}
+            accountCurrency={accountCurrency}
+            baseCurrency={settings.baseCurrency}
+            rates={settings.fxRates}
+            onChange={(c) => setCurrencyOverride(c === accountCurrency ? null : c)}
+          />
+        </div>
+        <AmountInput
+          id="quickadd-amount"
+          value={amount}
+          onChange={setAmount}
+          currency={txnCurrency}
+          size="hero"
+          autoFocus
+          onEnter={() => void save(false)}
+        />
+      </div>
+
+      {needsRate && (
+        <Notice tone="warn">
+          No exchange rate is set for {txnCurrency}. Add one in Settings before saving.
+        </Notice>
+      )}
+
       <Field label={t('Title')} htmlFor="qa-title">
         <TextInput
           id="qa-title"
@@ -690,6 +805,7 @@ function TransactionForm({
           placeholder={
             mode === 'expense' ? 'e.g. Groceries, Petrol, Rent…'
             : mode === 'income' ? 'e.g. Salary, Freelance…'
+            : mode === 'debt' ? 'e.g. Dinner, Loan…'
             : 'What is this for?'
           }
           autoComplete="off"
@@ -702,49 +818,10 @@ function TransactionForm({
         </datalist>
       </Field>
 
-      {/* Amount + date side by side — the two most critical fields */}
-      <div className="grid gap-3 sm:grid-cols-2">
-        <div>
-          <div className="mb-1.5 flex items-baseline justify-between gap-2">
-            <label htmlFor="quickadd-amount" className="text-[0.8125rem] font-medium text-ink-2">
-              {t('Amount')}
-            </label>
-            <CurrencyChip
-              value={txnCurrency}
-              accountCurrency={accountCurrency}
-              baseCurrency={settings.baseCurrency}
-              rates={settings.fxRates}
-              onChange={(c) => setCurrencyOverride(c === accountCurrency ? null : c)}
-            />
-          </div>
-          <AmountInput
-            id="quickadd-amount"
-            value={amount}
-            onChange={setAmount}
-            currency={txnCurrency}
-            size="hero"
-            autoFocus
-            onEnter={() => void save(false)}
-          />
-        </div>
-        <Field label={t('Date')} htmlFor="qa-date">
-          <DateInput id="qa-date" value={date} onChange={setDate} />
-        </Field>
-      </div>
-
-      {needsRate && (
-        <Notice tone="warn">
-          No exchange rate is set for {txnCurrency}. Add one in Settings before saving.
-        </Notice>
-      )}
-
       {mode === 'refund' && (
-        <Field
-          label="Refund of"
-          hint="Linking the refund keeps the original expense correct instead of creating income."
-        >
+        <Field label={t('Which expense is this refunding?')}>
           <Select value={refundOf ?? ''} onChange={(e) => setRefundOf(e.target.value || null)}>
-            <option value="">Choose the original expense</option>
+            <option value="">{tr('Choose the original expense')}</option>
             {refundable.map((t) => (
               <option key={t.id} value={t.id}>
                 {formatDate(t.date, 'short')} — {t.merchant ?? 'Expense'}
@@ -765,32 +842,22 @@ function TransactionForm({
         </Field>
       )}
 
-      {/* Budget selector — expense and income only */}
-      {(mode === 'expense' || mode === 'income') && activeBudgets.length > 0 && (
-        <Field label={t('Budget')} optional hint="Tag this transaction to a budget to track it there.">
-          <Select value={budgetId} onChange={(e) => setBudgetId(e.target.value)}>
-            <option value="">No budget</option>
-            {activeBudgets.map((b) => (
-              <option key={b.id} value={b.id}>{b.name}</option>
-            ))}
-          </Select>
-        </Field>
-      )}
-
       {isMovement ? (
         <div className="grid gap-3 sm:grid-cols-2">
-          <Field label="From" htmlFor="qa-account">
+          <Field label={t(sideLabels.from)} htmlFor="qa-account">
             <Select id="qa-account" value={accountId ?? ''} onChange={(e) => setAccountId(e.target.value || null)}>
-              <option value="">Choose an account</option>
-              <AccountOptions accounts={spendable} label="Accounts" />
-              {mode === 'debt' && <AccountOptions accounts={payableAccounts} label="People" />}
+              <option value="">{fromIsPerson ? t('Choose a person') : t('Choose an account')}</option>
+              {fromOptions.map((group) => (
+                <AccountOptions key={group.label} accounts={group.accounts} label={t(group.label)} />
+              ))}
             </Select>
           </Field>
-          <Field label="To">
+          <Field label={t(sideLabels.to)}>
             <Select value={toAccountId ?? ''} onChange={(e) => setToAccountId(e.target.value || null)}>
-              <option value="">Choose an account</option>
-              <AccountOptions accounts={spendable} label="Accounts" />
-              {mode === 'debt' && <AccountOptions accounts={receivableAccounts} label="People" />}
+              <option value="">{toIsPerson ? t('Choose a person') : t('Choose an account')}</option>
+              {toOptions.map((group) => (
+                <AccountOptions key={group.label} accounts={group.accounts} label={t(group.label)} />
+              ))}
             </Select>
           </Field>
         </div>
@@ -811,13 +878,14 @@ function TransactionForm({
       )}
 
       {crossCurrency && (
-        <Field
-          label={`Amount received in ${toAccount!.currency}`}
-          hint="Currencies differ, so Pocketa needs the exact amount that arrived rather than guessing a rate."
-        >
+        <Field label={`${t('Amount received in')} ${toAccount!.currency}`}>
           <AmountInput value={toAmount} onChange={setToAmount} currency={toAccount!.currency} />
         </Field>
       )}
+
+      <Field label={t('Date')} htmlFor="qa-date">
+        <DateInput id="qa-date" value={date} onChange={setDate} />
+      </Field>
 
       {splits && (
         <SplitEditor
@@ -836,58 +904,77 @@ function TransactionForm({
           people={peopleAccounts.filter((a) => a.class === 'receivable')}
           total={amount ?? 0}
           currency={fromAccount?.currency ?? settings.baseCurrency}
-          onAddPerson={() => toast.show('Add people from the Debts screen')}
+          onAddPerson={async (name) => {
+            const ids = await addPerson(name);
+            return ids.receivableId;
+          }}
         />
       )}
 
-      {mode === 'expense' && (
-        <div className="flex flex-wrap gap-2">
-          <Button
-            size="sm"
-            variant={splits ? 'quiet' : 'secondary'}
-            icon={<Split className="size-3.5" />}
-            onClick={() =>
-              setSplits(
-                splits
-                  ? null
-                  : categoryId && amount
-                    ? [{ categoryId, amount }]
-                    : [{ categoryId: categories[0]?.id ?? '', amount: amount ?? 0 }],
-              )
-            }
-          >
-            {splits ? 'Remove split' : 'Split across categories'}
-          </Button>
-          {peopleAccounts.some((p) => p.class === 'receivable') && (
-            <Button
-              size="sm"
-              variant={shares ? 'quiet' : 'secondary'}
-              icon={<Users className="size-3.5" />}
-              onClick={() => setShares(shares ? null : [])}
-            >
-              {shares ? 'Remove shares' : 'Share with someone'}
-            </Button>
-          )}
-        </div>
-      )}
-
-      {/* Extra details — collapsed by default to keep form simple */}
+      {/* Everything optional lives under one visible switch */}
       <button
+        type="button"
         onClick={() => setShowMoreDetails((v) => !v)}
-        className="flex w-full items-center justify-between rounded-[10px] px-1 py-2 text-[0.8125rem] font-medium text-ink-2 transition-colors hover:text-ink"
+        aria-expanded={showMoreDetails}
+        className="flex w-full items-center justify-between rounded-[--radius] border border-line px-3 py-2.5 text-[0.8125rem] font-semibold text-ink-2 transition-colors hover:bg-surface-2 hover:text-ink"
       >
-        <span>Notes, tags &amp; receipt</span>
-        <ChevronDown className={cn('size-4 transition-transform', showMoreDetails && 'rotate-180')} />
+        <span>{t('More options')}</span>
+        <span className="flex items-center gap-2 text-xs font-normal text-ink-4">
+          {!showMoreDetails && t('Notes, receipt, budget, split')}
+          <ChevronDown className={cn('size-4 transition-transform', showMoreDetails && 'rotate-180')} />
+        </span>
       </button>
 
       {showMoreDetails && (
         <div className="space-y-3.5 rounded-[--radius] border border-line bg-surface-2/50 p-4 fade-in">
-          <Field label="Merchant / Shop" htmlFor="qa-merchant" optional>
+          {mode === 'expense' && (
+            <div className="flex flex-wrap gap-2">
+              <Button
+                size="sm"
+                variant={splits ? 'quiet' : 'secondary'}
+                icon={<Split className="size-3.5" />}
+                onClick={() =>
+                  setSplits(
+                    splits
+                      ? null
+                      : categoryId && amount
+                        ? [{ categoryId, amount }]
+                        : [{ categoryId: categories[0]?.id ?? '', amount: amount ?? 0 }],
+                  )
+                }
+              >
+                {splits ? t('Remove split') : t('Split across categories')}
+              </Button>
+              {peopleAccounts.some((p) => p.class === 'receivable') && (
+                <Button
+                  size="sm"
+                  variant={shares ? 'quiet' : 'secondary'}
+                  icon={<Users className="size-3.5" />}
+                  onClick={() => setShares(shares ? null : [])}
+                >
+                  {shares ? t('Remove shares') : t('Share with someone')}
+                </Button>
+              )}
+            </div>
+          )}
+
+          {(mode === 'expense' || mode === 'income') && activeBudgets.length > 0 && (
+            <Field label={t('Budget')} optional>
+              <Select value={budgetId} onChange={(e) => setBudgetId(e.target.value)}>
+                <option value="">{t('No budget')}</option>
+                {activeBudgets.map((b) => (
+                  <option key={b.id} value={b.id}>{b.name}</option>
+                ))}
+              </Select>
+            </Field>
+          )}
+
+          <Field label={t('Merchant')} htmlFor="qa-merchant" optional>
             <TextInput
               id="qa-merchant"
               value={merchant}
               onChange={(e) => setMerchant(e.target.value)}
-              placeholder="Shop or payee name"
+              placeholder={tr('Shop or payee name')}
               autoComplete="off"
             />
           </Field>
@@ -901,7 +988,7 @@ function TransactionForm({
               value={notes}
               rows={2}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Anything worth remembering"
+              placeholder={tr('Anything worth remembering')}
             />
           </Field>
 
@@ -925,21 +1012,21 @@ function TransactionForm({
         </Notice>
       )}
 
-      <div className="sticky bottom-0 -mx-5 flex gap-2.5 border-t border-line bg-surface px-5 py-3 sm:-mx-6 sm:px-6">
-        {!editingId && (
-          <Button variant="secondary" onClick={() => void save(true)} disabled={saving}>
-            {t('Save & add')}
+      <SheetFooter>
+        <div className="flex gap-2.5">
+          {!editingId && (
+            <Button variant="secondary" onClick={() => void save(true)} disabled={saving} className="shrink-0 whitespace-nowrap">
+              {t('Save & add')}
+            </Button>
+          )}
+          <Button variant="primary" full loading={saving} onClick={() => void save(false)}>
+            {editingId ? t('Save changes') : t('Save')}
           </Button>
-        )}
-        <Button variant="primary" full loading={saving} onClick={() => void save(false)}>
-          {editingId ? t('Save changes') : t('Save')}
-        </Button>
-      </div>
+        </div>
+      </SheetFooter>
 
       {splits && amount != null && splitTotal !== amount && (
-        <p className="text-xs text-warn">
-          Split legs must total the transaction amount before it can be saved.
-        </p>
+        <p className="text-xs text-warn">{tr('Split legs must total the transaction amount before it can be saved.')}</p>
       )}
     </div>
   );
@@ -990,7 +1077,7 @@ function CategoryPicker({
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         placeholder={selected ? selected.path : 'Search categories'}
-        aria-label="Search categories"
+        aria-label={tr('Search categories')}
       />
       <div className="max-h-44 overflow-y-auto rounded-[11px] border border-line">
         {filtered.length === 0 ? (
@@ -1044,15 +1131,13 @@ function SplitEditor({
   return (
     <div className="space-y-2.5 rounded-[--radius] border border-line p-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-[0.8125rem] font-semibold text-ink">Split across categories</h3>
+        <h3 className="text-[0.8125rem] font-semibold text-ink">{tr('Split across categories')}</h3>
         <Button
           size="sm"
           variant="quiet"
           onClick={() => setSplits(allocateEvenly(total, splits.length).map((amount, i) => ({ ...splits[i], amount })))}
           disabled={total === 0}
-        >
-          Split evenly
-        </Button>
+        >{tr('Split evenly')}</Button>
       </div>
 
       {splits.map((split, i) => (
@@ -1087,7 +1172,7 @@ function SplitEditor({
           <button
             onClick={() => setSplits(splits.filter((_, j) => j !== i))}
             className="shrink-0 rounded-[10px] px-2 text-ink-4 transition-colors hover:text-negative"
-            aria-label="Remove split"
+            aria-label={tr('Remove split')}
           >
             <Trash2 className="size-4" />
           </button>
@@ -1101,9 +1186,7 @@ function SplitEditor({
         onClick={() =>
           setSplits([...splits, { categoryId: categories[0]?.id ?? '', amount: Math.max(0, total - assigned) }])
         }
-      >
-        Add a category
-      </Button>
+      >{tr('Add a category')}</Button>
 
       <ReckoningInline
         currency={currency}
@@ -1134,33 +1217,75 @@ function ShareEditor({
   people: Array<{ id: ID; name: string }>;
   total: number;
   currency: string;
-  onAddPerson: () => void;
+  onAddPerson: (name: string) => Promise<ID | null>;
 }) {
+  const t = useT();
   const owed = sumMinor(shares.map((s) => s.amount));
   const mine = total - owed;
+
+  // A new person is typed here and exists from then on — no detour to People.
+  const [newName, setNewName] = React.useState('');
+  const [adding, setAdding] = React.useState(false);
+  const [showNew, setShowNew] = React.useState(people.length === 0);
+
+  async function addNew() {
+    const name = newName.trim();
+    if (!name || adding) return;
+    setAdding(true);
+    const id = await onAddPerson(name);
+    setAdding(false);
+    if (!id) return;
+    setShares([...shares, { personAccountId: id, amount: 0 }]);
+    setNewName('');
+    setShowNew(false);
+  }
+
+  const newPersonRow = (
+    <div className="flex gap-2">
+      <TextInput
+        data-autofocus
+        value={newName}
+        onChange={(e) => setNewName(e.target.value)}
+        placeholder={t('Name of the person')}
+        className="flex-1"
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            void addNew();
+          }
+        }}
+      />
+      <Button size="sm" variant="primary" loading={adding} disabled={!newName.trim()} onClick={() => void addNew()}>
+        {t('Add')}
+      </Button>
+      {people.length > 0 && (
+        <Button size="sm" variant="ghost" onClick={() => setShowNew(false)}>
+          {t('Cancel')}
+        </Button>
+      )}
+    </div>
+  );
 
   return (
     <div className="space-y-2.5 rounded-[--radius] border border-line p-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-[0.8125rem] font-semibold text-ink">Shared with</h3>
+        <h3 className="text-[0.8125rem] font-semibold text-ink">{t('Shared with')}</h3>
         <Button
           size="sm"
           variant="quiet"
-          disabled={people.length === 0 || total === 0}
+          disabled={shares.length === 0 || total === 0}
           onClick={() => {
             const heads = shares.length + 1;
             const parts = allocateEvenly(total, heads);
             setShares(shares.map((s, i) => ({ ...s, amount: parts[i + 1] })));
           }}
         >
-          Split evenly
+          {t('Split evenly')}
         </Button>
       </div>
 
       {people.length === 0 ? (
-        <p className="text-[0.8125rem] text-ink-3">
-          Add someone on the Debts screen first, then you can split a bill with them.
-        </p>
+        newPersonRow
       ) : (
         <>
           {shares.map((share, i) => (
@@ -1201,35 +1326,39 @@ function ShareEditor({
             </div>
           ))}
 
-          <Button
-            size="sm"
-            variant="secondary"
-            icon={<Plus className="size-3.5" />}
-            onClick={() => setShares([...shares, { personAccountId: people[0].id, amount: 0 }])}
-          >
-            Add a person
-          </Button>
+          {showNew ? (
+            newPersonRow
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              <Button
+                size="sm"
+                variant="secondary"
+                icon={<Plus className="size-3.5" />}
+                onClick={() => setShares([...shares, { personAccountId: people[0].id, amount: 0 }])}
+              >
+                {t('Add someone')}
+              </Button>
+              <Button size="sm" variant="secondary" icon={<Users className="size-3.5" />} onClick={() => setShowNew(true)}>
+                {t('New person')}
+              </Button>
+            </div>
+          )}
 
           <div className="rounded-[--radius] bg-surface-2 px-3.5 py-3">
             <div className="reckoning">
-              <span className="text-[0.8125rem] font-medium text-ink">Your share</span>
+              <span className="text-[0.8125rem] font-medium text-ink">{tr('Your share')}</span>
               <span className="text-right">
                 <Money value={mine} currency={currency} size="sm" weight="medium" symbol={false} />
               </span>
-              <span className="text-[0.8125rem] text-ink-2">Owed to you</span>
+              <span className="text-[0.8125rem] text-ink-2">{tr('Owed to you')}</span>
               <span className="text-right">
                 <Money value={owed} currency={currency} size="sm" symbol={false} />
               </span>
             </div>
-            <p className="mt-2 text-xs text-ink-4">
-              Only your share counts as spending. The rest is recorded as money owed to you.
-            </p>
+            <p className="mt-2 text-xs text-ink-4">{tr('Only your share counts as spending. The rest is recorded as money owed to you.')}</p>
           </div>
         </>
       )}
-      <button onClick={onAddPerson} className="text-xs text-accent hover:underline">
-        Manage people
-      </button>
     </div>
   );
 }
@@ -1295,15 +1424,15 @@ function CurrencyChip({
         setOpen(false);
       }}
       onBlur={() => setOpen(false)}
-      aria-label="Transaction currency"
+      aria-label={tr('Transaction currency')}
       className="rounded-[8px] border border-accent bg-surface px-1.5 py-0.5 text-[0.6875rem] font-medium text-ink focus:outline-none"
     >
-      <optgroup label="Ready to use">
+      <optgroup label={tr('Ready to use')}>
         {ready.map((c) => (
           <option key={c} value={c}>{c}</option>
         ))}
       </optgroup>
-      <optgroup label="Needs a rate first">
+      <optgroup label={tr('Needs a rate first')}>
         {rest.map((c) => (
           <option key={c} value={c}>{c}</option>
         ))}

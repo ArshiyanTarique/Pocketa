@@ -96,6 +96,7 @@ function dataset(over: Partial<Dataset> = {}): Dataset {
         language: 'en',
         fontSize: 'normal',
         density: 'comfortable',
+        fontFamily: 'classic',
         createdAt: now,
         updatedAt: now,
       },

@@ -429,3 +429,23 @@ WCAG AA audit at 375px and 1280px, both light and dark themes.
 | Accent button label: pink `#ec4899` = 3.53:1 ❌ | Darkened fill to `#cb3e84` → 4.60:1 ✅ |
 
 All other tokens (ink, ink-2, ink-3, jade, rust, cerulean, plum, gold text, semantic soft backgrounds) already passed in both themes. Dark theme `--ink-4` was already 5.51:1. Gold accent fill (#e3b53a) correctly uses dark ink and passes at 9.51:1.
+
+### Phase 9 — newcomer pass (built, 2026-10-03)
+
+Spec: `docs/superpowers/specs/2026-10-03-newcomer-ux-design.md`. The brief:
+a first-time user should understand the app from its layout and labels, not
+from notes explaining each control.
+
+| Area | Change |
+|---|---|
+| Navigation | `Me` is gone. Desktop: a fixed, always-labelled 13rem sidebar grouped *daily · Plan · Money · Settings*, title bar reads `Group › Screen`. Phone: five labelled tabs — Home · Activity · Add · Plan · More; `/plan` and `/more` are list screens (icon, name, one-line purpose, live figure). `/me` redirects to `/more`. |
+| Top bar | "Sign in" is a worded button (avatar + name when signed in). Theme switch lives only in Settings › Appearance. Offline shows as a labelled chip. |
+| Controls | Sheet close is a worded button. Month/period pagers show the period between the arrows; Carpool's gear is a "Settings" button. Expand-in-place rows use a down chevron and end with an "Open X →" button. Account cards lose the icon circle that read as a button. |
+| Add sheet | Modes: Expense · Income · Transfer in the open, More ▾ reveals Lent · Borrowed · Refund (Lent/Borrowed constrain the From/To lists so only one side is a person). Amount is the first field. Budget, split, share, merchant, tags, notes, receipt sit under "More options". Tabs renamed Form · Quick type. |
+| Hints | ~40 `hint=`/`description=` strings and the Settings "About" essay removed; labels rewritten to carry the meaning (e.g. "Statement day (1–31)", "Move leftover into", "Fares count as a refund of"). Kept only data guards: refund linking, cross-currency amount, "amount differs from usual", budget-covers-everything, phone-number privacy. |
+| Vocabulary | Left to spend → Safe to spend (+ "How is this worked out?"); In/Out/Kept → Earned/Spent/Saved (Overspent); Moved → Transfers; Debts → People; Analytics → Reports; Reconcile → Fix balance; Lend/Borrow → I lent / I borrowed; Bills tabs Due · Paid · All. Urdu strings added for every new key. |
+| Tests | `src/app/Shell.test.tsx`: every button/link in the shell has visible text; every destination is named on desktop and carries a purpose. 559 tests pass. |
+| Follow-ups (same day) | Sidebar rests collapsed (3.5rem, icons only) and opens to full labels on hover or keyboard focus; group headings become hairlines when closed. New **Font** picker in Settings › Appearance: six pairings (Classic · Rounded · Playful · Modern · Editorial · Bold) in `src/app/fonts.ts`, each drawn in its own faces; Google Fonts load on demand, numbers keep the mono face. |
+| Follow-ups (round 2) | **Share editor** creates a person inline ("New person" → name → Add; the person is selected immediately), so splitting a bill never needs a trip to People. **Compact spacing** now actually compacts: `.density-row` carries min-height, and unlayered compact rules tighten card padding, section gaps and row heights (they live at the end of `index.css` because layered rules cannot beat Tailwind utilities). **Urdu** now spans the app: ~700 strings route through `tr()`/`trf()` (non-hook translators in `i18n.ts`, dictionary in `i18n.ur.ts`), dates and recurrence descriptions follow the UI language via `setDateLanguage()` in `core/dates.ts`, and option arrays translate at render rather than at module load. User data (account, merchant, category names) stays as typed. |
+| Follow-ups (round 3) | **Delete a person**: People › row › *Details* (was "History") opens the person sheet, which now ends with *Delete this person*. The confirm is proportional: a plain confirm when they have no transactions; when they do, it says how many will be voided (hidden from totals, kept in history) and requires typing DELETE. Uses the store's existing `deletePerson`. |
+| Follow-ups (round 4) | The Add sheet's Save bar moves out of the scrolling form into the sheet's real footer via a new `<SheetFooter>` portal slot in `Sheet.tsx` (the footer is a portal target; empty, it takes no space). Nothing can scroll under the buttons any more. Phone tab bar grows to 4rem and the Add fab shrinks to 2.25rem so its label never clips. Sheet titles keep the display face. |

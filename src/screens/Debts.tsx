@@ -1,10 +1,10 @@
 import * as React from 'react';
-import { HandCoins, MessageCircle, Plus, UserPlus, Users } from 'lucide-react';
+import { HandCoins, MessageCircle, Plus, Trash2, UserPlus, Users } from 'lucide-react';
 import { Badge, Button, EmptyState, Notice, Segmented } from '../ui/primitives';
 import { Money } from '../ui/Money';
 import { cn } from '../ui/cn';
 import { Reckoning } from '../ui/Reckoning';
-import { Sheet } from '../ui/Sheet';
+import { Sheet, Confirm } from '../ui/Sheet';
 import { AmountInput, DateInput, Field, Select, TextInput, Textarea } from '../ui/fields';
 import { TransactionRow } from '../components/TransactionRow';
 import { useIncremental } from '../ui/useIncremental';
@@ -16,6 +16,7 @@ import { formatDate as fmtDate, formatRelativeDay, nowIso } from '../core/dates'
 import { newId } from '../core/ids';
 import type { Account, ID, Person } from '../core/types';
 
+import { tr, trf } from '../app/i18n';
 type Direction = 'owed_to_me' | 'i_owe';
 
 export function Debts() {
@@ -81,11 +82,11 @@ export function Debts() {
           />
           <div className="flex gap-5 pb-1.5">
             <span className="flex flex-col">
-              <span className="label">Owed to you</span>
+              <span className="label">{tr('Owed to you')}</span>
               <Money value={owedToMe} currency={settings.baseCurrency} hidden={hidden} size="sm" weight="semibold" symbol={false} tone="positive" />
             </span>
             <span className="flex flex-col">
-              <span className="label">You owe</span>
+              <span className="label">{tr('You owe')}</span>
               <Money value={iOwe} currency={settings.baseCurrency} hidden={hidden} size="sm" weight="semibold" symbol={false} tone={iOwe > 0 ? 'negative' : 'muted'} />
             </span>
           </div>
@@ -94,46 +95,35 @@ export function Debts() {
       </section>
 
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 className="display text-[1.0625rem]">People</h2>
+        <h2 className="display text-[1.0625rem]">{tr('People')}</h2>
         <div className="flex gap-2">
-          <Button size="sm" variant="ghost" icon={<UserPlus className="size-3.5" />} onClick={() => setAddingPerson(true)}>
-            Add person
-          </Button>
-          <Button size="sm" variant="secondary" onClick={() => setRecording({ direction: 'i_owe' })} disabled={!hasPeople}>
-            Borrow
-          </Button>
+          <Button variant="secondary" icon={<UserPlus className="size-4" />} onClick={() => setAddingPerson(true)}>{tr('Add a person')}</Button>
+          <Button variant="secondary" onClick={() => setRecording({ direction: 'i_owe' })} disabled={!hasPeople}>{tr('I borrowed')}</Button>
           <Button
-            size="sm"
             variant="primary"
-            icon={<Plus className="size-3.5" />}
+            icon={<Plus className="size-4" />}
             onClick={() => setRecording({ direction: 'owed_to_me' })}
             disabled={!hasPeople}
-          >
-            Lend
-          </Button>
+          >{tr('I lent')}</Button>
         </div>
       </div>
 
       {!hasPeople ? (
         <EmptyState
           icon={<Users className="size-5" />}
-          title="No people yet"
-          body="People you lend to, borrow from, or split with."
+          title={tr('No people yet')}
+          body={tr('People you lend to, borrow from, or split with.')}
           action={
-            <Button variant="primary" icon={<UserPlus className="size-4" />} onClick={() => setAddingPerson(true)}>
-              Add someone
-            </Button>
+            <Button variant="primary" icon={<UserPlus className="size-4" />} onClick={() => setAddingPerson(true)}>{tr('Add someone')}</Button>
           }
         />
       ) : outstanding.length === 0 && !showSettled ? (
         <EmptyState
           icon={<HandCoins className="size-5" />}
-          title="All square"
+          title={tr('All square')}
           body={`Nothing outstanding with ${settled.length === 1 ? 'the one person' : `any of the ${settled.length} people`} you track.`}
           action={
-            <Button variant="secondary" onClick={() => setShowSettled(true)}>
-              Show everyone
-            </Button>
+            <Button variant="secondary" onClick={() => setShowSettled(true)}>{tr('Show everyone')}</Button>
           }
         />
       ) : (
@@ -311,8 +301,8 @@ function PersonDebtRow({
                 hidden={hidden}
                 showSigns={false}
                 lines={[
-                  { key: 'they', label: 'They owe you', amount: theyOwe },
-                  { key: 'you', label: 'You owe them', amount: youOwe },
+                  { key: 'they', label: tr('They owe you'), amount: theyOwe },
+                  { key: 'you', label: tr('You owe them'), amount: youOwe },
                 ]}
                 total={{ label: net >= 0 ? 'Net, in your favour' : 'Net, you owe', amount: Math.abs(net) }}
               />
@@ -336,14 +326,10 @@ function PersonDebtRow({
 
             <div className="flex flex-wrap gap-2">
               {net > 0 && recv && (
-                <Button size="sm" variant="primary" onClick={() => onRecord('owed_to_me', recv.id, 'settle')}>
-                  They paid back
-                </Button>
+                <Button size="sm" variant="primary" onClick={() => onRecord('owed_to_me', recv.id, 'settle')}>{tr('They paid back')}</Button>
               )}
               {net < 0 && pay && (
-                <Button size="sm" variant="primary" onClick={() => onRecord('i_owe', pay.id, 'settle')}>
-                  Pay back
-                </Button>
+                <Button size="sm" variant="primary" onClick={() => onRecord('i_owe', pay.id, 'settle')}>{tr('Pay back')}</Button>
               )}
               {recv && (
                 <Button size="sm" variant="secondary" onClick={() => onRecord('owed_to_me', recv.id, 'new')}>
@@ -355,9 +341,7 @@ function PersonDebtRow({
                   Borrow {net < 0 ? 'more' : ''}
                 </Button>
               )}
-              <Button size="sm" variant="ghost" onClick={() => onHistory((net < 0 ? pay : recv)?.id ?? (recv ?? pay)!.id)}>
-                History
-              </Button>
+              <Button size="sm" variant="ghost" onClick={() => onHistory((net < 0 ? pay : recv)?.id ?? (recv ?? pay)!.id)}>{tr('Details')}</Button>
               {net !== 0 && (
                 <Button
                   size="sm"
@@ -397,21 +381,20 @@ function PersonEditor({ onClose }: { onClose: () => void }) {
     <Sheet
       open
       onClose={onClose}
-      title="Add a person"
-      description="Someone you lend to, borrow from, or split bills with."
+      title={tr('Add a person')}
       footer={
         <div className="flex gap-2.5">
-          <Button variant="secondary" full onClick={onClose}>Cancel</Button>
-          <Button variant="primary" full onClick={() => void save()}>Add person</Button>
+          <Button variant="secondary" full onClick={onClose}>{tr('Cancel')}</Button>
+          <Button variant="primary" full onClick={() => void save()}>{tr('Add person')}</Button>
         </div>
       }
     >
       <div className="space-y-4 pb-2">
-        <Field label="Name" htmlFor="p-name">
+        <Field label={tr('Name')} htmlFor="p-name">
           <TextInput id="p-name" data-autofocus value={name} onChange={(e) => setName(e.target.value)} placeholder="Sara" />
         </Field>
-        <Field label="Phone or email" optional>
-          <TextInput value={contact} onChange={(e) => setContact(e.target.value)} placeholder="Just for your reference" />
+        <Field label={tr('Phone or email')} optional>
+          <TextInput value={contact} onChange={(e) => setContact(e.target.value)} placeholder={tr('Just for your reference')} />
         </Field>
         {error && <Notice tone="negative">{error}</Notice>}
       </div>
@@ -529,8 +512,8 @@ function RecordDebt({
       title={verb}
       footer={
         <div className="flex gap-2.5">
-          <Button variant="secondary" full onClick={onClose}>Cancel</Button>
-          <Button variant="primary" full loading={saving} onClick={() => void submit()}>Record</Button>
+          <Button variant="secondary" full onClick={onClose}>{tr('Cancel')}</Button>
+          <Button variant="primary" full loading={saving} onClick={() => void submit()}>{tr('Record')}</Button>
         </div>
       }
     >
@@ -544,9 +527,9 @@ function RecordDebt({
           ]}
         />
 
-        <Field label="Person">
+        <Field label={tr('Person')}>
           <Select value={personAcc} onChange={(e) => setPersonAcc(e.target.value as ID)}>
-            <option value="">Choose a person</option>
+            <option value="">{tr('Choose a person')}</option>
             {personAccounts.map((a) => (
               <option key={a.id} value={a.id}>{a.name}</option>
             ))}
@@ -554,18 +537,17 @@ function RecordDebt({
         </Field>
 
         {mode === 'settle' && personAcc && (
-          <Notice tone="neutral">
-            Outstanding: <Money value={outstanding} size="sm" />
+          <Notice tone="neutral">{tr('Outstanding:')}<Money value={outstanding} size="sm" />
           </Notice>
         )}
 
-        <Field label="Amount">
+        <Field label={tr('Amount')}>
           <AmountInput value={amount} onChange={setAmount} size="hero" autoFocus />
         </Field>
 
         <Field label={direction === 'owed_to_me' ? (mode === 'new' ? 'Paid from' : 'Received into') : (mode === 'new' ? 'Received into' : 'Paid from')}>
           <Select value={myAccount} onChange={(e) => setMyAccount(e.target.value as ID)}>
-            <option value="">Choose an account</option>
+            <option value="">{tr('Choose an account')}</option>
             {spendable.map((a) => (
               <option key={a.id} value={a.id}>{a.name}</option>
             ))}
@@ -573,17 +555,17 @@ function RecordDebt({
         </Field>
 
         <div className="grid gap-3 sm:grid-cols-2">
-          <Field label="Date">
+          <Field label={tr('Date')}>
             <DateInput value={date} onChange={setDate} />
           </Field>
           {mode === 'new' && (
-            <Field label="Due back by" optional>
+            <Field label={tr('Due back by')} optional>
               <DateInput value={dueDate} onChange={setDueDate} min={date} />
             </Field>
           )}
         </div>
 
-        <Field label="Notes" optional>
+        <Field label={tr('Notes')} optional>
           <Textarea value={notes} rows={2} onChange={(e) => setNotes(e.target.value)} />
         </Field>
 
@@ -609,8 +591,10 @@ function DebtDetail({
   const debts = useStore((s) => s.debts);
   const transactions = useStore((s) => s.transactions);
   const settings = useStore((s) => s.settings);
+  const deletePerson = useStore((s) => s.deletePerson);
   const balances = useBalances();
   const asOf = useToday();
+  const [confirmDelete, setConfirmDelete] = React.useState(false);
 
   const account = accounts.find((a) => a.id === accountId);
   const allRows = React.useMemo(() => accountLedger(transactions, accountId), [transactions, accountId]);
@@ -653,7 +637,7 @@ function DebtDetail({
             weight="semibold"
             tone={balance === 0 ? 'muted' : direction === 'owed_to_me' ? 'positive' : 'negative'}
           />
-          {balance === 0 && <Badge tone="positive" className="mt-2">Settled</Badge>}
+          {balance === 0 && <Badge tone="positive" className="mt-2">{tr('Settled')}</Badge>}
         </div>
 
         <Reckoning
@@ -662,9 +646,9 @@ function DebtDetail({
           showSigns={false}
           lines={[
             { key: 'orig', label: direction === 'owed_to_me' ? 'Total lent' : 'Total borrowed', amount: lent, emphasis: true },
-            { key: 'paid', label: 'Repaid so far', amount: repaid },
+            { key: 'paid', label: tr('Repaid so far'), amount: repaid },
           ]}
-          total={{ label: 'Outstanding', amount: balance }}
+          total={{ label: tr('Outstanding'), amount: balance }}
         />
 
         {record?.dueDate && (
@@ -678,9 +662,9 @@ function DebtDetail({
         {record?.notes && <p className="text-sm leading-relaxed text-ink-3">{record.notes}</p>}
 
         <section>
-          <h3 className="eyebrow mb-2">History</h3>
+          <h3 className="eyebrow mb-2">{tr('History')}</h3>
           {rows.length === 0 ? (
-            <EmptyState compact title="Nothing recorded yet" />
+            <EmptyState compact title={tr('Nothing recorded yet')} />
           ) : (
             <div className="-mx-5 divide-y divide-line sm:-mx-6">
               {rows.map((row) => (
@@ -696,9 +680,7 @@ function DebtDetail({
 
               {list.hasMore && (
                 <div ref={list.sentinelRef} className="flex flex-col items-center gap-2 py-3">
-                  <Button variant="secondary" size="sm" onClick={list.showMore}>
-                    Show older
-                  </Button>
+                  <Button variant="secondary" size="sm" onClick={list.showMore}>{tr('Show older')}</Button>
                   <p className="tnum text-xs text-ink-4">
                     {rows.length} of {allRows.length} shown
                   </p>
@@ -707,7 +689,44 @@ function DebtDetail({
             </div>
           )}
         </section>
+
+        {/* Removing someone is rare and consequential, so it sits last and asks twice. */}
+        {person && (
+          <section className="border-t border-line pt-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              icon={<Trash2 className="size-3.5" />}
+              onClick={() => setConfirmDelete(true)}
+              className="text-negative hover:bg-negative-soft hover:text-negative"
+            >
+              {tr('Delete this person')}
+            </Button>
+          </section>
+        )}
       </div>
+
+      {person && (
+        <Confirm
+          open={confirmDelete}
+          onClose={() => setConfirmDelete(false)}
+          tone="danger"
+          title={trf('Delete {name}?', { name: person.name })}
+          confirmLabel={tr('Delete')}
+          requirePhrase={allRows.length > 0 ? 'DELETE' : undefined}
+          body={
+            allRows.length === 0
+              ? tr('They have no transactions, so nothing else changes.')
+              : trf('Every transaction with them ({n}) will be voided — hidden from every total but kept in your history. Type DELETE to confirm.', { n: allRows.length })
+          }
+          onConfirm={async () => {
+            await deletePerson(person.id);
+            toast.saved(trf('{name} deleted', { name: person.name }));
+            setConfirmDelete(false);
+            onClose();
+          }}
+        />
+      )}
     </Sheet>
   );
 }

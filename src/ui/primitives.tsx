@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { ChevronRight } from 'lucide-react';
+import { ChevronDown, ChevronRight } from 'lucide-react';
 import { cn } from './cn';
 import { useFieldLabelId } from './fieldContext';
 import { Link } from '../app/router';
@@ -193,15 +193,15 @@ export function ExpandingRow({
         aria-expanded={open}
         aria-controls={id}
         className={cn(
-          'flex min-h-[3.25rem] w-full items-center gap-3 px-3 py-2.5 text-left transition-colors',
+          'density-row flex w-full items-center gap-3 px-3 text-left transition-colors',
           open ? 'bg-surface-2/60' : 'hover:bg-surface-2/60',
         )}
       >
         {leading}
         <span className="min-w-0 flex-1">{summary}</span>
         {trailing && <span className="shrink-0">{trailing}</span>}
-        <ChevronRight
-          className={cn('size-4 shrink-0 text-ink-4 transition-transform duration-200', open && 'rotate-90')}
+        <ChevronDown
+          className={cn('size-4 shrink-0 text-ink-4 transition-transform duration-200', open && 'rotate-180')}
           aria-hidden="true"
         />
       </button>
