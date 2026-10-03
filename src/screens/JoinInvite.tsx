@@ -7,6 +7,7 @@ import { useCarpoolNet } from '../store/useCarpoolNet';
 import { parseInviteInput } from '../core/carpoolNetwork';
 import { CARPOOL_PRIVACY_NOTES } from '../data/carpoolSchema';
 
+import { tr } from '../app/i18n';
 /**
  * Landing on an invite link.
  *
@@ -32,9 +33,9 @@ export function JoinInvite({ token }: { token: string | null }) {
       <Card>
         <EmptyState
           icon={<Link2 className="size-5" />}
-          title="That invite link is not valid"
-          body="Ask the driver to send it again — links can expire or be cancelled."
-          action={<Button variant="secondary" onClick={() => navigate('/carpool')}>Go to carpool</Button>}
+          title={tr('That invite link is not valid')}
+          body={tr('Ask the driver to send it again — links can expire or be cancelled.')}
+          action={<Button variant="secondary" onClick={() => navigate('/carpool')}>{tr('Go to carpool')}</Button>}
         />
       </Card>
     );
@@ -45,9 +46,9 @@ export function JoinInvite({ token }: { token: string | null }) {
       <Card>
         <EmptyState
           icon={<Check className="size-5 text-positive" />}
-          title="You are on the carpool"
-          body="You can log your own rides now, and everyone on the team will see them."
-          action={<Button variant="primary" onClick={() => navigate('/carpool')}>Open the carpool</Button>}
+          title={tr('You are on the carpool')}
+          body={tr('You can log your own rides now, and everyone on the team will see them.')}
+          action={<Button variant="primary" onClick={() => navigate('/carpool')}>{tr('Open the carpool')}</Button>}
         />
       </Card>
     );
@@ -66,7 +67,7 @@ export function JoinInvite({ token }: { token: string | null }) {
   return (
     <div className="mx-auto max-w-lg space-y-4">
       <Card>
-        <CardHeader eyebrow="Carpool invite" title="You have been invited to join a carpool" />
+        <CardHeader eyebrow={tr('Carpool invite')} title={tr('You have been invited to join a carpool')} />
         <div className="space-y-4 px-5 pb-5">
           <div className="flex items-center gap-3 rounded-[--radius] border border-accent bg-accent-soft px-3.5 py-3">
             <Car className="size-5 shrink-0 text-accent" />
@@ -74,7 +75,7 @@ export function JoinInvite({ token }: { token: string | null }) {
           </div>
 
           <div>
-            <h3 className="eyebrow mb-2">What joining means</h3>
+            <h3 className="eyebrow mb-2">{tr('What joining means')}</h3>
             <ul className="space-y-1.5">
               {[
                 'You can log rides yourself, so the driver is not the only one remembering.',
@@ -91,17 +92,13 @@ export function JoinInvite({ token }: { token: string | null }) {
 
           {error && <Notice tone="negative">{error}</Notice>}
 
-          <Button variant="primary" full loading={busy} onClick={() => void accept()}>
-            Join this carpool
-          </Button>
-          <Button variant="ghost" full onClick={() => navigate('/carpool')}>
-            Not now
-          </Button>
+          <Button variant="primary" full loading={busy} onClick={() => void accept()}>{tr('Join this carpool')}</Button>
+          <Button variant="ghost" full onClick={() => navigate('/carpool')}>{tr('Not now')}</Button>
         </div>
       </Card>
 
       <Card>
-        <CardHeader eyebrow="Privacy" title="What is shared" />
+        <CardHeader eyebrow={tr('Privacy')} title={tr('What is shared')} />
         <ul className="space-y-1.5 px-5 pb-5">
           {CARPOOL_PRIVACY_NOTES.map((note) => (
             <li key={note} className="text-xs leading-relaxed text-ink-3">

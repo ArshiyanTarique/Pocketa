@@ -38,6 +38,7 @@ import { newId } from '../core/ids';
 import { CarpoolTeams } from './CarpoolTeams';
 import type { Carpool as CarpoolType, CarpoolRider, CarpoolTrip, ID, Person } from '../core/types';
 
+import { tr } from '../app/i18n';
 /**
  * One carpool, one screen.
  *
@@ -59,9 +60,7 @@ export function Carpool() {
       <CarpoolBoard carpool={carpool} />
 
       <section>
-        <SectionLabel onClick={() => setTeamOpen((v) => !v)} count={teamOpen ? 'Hide' : 'Route, invites, riders'}>
-          Team
-        </SectionLabel>
+        <SectionLabel onClick={() => setTeamOpen((v) => !v)} count={teamOpen ? 'Hide' : 'Route, invites, riders'}>{tr('Team')}</SectionLabel>
         <div className="disclose" data-open={teamOpen || undefined}>
           <div>
             <div className="pt-2">
@@ -115,7 +114,7 @@ function CarpoolSetup() {
       true,
     );
     setBusy(false);
-    toast.saved('Carpool set up', { label: 'Add riders', run: () => undefined });
+    toast.saved('Carpool set up', { label: tr('Add riders'), run: () => undefined });
   }
 
   return (
@@ -124,27 +123,20 @@ function CarpoolSetup() {
         <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-[16px] bg-accent-soft text-accent">
           <CarFront className="size-5" />
         </div>
-        <h1 className="text-2xl font-semibold tracking-[-0.03em] text-ink">Stop counting from memory</h1>
-        <p className="mx-auto mt-2 max-w-[46ch] text-sm leading-relaxed text-ink-3">
-          Log who rode with you as it happens. At the end of the month Pocketa totals each person
-          up, and only then does anyone owe you anything.
-        </p>
+        <h1 className="text-2xl font-semibold tracking-[-0.03em] text-ink">{tr('Set up your carpool')}</h1>
       </div>
 
       <Card className="p-5">
         <div className="space-y-4">
-          <Field label="What is this run called?" htmlFor="cp-name">
-            <TextInput id="cp-name" data-autofocus value={name} onChange={(e) => setName(e.target.value)} />
+          <Field label={tr('Carpool name')} htmlFor="cp-name">
+            <TextInput id="cp-name" data-autofocus value={name} onChange={(e) => setName(e.target.value)} placeholder={tr('e.g. Office run')} />
           </Field>
 
-          <Field label="Rate per person, per trip" hint="You can give an individual rider a different rate later.">
+          <Field label={tr('Fare per person, per trip')}>
             <AmountInput value={rate} onChange={setRate} currency={settings.baseCurrency} size="hero" />
           </Field>
 
-          <Field
-            label="Money collected goes against"
-            hint="Reimbursement reduces this category, so your real transport cost is what you see."
-          >
+          <Field label={tr('Fares count as a refund of')}>
             <Select value={categoryId} onChange={(e) => setCategoryId(e.target.value as ID)}>
               {categories.map((c) => (
                 <option key={c.id} value={c.id}>{c.path}</option>
@@ -154,9 +146,7 @@ function CarpoolSetup() {
 
           {error && <Notice tone="negative">{error}</Notice>}
 
-          <Button variant="primary" full loading={busy} onClick={() => void create()}>
-            Set up the carpool
-          </Button>
+          <Button variant="primary" full loading={busy} onClick={() => void create()}>{tr('Set up the carpool')}</Button>
         </div>
       </Card>
     </div>
@@ -216,9 +206,7 @@ function CarpoolBoard({ carpool }: { carpool: CarpoolType }) {
           action={
             <div className="flex flex-wrap gap-2">
               {gaps.missingToday && (
-                <Button size="sm" variant="primary" onClick={() => setLogging({ date: asOf })}>
-                  Log today
-                </Button>
+                <Button size="sm" variant="primary" onClick={() => setLogging({ date: asOf })}>{tr('Log today')}</Button>
               )}
               {gaps.unloggedWeekdays.slice(0, 3).map((day) => (
                 <Button key={day} size="sm" variant="secondary" onClick={() => setLogging({ date: day })}>
@@ -247,18 +235,21 @@ function CarpoolBoard({ carpool }: { carpool: CarpoolType }) {
 
       {/* --- header ------------------------------------------------------- */}
       <section>
-        <div className="flex items-center justify-between gap-3">
-          <p className="label">Owed · {formatDate(range.from, 'month')}</p>
-          <div className="flex items-center">
-            <IconButton label="Previous month" onClick={() => setOffset((o) => o + 1)}>
-              <ChevronLeft className="size-4" />
-            </IconButton>
-            <IconButton label="Next month" onClick={() => setOffset((o) => Math.max(0, o - 1))} disabled={offset === 0}>
-              <ChevronRight className="size-4" />
-            </IconButton>
-            <IconButton label="Carpool settings" onClick={() => setConfiguring(true)}>
-              <Settings2 className="size-4" />
-            </IconButton>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="label">{tr('Owed to you')}</p>
+          <div className="flex items-center gap-2">
+            <div className="flex items-center rounded-[--radius] border border-line">
+              <IconButton label={tr('Previous month')} onClick={() => setOffset((o) => o + 1)} className="size-8 rounded-e-none">
+                <ChevronLeft className="size-4 rtl-flip" />
+              </IconButton>
+              <span className="tnum min-w-[6.5rem] text-center text-[0.8125rem] font-semibold text-ink">
+                {formatDate(range.from, 'month')}
+              </span>
+              <IconButton label={tr('Next month')} onClick={() => setOffset((o) => Math.max(0, o - 1))} disabled={offset === 0} className="size-8 rounded-s-none">
+                <ChevronRight className="size-4 rtl-flip" />
+              </IconButton>
+            </div>
+            <Button size="sm" variant="secondary" icon={<Settings2 className="size-3.5" />} onClick={() => setConfiguring(true)}>{tr('Settings')}</Button>
           </div>
         </div>
 
@@ -272,15 +263,15 @@ function CarpoolBoard({ carpool }: { carpool: CarpoolType }) {
           />
           <div className="flex gap-5 pb-1.5">
             <span className="flex flex-col">
-              <span className="label">Trips</span>
+              <span className="label">{tr('Trips')}</span>
               <Num size="sm" className="font-semibold">{summary.tripCount}</Num>
             </span>
             <span className="flex flex-col">
-              <span className="label">Riders</span>
+              <span className="label">{tr('Riders')}</span>
               <Num size="sm" className="font-semibold">{activeRiders.length}</Num>
             </span>
             <span className="flex flex-col">
-              <span className="label">Each</span>
+              <span className="label">{tr('Each')}</span>
               <Money value={carpool.ratePerTrip} currency={carpool.currency} hidden={hidden} size="sm" weight="semibold" symbol={false} />
             </span>
           </div>
@@ -289,7 +280,7 @@ function CarpoolBoard({ carpool }: { carpool: CarpoolType }) {
 
         {summary.billed > 0 && (
           <p className="mt-2 text-xs text-ink-3">
-            <Money value={summary.billed} currency={settings.baseCurrency} hidden={hidden} size="xs" /> already billed → Debts
+            <Money value={summary.billed} currency={settings.baseCurrency} hidden={hidden} size="xs" /> already billed → People
           </p>
         )}
 
@@ -299,38 +290,30 @@ function CarpoolBoard({ carpool }: { carpool: CarpoolType }) {
             icon={<Plus className="size-4" />}
             onClick={() => setLogging({ date: asOf })}
             disabled={activeRiders.length === 0}
-          >
-            Log a trip
-          </Button>
+          >{tr('Log a trip')}</Button>
           <Button
             variant="secondary"
             icon={<Receipt className="size-4" />}
             onClick={() => setSettling(true)}
             disabled={!canSettle}
-          >
-            Bill everyone
-          </Button>
+          >{tr('Bill everyone')}</Button>
           <Button
             variant="secondary"
             icon={<UserPlus className="size-4" />}
             onClick={() => setEditingRider('new')}
             className="col-span-2 sm:col-span-1"
-          >
-            Add a rider
-          </Button>
+          >{tr('Add a rider')}</Button>
         </div>
       </section>
 
       {/* --- riders ------------------------------------------------------- */}
       <Card>
         <CardHeader
-          title="Who owes what"
+          title={tr('Who owes what')}
           eyebrow={formatDate(range.from, 'month')}
           action={
             canSettle ? (
-              <Button size="sm" variant="quiet" onClick={() => setSettling(true)}>
-                Bill
-              </Button>
+              <Button size="sm" variant="quiet" onClick={() => setSettling(true)}>{tr('Bill')}</Button>
             ) : undefined
           }
         />
@@ -339,16 +322,14 @@ function CarpoolBoard({ carpool }: { carpool: CarpoolType }) {
           <EmptyState
             compact
             icon={<Users className="size-5" />}
-            title="No riders yet"
-            body="Add the people who ride with you and their trips will start counting."
+            title={tr('No riders yet')}
+            body={tr('Add the people who ride with you and their trips will start counting.')}
             action={
-              <Button size="sm" variant="primary" icon={<UserPlus className="size-4" />} onClick={() => setEditingRider('new')}>
-                Add a rider
-              </Button>
+              <Button size="sm" variant="primary" icon={<UserPlus className="size-4" />} onClick={() => setEditingRider('new')}>{tr('Add a rider')}</Button>
             }
           />
         ) : summary.riders.length === 0 ? (
-          <EmptyState compact title="No trips this month" body="Log a trip and the totals appear here." />
+          <EmptyState compact title={tr('No trips this month')} body={tr('Log a trip and the totals appear here.')} />
         ) : (
           <ul className="pb-2">
             {summary.riders.map((tally) => (
@@ -367,7 +348,7 @@ function CarpoolBoard({ carpool }: { carpool: CarpoolType }) {
       {/* --- trip log ----------------------------------------------------- */}
       <Card>
         <CardHeader
-          title="Trip log"
+          title={tr('Trip log')}
           eyebrow={`${monthTrips.length} logged`}
           action={
             <span className="text-xs text-ink-4">
@@ -376,7 +357,7 @@ function CarpoolBoard({ carpool }: { carpool: CarpoolType }) {
           }
         />
         {monthTrips.length === 0 ? (
-          <EmptyState compact title="Nothing logged this month" />
+          <EmptyState compact title={tr('Nothing logged this month')} />
         ) : (
           <ul className="pb-2">
             {monthTrips.map((trip) => (
@@ -445,9 +426,9 @@ function RiderRow({
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <span className="truncate text-sm font-medium text-ink">{tally.name}</span>
-            {!tally.rider.active && <Badge tone="neutral">Left</Badge>}
+            {!tally.rider.active && <Badge tone="neutral">{tr('Left')}</Badge>}
             {tally.rider.ratePerTrip != null && (
-              <Badge tone="info" title="This rider has their own rate">
+              <Badge tone="info" title={tr('This rider has their own rate')}>
                 <Money value={tally.rate} currency={currency} hidden={hidden} size="xs" symbol={false} className="text-info" />
               </Badge>
             )}
@@ -523,9 +504,9 @@ function TripRow({
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <span className="truncate text-sm text-ink">
-              {names.length > 0 ? names.join(', ') : <span className="text-ink-4">Nobody rode</span>}
+              {names.length > 0 ? names.join(', ') : <span className="text-ink-4">{tr('Nobody rode')}</span>}
             </span>
-            {trip.settlementId && <Badge tone="positive">Billed</Badge>}
+            {trip.settlementId && <Badge tone="positive">{tr('Billed')}</Badge>}
           </div>
           <p className="mt-0.5 text-xs text-ink-3">{formatRelativeDay(trip.date, asOf)}</p>
         </div>
@@ -612,12 +593,10 @@ function QuickLog({
           </svg>
         </span>
         <span className="min-w-0 flex-1">
-          <span className="label">Today</span>
+          <span className="label">{tr('Today')}</span>
           <span className="block truncate text-sm font-semibold text-ink">{names.length ? names.join(', ') : 'Nobody rode'}</span>
         </span>
-        <Button size="sm" variant="ghost" onClick={onMore}>
-          Change
-        </Button>
+        <Button size="sm" variant="ghost" onClick={onMore}>{tr('Change')}</Button>
       </section>
     );
   }
@@ -625,10 +604,8 @@ function QuickLog({
   return (
     <section className="rounded-[--radius] border border-line bg-surface px-4 py-3">
       <div className="flex items-center justify-between">
-        <span className="label">Today · who is in the car?</span>
-        <button onClick={onMore} className="text-xs font-semibold text-ink-3 hover:text-ink">
-          Another day
-        </button>
+        <span className="label">{tr('Today · who is in the car?')}</span>
+        <button onClick={onMore} className="text-xs font-semibold text-ink-3 hover:text-ink">{tr('Another day')}</button>
       </div>
       <div className="mt-2.5 flex flex-wrap items-center gap-2">
         {riders.map((rider) => {
@@ -661,9 +638,7 @@ function QuickLog({
         })}
         <div className="ms-auto flex items-center gap-3">
           <Money value={value} currency={carpool.currency} size="sm" weight="semibold" symbol={false} tone={selected.length ? 'default' : 'muted'} />
-          <Button variant="primary" size="sm" loading={busy} disabled={selected.length === 0} onClick={() => void log()}>
-            Log
-          </Button>
+          <Button variant="primary" size="sm" loading={busy} disabled={selected.length === 0} onClick={() => void log()}>{tr('Log')}</Button>
         </div>
       </div>
     </section>
@@ -749,9 +724,7 @@ function LogTripSheet({
       footer={
         <div className="flex gap-2.5">
           {existing && (
-            <Button variant="secondary" icon={<Trash2 className="size-4" />} onClick={() => setConfirmDelete(true)}>
-              Delete
-            </Button>
+            <Button variant="secondary" icon={<Trash2 className="size-4" />} onClick={() => setConfirmDelete(true)}>{tr('Delete')}</Button>
           )}
           <Button variant="primary" full loading={busy} onClick={() => void save()} disabled={selected.length === 0}>
             {existing ? 'Save trip' : `Log ${selected.length} rider${selected.length === 1 ? '' : 's'}`}
@@ -760,7 +733,7 @@ function LogTripSheet({
       }
     >
       <div className="space-y-4 pb-2">
-        <Field label="Who was in the car?" hint="Tap to toggle. Starts with whoever rode last time.">
+        <Field label={tr('Who was in the car?')}>
           <div className="space-y-1.5">
             {riders.map((rider) => {
               const person = people.find((p) => p.id === rider.personId);
@@ -815,27 +788,25 @@ function LogTripSheet({
               <Money value={value} currency={carpool.currency} size="sm" weight="medium" symbol={false} />
             </span>
           </div>
-          <p className="mt-2 text-xs text-ink-4">
-            Nothing is charged yet. This is added to their running total until you bill the month.
-          </p>
+          <p className="mt-2 text-xs text-ink-4">{tr('Nothing is charged yet. This is added to their running total until you bill the month.')}</p>
         </div>
 
-        <Field label="Date">
+        <Field label={tr('Date')}>
           <DateInput value={tripDate} onChange={setTripDate} max={asOf} />
         </Field>
 
-        <Field label="Note" optional>
-          <Textarea value={note} rows={2} onChange={(e) => setNote(e.target.value)} placeholder="Detour, one way only, anything worth remembering" />
+        <Field label={tr('Note')} optional>
+          <Textarea value={note} rows={2} onChange={(e) => setNote(e.target.value)} placeholder={tr('Detour, one way only, anything worth remembering')} />
         </Field>
       </div>
 
       <Confirm
         open={confirmDelete}
         onClose={() => setConfirmDelete(false)}
-        title="Delete this trip?"
+        title={tr('Delete this trip?')}
         tone="danger"
         confirmLabel="Delete"
-        body="It will no longer count towards anyone's total."
+        body={tr("It will no longer count towards anyone's total.")}
         onConfirm={async () => {
           await deleteTrip(existing!.id);
           toast.saved('Trip deleted');
@@ -944,7 +915,7 @@ function RiderSheet({
       title={isNew ? 'Add a rider' : `Edit ${name ?? 'rider'}`}
       footer={
         <div className="flex gap-2.5">
-          <Button variant="secondary" full onClick={onClose}>Cancel</Button>
+          <Button variant="secondary" full onClick={onClose}>{tr('Cancel')}</Button>
           <Button variant="primary" full loading={busy} onClick={() => void save()}>
             {isNew ? 'Add rider' : 'Save changes'}
           </Button>
@@ -960,27 +931,23 @@ function RiderSheet({
                 'flex-1 rounded-[10px] border px-3 py-2 text-[0.8125rem] font-medium transition-all',
                 mode === 'existing' ? 'border-accent bg-accent-soft text-accent' : 'border-line text-ink-3',
               )}
-            >
-              Someone I know
-            </button>
+            >{tr('Someone I know')}</button>
             <button
               onClick={() => setMode('new')}
               className={cn(
                 'flex-1 rounded-[10px] border px-3 py-2 text-[0.8125rem] font-medium transition-all',
                 mode === 'new' ? 'border-accent bg-accent-soft text-accent' : 'border-line text-ink-3',
               )}
-            >
-              New person
-            </button>
+            >{tr('New person')}</button>
           </div>
         )}
 
         {isNew && mode === 'new' ? (
-          <Field label="Name" htmlFor="rd-name">
+          <Field label={tr('Name')} htmlFor="rd-name">
             <TextInput id="rd-name" data-autofocus value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Sara" />
           </Field>
         ) : isNew ? (
-          <Field label="Who is riding?">
+          <Field label={tr('Who is riding?')}>
             <Select value={personId} onChange={(e) => setPersonId(e.target.value as ID)}>
               {available.map((p) => (
                 <option key={p.id} value={p.id}>{p.name}</option>
@@ -992,12 +959,11 @@ function RiderSheet({
         <Toggle
           checked={useCustom}
           onChange={setUseCustom}
-          label="Charge this rider a different rate"
-          description={`Everyone else pays ${carpool.ratePerTrip / 100} per trip.`}
+          label={tr('Charge this rider a different fare')}
         />
 
         {useCustom && (
-          <Field label="Their rate per trip">
+          <Field label={tr('Their rate per trip')}>
             <AmountInput value={customRate} onChange={setCustomRate} currency={carpool.currency} />
           </Field>
         )}
@@ -1006,8 +972,7 @@ function RiderSheet({
           <Toggle
             checked={active}
             onChange={setActive}
-            label="Still riding"
-            description="Turn this off when someone stops carpooling. Their past trips stay counted."
+            label={tr('Still riding')}
           />
         )}
 
@@ -1052,23 +1017,21 @@ function SettleSheet({
     if (!result.ok) return setError(result.error ?? 'Nothing could be billed.');
     setDone({ riders: lines.length, total: result.settlement?.total ?? 0 });
     toast.saved(`Billed ${lines.length} rider${lines.length === 1 ? '' : 's'}`, {
-      label: 'See debts',
+      label: tr('See debts'),
       run: () => navigate('/debts'),
     });
   }
 
   if (done != null) {
     return (
-      <Sheet open onClose={onClose} title="Billed" footer={<Button variant="primary" full onClick={onClose}>Done</Button>}>
+      <Sheet open onClose={onClose} title={tr('Billed')} footer={<Button variant="primary" full onClick={onClose}>{tr('Done')}</Button>}>
         <div className="py-2">
           <EmptyState
             icon={<Check className="size-5 text-positive" />}
             title={`${done.riders} rider${done.riders === 1 ? '' : 's'} billed`}
-            body="Each person now owes you this amount. Record their payment on the Debts screen when it arrives."
+            body={tr('Each person now owes you this amount. Record their payment on the Debts screen when it arrives.')}
             action={
-              <Button variant="secondary" onClick={() => { onClose(); navigate('/debts'); }}>
-                Open Debts
-              </Button>
+              <Button variant="secondary" onClick={() => { onClose(); navigate('/debts'); }}>{tr('Open Debts')}</Button>
             }
           />
         </div>
@@ -1081,21 +1044,18 @@ function SettleSheet({
       open
       onClose={onClose}
       title={`Bill ${formatDate(range.from, 'month')}`}
-      description="Check the totals before anyone is charged. Nothing is recorded until you confirm."
+      description={tr('Check the totals before anyone is charged. Nothing is recorded until you confirm.')}
       footer={
         <div className="flex gap-2.5">
-          <Button variant="secondary" full onClick={onClose}>Cancel</Button>
-          <Button variant="primary" full loading={busy} onClick={() => void bill()} disabled={lines.length === 0}>
-            Bill <Money value={summary.outstanding} currency={settings.baseCurrency} size="sm" symbol={false} className="text-[--accent-ink]" />
+          <Button variant="secondary" full onClick={onClose}>{tr('Cancel')}</Button>
+          <Button variant="primary" full loading={busy} onClick={() => void bill()} disabled={lines.length === 0}>{tr('Bill')}<Money value={summary.outstanding} currency={settings.baseCurrency} size="sm" symbol={false} className="text-[--accent-ink]" />
           </Button>
         </div>
       }
     >
       <div className="space-y-4 pb-2">
         {lines.length === 0 ? (
-          <Notice tone="neutral" icon={<CircleAlert className="size-4" />}>
-            Every trip this month has already been billed.
-          </Notice>
+          <Notice tone="neutral" icon={<CircleAlert className="size-4" />}>{tr('Every trip this month has already been billed.')}</Notice>
         ) : (
           <>
             <Reckoning
@@ -1107,7 +1067,7 @@ function SettleSheet({
                 detail: `${l.trips} trip${l.trips === 1 ? '' : 's'}`,
                 amount: l.amount,
               }))}
-              total={{ label: 'Total to collect', amount: summary.outstanding }}
+              total={{ label: tr('Total to collect'), amount: summary.outstanding }}
             />
 
             <Notice tone="neutral">
@@ -1175,27 +1135,24 @@ function CarpoolSettingsSheet({ carpool, onClose }: { carpool: CarpoolType; onCl
     <Sheet
       open
       onClose={onClose}
-      title="Carpool settings"
+      title={tr('Carpool settings')}
       footer={
         <div className="flex gap-2.5">
-          <Button variant="secondary" full onClick={onClose}>Cancel</Button>
-          <Button variant="primary" full onClick={() => void save()}>Save changes</Button>
+          <Button variant="secondary" full onClick={onClose}>{tr('Cancel')}</Button>
+          <Button variant="primary" full onClick={() => void save()}>{tr('Save changes')}</Button>
         </div>
       }
     >
       <div className="space-y-4 pb-2">
-        <Field label="Name" htmlFor="cps-name">
+        <Field label={tr('Name')} htmlFor="cps-name">
           <TextInput id="cps-name" value={name} onChange={(e) => setName(e.target.value)} />
         </Field>
 
-        <Field
-          label="Rate per person, per trip"
-          hint="Changing this affects future trips only. Trips already logged keep the rate they were logged at."
-        >
+        <Field label={tr('Fare per person, per trip (future trips)')}>
           <AmountInput value={rate} onChange={setRate} currency={carpool.currency} />
         </Field>
 
-        <Field label="Money collected counts as">
+        <Field label={tr('Money collected counts as')}>
           <div className="flex gap-1.5">
             <button
               onClick={() => setSettleAs('recovery')}
@@ -1204,8 +1161,8 @@ function CarpoolSettingsSheet({ carpool, onClose }: { carpool: CarpoolType; onCl
                 settleAs === 'recovery' ? 'border-accent bg-accent-soft text-accent' : 'border-line text-ink-3',
               )}
             >
-              <span className="block font-medium">Getting fuel money back</span>
-              <span className="mt-0.5 block text-xs opacity-80">Reduces a spending category</span>
+              <span className="block font-medium">{tr('Getting fuel money back')}</span>
+              <span className="mt-0.5 block text-xs opacity-80">{tr('Reduces a spending category')}</span>
             </button>
             <button
               onClick={() => setSettleAs('income')}
@@ -1214,8 +1171,8 @@ function CarpoolSettingsSheet({ carpool, onClose }: { carpool: CarpoolType; onCl
                 settleAs === 'income' ? 'border-accent bg-accent-soft text-accent' : 'border-line text-ink-3',
               )}
             >
-              <span className="block font-medium">Income</span>
-              <span className="mt-0.5 block text-xs opacity-80">Counts as money earned</span>
+              <span className="block font-medium">{tr('Income')}</span>
+              <span className="mt-0.5 block text-xs opacity-80">{tr('Counts as money earned')}</span>
             </button>
           </div>
         </Field>
@@ -1228,7 +1185,7 @@ function CarpoolSettingsSheet({ carpool, onClose }: { carpool: CarpoolType; onCl
           </Select>
         </Field>
 
-        <Field label="Notes" optional>
+        <Field label={tr('Notes')} optional>
           <Textarea value={notes} rows={2} onChange={(e) => setNotes(e.target.value)} />
         </Field>
 

@@ -209,11 +209,26 @@ export function AmountInput({
 
   return (
     <div className={className}>
-      <div className="relative">
+      {/*
+        Hero: the symbol and the digits are flex siblings, so the gap between
+        "Rs." and the number follows the symbol's real width — a hard-coded
+        padding let the digits land on the period. The row stays LTR because
+        an amount reads symbol-then-digits in either script direction.
+      */}
+      <div
+        dir={size === 'hero' ? 'ltr' : undefined}
+        className={cn(
+          'relative',
+          size === 'hero' && 'flex items-baseline gap-2 border-b-2 pb-1 focus-within:border-accent',
+          size === 'hero' && (invalid ? 'border-negative' : 'border-line-strong'),
+        )}
+      >
         <span
           className={cn(
-            'pointer-events-none absolute left-0 top-1/2 -translate-y-1/2 tnum text-ink-4',
-            size === 'hero' ? 'text-2xl' : 'text-sm left-3',
+            'pointer-events-none tnum text-ink-4',
+            size === 'hero'
+              ? 'shrink-0 text-2xl'
+              : 'absolute left-3 top-1/2 -translate-y-1/2 text-sm',
           )}
         >
           {currencySymbol(currency)}
@@ -238,10 +253,8 @@ export function AmountInput({
             'tnum w-full bg-transparent text-ink placeholder:text-ink-4',
             'focus:outline-none',
             size === 'hero'
-              ? 'border-0 border-b-2 pb-1 pl-9 text-[2.25rem] font-medium leading-tight focus:border-accent'
-              : cn(CONTROL, 'h-11 pl-10'),
-            size === 'hero' && (invalid ? 'border-negative' : 'border-line-strong'),
-            size !== 'hero' && (invalid ? 'border-negative' : 'border-line-strong'),
+              ? 'min-w-0 flex-1 border-0 text-[2.25rem] font-medium leading-tight'
+              : cn(CONTROL, 'h-11 pl-10', invalid ? 'border-negative' : 'border-line-strong'),
           )}
         />
       </div>

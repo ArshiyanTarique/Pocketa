@@ -5,6 +5,7 @@ import { cn } from '../ui/cn';
 import { describeTransaction, signedAmount } from '../app/txnDisplay';
 import { MOVEMENT_KINDS, type Account, type ID, type Transaction } from '../core/types';
 
+import { tr } from '../app/i18n';
 export function TransactionRow({
   txn,
   accounts,
@@ -56,8 +57,8 @@ export function TransactionRow({
           >
             {d.title}
           </span>
-          {d.isSplit && <Split className="size-3 shrink-0 text-ink-4" aria-label="Split" />}
-          {d.isShared && <Users className="size-3 shrink-0 text-ink-4" aria-label="Shared" />}
+          {d.isSplit && <Split className="size-3 shrink-0 text-ink-4" aria-label={tr('Split')} />}
+          {d.isShared && <Users className="size-3 shrink-0 text-ink-4" aria-label={tr('Shared')} />}
         </div>
         <div className="mt-0.5 truncate text-xs text-ink-4">
           {showDate && dateLabel && (

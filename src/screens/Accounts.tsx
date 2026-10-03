@@ -37,14 +37,15 @@ import {
   type AccountClass,
   type ID } from '../core/types';
 
+import { tr } from '../app/i18n';
 const CLASS_META: Record<string, { label: string; icon: React.ComponentType<{ className?: string }>; hint: string }> = {
-  cash: { label: 'Cash', icon: Wallet, hint: 'Notes and coins you hold' },
-  bank: { label: 'Bank account', icon: Landmark, hint: 'Current or chequing account' },
-  savings: { label: 'Savings', icon: PiggyBank, hint: 'Set aside, but still yours to spend' },
-  ewallet: { label: 'E-wallet', icon: Smartphone, hint: 'JazzCash, Easypaisa, SadaPay and the like' },
-  investment: { label: 'Investment', icon: TrendingUp, hint: 'Stocks, funds, crypto' },
-  credit_card: { label: 'Credit card', icon: CreditCard, hint: 'Spending here increases what you owe' },
-  loan: { label: 'Loan', icon: Banknote, hint: 'Money borrowed from an institution' } };
+  cash: { label: tr('Cash'), icon: Wallet, hint: 'Notes and coins you hold' },
+  bank: { label: tr('Bank account'), icon: Landmark, hint: 'Current or chequing account' },
+  savings: { label: tr('Savings'), icon: PiggyBank, hint: 'Set aside, but still yours to spend' },
+  ewallet: { label: tr('E-wallet'), icon: Smartphone, hint: 'JazzCash, Easypaisa, SadaPay and the like' },
+  investment: { label: tr('Investment'), icon: TrendingUp, hint: 'Stocks, funds, crypto' },
+  credit_card: { label: tr('Credit card'), icon: CreditCard, hint: 'Spending here increases what you owe' },
+  loan: { label: tr('Loan'), icon: Banknote, hint: 'Money borrowed from an institution' } };
 
 const CREATABLE: AccountClass[] = ['cash', 'bank', 'savings', 'ewallet', 'investment', 'credit_card', 'loan'];
 
@@ -78,7 +79,7 @@ export function Accounts() {
   return (
     <div className="space-y-6">
       <section>
-        <p className="text-[0.6875rem] font-semibold uppercase tracking-widest text-ink-4 mb-3">Net worth</p>
+        <p className="text-[0.6875rem] font-semibold uppercase tracking-widest text-ink-4 mb-3">{tr('Net worth')}</p>
         <div className="count-in flex flex-wrap items-end justify-between gap-x-6 gap-y-2">
           <Money
             value={netWorth.net}
@@ -90,11 +91,11 @@ export function Accounts() {
           />
           <div className="flex gap-6 pb-1.5">
             <span className="flex flex-col gap-0.5">
-              <span className="text-[0.625rem] font-semibold uppercase tracking-widest text-ink-4">Own</span>
+              <span className="text-[0.625rem] font-semibold uppercase tracking-widest text-ink-4">{tr('Own')}</span>
               <Money value={netWorth.assets} currency={settings.baseCurrency} hidden={hidden} size="sm" weight="semibold" symbol={false} />
             </span>
             <span className="flex flex-col gap-0.5">
-              <span className="text-[0.625rem] font-semibold uppercase tracking-widest text-ink-4">Owe</span>
+              <span className="text-[0.625rem] font-semibold uppercase tracking-widest text-ink-4">{tr('Owe')}</span>
               <Money value={netWorth.liabilities} currency={settings.baseCurrency} hidden={hidden} size="sm" weight="semibold" symbol={false} tone={netWorth.liabilities > 0 ? 'negative' : 'muted'} />
             </span>
           </div>
@@ -105,33 +106,24 @@ export function Accounts() {
       <AccountFan size="lg" onSelect={setDetailId} onAdd={() => setEditing('new')} />
 
       <div className="flex items-center justify-between">
-        <h2 className="display text-[1.0625rem]">Accounts</h2>
-        <Button
-          size="sm"
-          variant="primary"
-          icon={<Plus className="size-3.5" />}
-          onClick={() => setEditing('new')}
-        >
-          Add account
-        </Button>
+        <h2 className="display text-[1.0625rem]">{tr('Accounts')}</h2>
+        <Button variant="primary" icon={<Plus className="size-4" />} onClick={() => setEditing('new')}>{tr('Add an account')}</Button>
       </div>
 
       {visible.length === 0 ? (
         <EmptyState
           icon={<Wallet className="size-5" />}
-          title="No accounts yet"
-          body="Add the accounts you actually use, then set what is in each of them today. Everything else is worked out from your transactions."
+          title={tr('No accounts yet')}
+          body={tr('Add the accounts you actually use, then set what is in each of them today. Everything else is worked out from your transactions.')}
           action={
-            <Button variant="primary" icon={<Plus className="size-4" />} onClick={() => setEditing('new')}>
-              Add your first account
-            </Button>
+            <Button variant="primary" icon={<Plus className="size-4" />} onClick={() => setEditing('new')}>{tr('Add your first account')}</Button>
           }
         />
       ) : (
         <div className="space-y-5">
           {assets.length > 0 && (
             <AccountGroup
-              title="Assets"
+              title={tr('Assets')}
               accounts={assets}
               balances={balances}
               hidden={hidden}
@@ -140,7 +132,7 @@ export function Accounts() {
           )}
           {liabilities.length > 0 && (
             <AccountGroup
-              title="Liabilities"
+              title={tr('Liabilities')}
               accounts={liabilities}
               balances={balances}
               hidden={hidden}
@@ -237,7 +229,7 @@ function AccountGroup({
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                       <span className="truncate text-[0.9375rem] font-medium text-ink">{account.name}</span>
-                      {account.archived && <Badge tone="neutral">Archived</Badge>}
+                      {account.archived && <Badge tone="neutral">{tr('Archived')}</Badge>}
                       {account.currency !== 'PKR' && <Badge tone="neutral">{account.currency}</Badge>}
                     </div>
                     <p className="mt-0.5 truncate text-xs text-ink-3">
@@ -371,9 +363,7 @@ function AccountEditor({ account, onClose }: { account: Account | null; onClose:
       size="md"
       footer={
         <div className="flex gap-2.5">
-          <Button variant="secondary" full onClick={onClose}>
-            Cancel
-          </Button>
+          <Button variant="secondary" full onClick={onClose}>{tr('Cancel')}</Button>
           <Button variant="primary" full loading={saving} onClick={() => void save()}>
             {isNew ? 'Add account' : 'Save changes'}
           </Button>
@@ -382,7 +372,7 @@ function AccountEditor({ account, onClose }: { account: Account | null; onClose:
     >
       <div className="space-y-4 pb-2">
         {isNew && (
-          <Field label="What kind of account?">
+          <Field label={tr('What kind of account?')}>
             <ChipGroup
               value={cls}
               onChange={(v) => setCls(v)}
@@ -392,7 +382,7 @@ function AccountEditor({ account, onClose }: { account: Account | null; onClose:
           </Field>
         )}
 
-        <Field label="Name" htmlFor="acc-name">
+        <Field label={tr('Name')} htmlFor="acc-name">
           <TextInput
             id="acc-name"
             data-autofocus
@@ -403,7 +393,7 @@ function AccountEditor({ account, onClose }: { account: Account | null; onClose:
         </Field>
 
         <div className="grid gap-3 sm:grid-cols-2">
-          <Field label="Currency">
+          <Field label={tr('Currency')}>
             <Select value={currency} onChange={(e) => setCurrency(e.target.value)}>
               {Object.values(CURRENCIES).map((c) => (
                 <option key={c.code} value={c.code}>
@@ -412,21 +402,21 @@ function AccountEditor({ account, onClose }: { account: Account | null; onClose:
               ))}
             </Select>
           </Field>
-          <Field label="Institution" optional>
+          <Field label={tr('Institution')} optional>
             <TextInput
               value={institution}
               onChange={(e) => setInstitution(e.target.value)}
-              placeholder="Bank or provider"
+              placeholder={tr('Bank or provider')}
             />
           </Field>
         </div>
 
         {isCard && (
           <div className="grid gap-3 sm:grid-cols-2">
-            <Field label="Credit limit" optional>
+            <Field label={tr('Credit limit')} optional>
               <AmountInput value={creditLimit} onChange={setCreditLimit} currency={currency} />
             </Field>
-            <Field label="Last 4 digits" optional>
+            <Field label={tr('Last 4 digits')} optional>
               <TextInput
                 value={last4}
                 maxLength={4}
@@ -435,7 +425,7 @@ function AccountEditor({ account, onClose }: { account: Account | null; onClose:
                 placeholder="1234"
               />
             </Field>
-            <Field label="Statement closes on" optional hint="Day of the month">
+            <Field label={tr('Statement day (1–31)')} optional>
               <TextInput
                 value={statementDay}
                 inputMode="numeric"
@@ -443,7 +433,7 @@ function AccountEditor({ account, onClose }: { account: Account | null; onClose:
                 placeholder="25"
               />
             </Field>
-            <Field label="Payment due on" optional hint="Day of the month">
+            <Field label={tr('Payment due day (1–31)')} optional>
               <TextInput
                 value={dueDay}
                 inputMode="numeric"
@@ -459,17 +449,12 @@ function AccountEditor({ account, onClose }: { account: Account | null; onClose:
             <Field
               label={isCard ? 'Amount currently owed' : 'Balance today'}
               optional
-              hint={
-                isCard
-                  ? 'Recorded as an opening balance so the card starts from the right place.'
-                  : 'Recorded as an opening balance. You can add or correct it later.'
-              }
             >
               <AmountInput value={opening} onChange={setOpening} currency={currency} />
             </Field>
             {opening != null && opening !== 0 && (
               <div className="mt-3">
-                <Field label="As at">
+                <Field label={tr('As at')}>
                   <DateInput value={openingDate} onChange={setOpeningDate} max={asOf} />
                 </Field>
               </div>
@@ -481,12 +466,11 @@ function AccountEditor({ account, onClose }: { account: Account | null; onClose:
           <Toggle
             checked={excludeFromNetWorth}
             onChange={setExclude}
-            label="Exclude from net worth"
-            description="Useful for a pension or anything you would rather not count yet."
+            label={tr('Leave out of net worth')}
           />
         )}
 
-        <Field label="Notes" optional>
+        <Field label={tr('Notes')} optional>
           <Textarea value={notes} rows={2} onChange={(e) => setNotes(e.target.value)} />
         </Field>
 
@@ -560,19 +544,13 @@ function AccountDetail({
             </p>
           )}
           {balance < 0 && account.class !== 'credit_card' && account.class !== 'loan' && (
-            <p className="mt-2 text-xs text-warn">
-              This account is overdrawn. Pocketa records it rather than hiding it.
-            </p>
+            <p className="mt-2 text-xs text-warn">{tr('This account is overdrawn. Pocketa records it rather than hiding it.')}</p>
           )}
         </div>
 
         <div className="flex flex-wrap gap-2">
-          <Button size="sm" variant="secondary" icon={<Pencil className="size-3.5" />} onClick={() => onEdit(account)}>
-            Edit
-          </Button>
-          <Button size="sm" variant="secondary" icon={<Scale className="size-3.5" />} onClick={() => setReconciling(true)}>
-            Reconcile
-          </Button>
+          <Button size="sm" variant="secondary" icon={<Pencil className="size-3.5" />} onClick={() => onEdit(account)}>{tr('Edit')}</Button>
+          <Button size="sm" variant="secondary" icon={<Scale className="size-3.5" />} onClick={() => setReconciling(true)}>{tr('Fix balance')}</Button>
           <Button
             size="sm"
             variant="secondary"
@@ -587,17 +565,15 @@ function AccountDetail({
             icon={<Trash2 className="size-3.5" />}
             onClick={() => setConfirmDelete(true)}
             className="text-negative"
-          >
-            Delete
-          </Button>
+          >{tr('Delete')}</Button>
         </div>
 
         {account.notes && <p className="text-sm leading-relaxed text-ink-3">{account.notes}</p>}
 
         <section>
-          <h3 className="eyebrow mb-2">History</h3>
+          <h3 className="eyebrow mb-2">{tr('History')}</h3>
           {rows.length === 0 ? (
-            <EmptyState compact title="Nothing recorded yet" body="Transactions in this account will appear here." />
+            <EmptyState compact title={tr('Nothing recorded yet')} body={tr('Transactions in this account will appear here.')} />
           ) : (
             <div className="-mx-5 divide-y divide-line sm:-mx-6">
               {rows.map((row) => (
@@ -625,9 +601,7 @@ function AccountDetail({
 
               {list.hasMore && (
                 <div ref={list.sentinelRef} className="flex flex-col items-center gap-2 py-3">
-                  <Button variant="secondary" size="sm" onClick={list.showMore}>
-                    Show older
-                  </Button>
+                  <Button variant="secondary" size="sm" onClick={list.showMore}>{tr('Show older')}</Button>
                   <p className="tnum text-xs text-ink-4">
                     {rows.length} of {allRows.length} shown
                   </p>
@@ -648,10 +622,7 @@ function AccountDetail({
         title={`Archive ${account.name}?`}
         confirmLabel="Archive"
         body={
-          <>
-            The account is hidden from pickers and totals, but every transaction in it is kept and
-            stays visible in your history. You can unarchive it at any time.
-          </>
+          <>{tr("The account is hidden from pickers and totals, but every transaction in it is kept and stays visible in your history. You can unarchive it at any time.")}</>
         }
         onConfirm={async () => {
           await archiveAccount(account.id, true);
@@ -668,10 +639,7 @@ function AccountDetail({
         tone="danger"
         requirePhrase={account.name}
         body={
-          <>
-            All transactions in this account will be voided and it will be removed entirely.
-            This cannot be undone. Type the account name to confirm.
-          </>
+          <>{tr("All transactions in this account will be voided and it will be removed entirely. This cannot be undone. Type the account name to confirm.")}</>
         }
         onConfirm={async () => {
           await deleteAccount(account.id);
@@ -723,7 +691,7 @@ function Reconcile({
       setError(result.issues[0]?.message ?? 'The adjustment could not be recorded.');
       return;
     }
-    toast.saved('Balance reconciled');
+    toast.saved('Balance fixed');
     onClose();
   }
 
@@ -731,36 +699,31 @@ function Reconcile({
     <Sheet
       open
       onClose={onClose}
-      title={`Reconcile ${account.name}`}
-      description="Tell Pocketa what is really there. The difference is recorded as an adjustment rather than quietly changing your history."
+      title={`Fix balance · ${account.name}`}
+      description={tr('The difference is recorded as an adjustment, so your history stays intact.')}
       footer={
         <div className="flex gap-2.5">
-          <Button variant="secondary" full onClick={onClose}>
-            Cancel
-          </Button>
-          <Button variant="primary" full loading={saving} onClick={() => void apply()} disabled={counted == null}>
-            Record adjustment
-          </Button>
+          <Button variant="secondary" full onClick={onClose}>{tr('Cancel')}</Button>
+          <Button variant="primary" full loading={saving} onClick={() => void apply()} disabled={counted == null}>{tr('Record adjustment')}</Button>
         </div>
       }
     >
       <div className="space-y-4 pb-2">
-        <Field label="Counted balance">
+        <Field label={tr('Counted balance')}>
           <AmountInput value={counted} onChange={setCounted} currency={account.currency} size="hero" autoFocus />
         </Field>
 
         <Reckoning
           currency={account.currency}
           lines={[
-            { key: 'ledger', label: 'Pocketa says', amount: current, emphasis: true },
-            { key: 'counted', label: 'You counted', amount: counted ?? 0 },
+            { key: 'ledger', label: tr('Pocketa says'), amount: current, emphasis: true },
+            { key: 'counted', label: tr('You counted'), amount: counted ?? 0 },
           ]}
-          total={{ label: 'Adjustment', amount: delta }}
+          total={{ label: tr('Adjustment'), amount: delta }}
         />
 
         {delta !== 0 && counted != null && (
-          <Notice tone={Math.abs(delta) > current * 0.1 ? 'warn' : 'neutral'}>
-            An adjustment of <Money value={delta} currency={account.currency} size="sm" sign="always" /> will
+          <Notice tone={Math.abs(delta) > current * 0.1 ? 'warn' : 'neutral'}>{tr('An adjustment of')}<Money value={delta} currency={account.currency} size="sm" sign="always" /> will
             be recorded against your Adjustments account, dated today. It does not count as income or
             spending, and the original transactions are left untouched.
           </Notice>

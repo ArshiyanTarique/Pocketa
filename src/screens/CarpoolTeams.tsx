@@ -46,6 +46,7 @@ import { formatDate } from '../core/dates';
 import { newId } from '../core/ids';
 import { CARPOOL_PRIVACY_NOTES } from '../data/carpoolSchema';
 
+import { tr } from '../app/i18n';
 // ---------------------------------------------------------------------------
 // Saved places live on the device: a convenience, not shared data.
 // ---------------------------------------------------------------------------
@@ -88,7 +89,7 @@ export function CarpoolTeams() {
   }, [net]);
 
   if (net.status === 'loading' || net.status === 'idle') {
-    return <Card className="p-6"><p className="text-sm text-ink-3">Loading your teams…</p></Card>;
+    return <Card className="p-6"><p className="text-sm text-ink-3">{tr('Loading your teams…')}</p></Card>;
   }
 
   if (!net.world.me) return <ProfileSetup />;
@@ -96,12 +97,12 @@ export function CarpoolTeams() {
   return (
     <div className="space-y-4">
       <Segmented
-        label="Carpool section"
+        label={tr('Carpool section')}
         value={tab}
         onChange={setTab}
         options={[
-          { value: 'teams', label: 'My teams' },
-          { value: 'find', label: 'Find a ride' },
+          { value: 'teams', label: tr('My teams') },
+          { value: 'find', label: tr('Find a ride') },
         ]}
       />
       {tab === 'teams' ? <TeamsPanel /> : <DiscoveryPanel />}
@@ -136,35 +137,33 @@ function ProfileSetup() {
 
   return (
     <Card>
-      <CardHeader eyebrow="Carpool" title="Set yourself up" />
+      <CardHeader eyebrow={tr('Carpool')} title={tr('Set yourself up')} />
       <div className="space-y-4 px-5 pb-5">
-        <p className="text-[0.8125rem] text-ink-3">Other people will see this. Your money stays private.</p>
+        <p className="text-[0.8125rem] text-ink-3">{tr('Other people will see this. Your money stays private.')}</p>
 
-        <Field label="Are you driving or riding?">
+        <Field label={tr('Are you driving or riding?')}>
           <Segmented
             value={role}
             onChange={setRole}
             options={[
-              { value: 'driver', label: 'I drive' },
-              { value: 'passenger', label: 'I ride' },
+              { value: 'driver', label: tr('I drive') },
+              { value: 'passenger', label: tr('I ride') },
             ]}
           />
-          <p className="mt-2 text-xs text-ink-4">
-            Only a starting point — you can drive one carpool and ride in another.
-          </p>
+          <p className="mt-2 text-xs text-ink-4">{tr('Only a starting point — you can drive one carpool and ride in another.')}</p>
         </Field>
 
-        <Field label="Name" htmlFor="cp-name">
+        <Field label={tr('Name')} htmlFor="cp-name">
           <TextInput
             id="cp-name"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="What your carpool calls you"
+            placeholder={tr('What your carpool calls you')}
           />
         </Field>
 
         <Field
-          label="Phone"
+          label={tr('Phone')}
           optional
           hint="Shared only with people who are actually on a team with you — never with someone who has merely asked to join, and never in a search result."
         >
@@ -179,9 +178,7 @@ function ProfileSetup() {
 
         {error && <Notice tone="negative">{error}</Notice>}
 
-        <Button variant="primary" full loading={saving} onClick={() => void save()}>
-          Continue
-        </Button>
+        <Button variant="primary" full loading={saving} onClick={() => void save()}>{tr('Continue')}</Button>
 
         <PrivacyNote />
       </div>
@@ -228,26 +225,20 @@ function TeamsPanel() {
   return (
     <div className="space-y-4">
       {net.kind === 'local' && (
-        <Notice tone="neutral" title="This device only">
-          Sign in to invite, request, or search routes.
-        </Notice>
+        <Notice tone="neutral" title={tr('This device only')}>{tr('Sign in to invite, request, or search routes.')}</Notice>
       )}
 
       <div className="flex flex-wrap gap-2">
-        <Button variant="primary" icon={<Plus className="size-4" />} onClick={() => setCreating(true)}>
-          Start a carpool
-        </Button>
-        <Button variant="secondary" icon={<Link2 className="size-4" />} onClick={() => setJoining(true)}>
-          I have an invite link
-        </Button>
+        <Button variant="primary" icon={<Plus className="size-4" />} onClick={() => setCreating(true)}>{tr('Start a carpool')}</Button>
+        <Button variant="secondary" icon={<Link2 className="size-4" />} onClick={() => setJoining(true)}>{tr('I have an invite link')}</Button>
       </div>
 
       {driving.length === 0 && riding.length === 0 ? (
         <Card>
           <EmptyState
             icon={<Car className="size-5" />}
-            title="No carpools yet"
-            body="Start one if you drive, or paste an invite link if someone has asked you along."
+            title={tr('No carpools yet')}
+            body={tr('Start one if you drive, or paste an invite link if someone has asked you along.')}
           />
         </Card>
       ) : (
@@ -317,9 +308,7 @@ function TeamCard({
           </div>
         ) : (
           amDriver && (
-            <Notice tone="neutral" className="mb-3">
-              Add your route so passengers can find you.
-            </Notice>
+            <Notice tone="neutral" className="mb-3">{tr('Add your route so passengers can find you.')}</Notice>
           )
         )}
 
@@ -339,9 +328,7 @@ function TeamCard({
             {members.length} {members.length === 1 ? 'person' : 'people'} ·{' '}
             <Money value={team.ratePerTrip} currency={currency} size="xs" symbol={false} /> a trip
           </span>
-          <Button size="sm" variant="secondary" className="ms-auto" onClick={() => setLogging(true)}>
-            Log a ride
-          </Button>
+          <Button size="sm" variant="secondary" className="ms-auto" onClick={() => setLogging(true)}>{tr('Log a ride')}</Button>
         </div>
 
         {rides.length > 0 && (
@@ -383,34 +370,31 @@ function CreateTeamSheet({ onClose }: { onClose: () => void }) {
     <Sheet
       open
       onClose={onClose}
-      title="Start a carpool"
-      description="You will be the captain: you set the rate, admit passengers and bill at month end."
+      title={tr('Start a carpool')}
       footer={
         <div className="flex gap-2.5">
-          <Button variant="secondary" full onClick={onClose}>Cancel</Button>
+          <Button variant="secondary" full onClick={onClose}>{tr('Cancel')}</Button>
           <Button
             variant="primary"
             full
             loading={saving}
             onClick={() => void create()}
             disabled={!name.trim() || rate == null}
-          >
-            Start it
-          </Button>
+          >{tr('Start it')}</Button>
         </div>
       }
     >
       <div className="space-y-4 pb-2">
-        <Field label="Name it" htmlFor="team-name">
+        <Field label={tr('Name it')} htmlFor="team-name">
           <TextInput
             id="team-name"
             data-autofocus
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Morning run to uni"
+            placeholder={tr('Morning run to uni')}
           />
         </Field>
-        <Field label="Charge per trip, per person">
+        <Field label={tr('Charge per trip, per person')}>
           <AmountInput value={rate} onChange={setRate} currency={settings.baseCurrency} size="hero" />
         </Field>
       </div>
@@ -438,9 +422,9 @@ function TeamSheet({
           value={tab}
           onChange={setTab}
           options={[
-            { value: 'people', label: 'People' },
-            { value: 'route', label: 'Route' },
-            { value: 'rides', label: 'Rides' },
+            { value: 'people', label: tr('People') },
+            { value: 'route', label: tr('Route') },
+            { value: 'rides', label: tr('Rides') },
           ]}
         />
         {tab === 'people' && <PeopleTab team={team} amDriver={amDriver} />}
@@ -471,7 +455,7 @@ function PeopleTab({ team, amDriver }: { team: CarpoolTeam; amDriver: boolean })
     <div className="space-y-4">
       {amDriver && requests.length > 0 && (
         <section>
-          <h3 className="eyebrow mb-2">Asking to join</h3>
+          <h3 className="eyebrow mb-2">{tr('Asking to join')}</h3>
           <ul className="space-y-2">
             {requests.map(({ membership, profile }) => (
               <li key={membership.id} className="rounded-[--radius] border border-warn/30 bg-warn-soft/40 p-3">
@@ -481,9 +465,7 @@ function PeopleTab({ team, amDriver }: { team: CarpoolTeam; amDriver: boolean })
                 {membership.message && (
                   <p className="mt-1 text-xs leading-relaxed text-ink-2">“{membership.message}”</p>
                 )}
-                <p className="mt-1.5 text-[0.6875rem] text-ink-4">
-                  Their number stays hidden until you add them.
-                </p>
+                <p className="mt-1.5 text-[0.6875rem] text-ink-4">{tr('Their number stays hidden until you add them.')}</p>
                 <div className="mt-2.5 flex gap-2">
                   <Button
                     size="sm"
@@ -493,17 +475,13 @@ function PeopleTab({ team, amDriver }: { team: CarpoolTeam; amDriver: boolean })
                       await net.decideMembership(membership.id, 'active');
                       toast.saved(`${profile?.displayName ?? 'They'} joined`);
                     }}
-                  >
-                    Add them
-                  </Button>
+                  >{tr('Add them')}</Button>
                   <Button
                     size="sm"
                     variant="secondary"
                     icon={<X className="size-3.5" />}
                     onClick={() => void net.decideMembership(membership.id, 'declined')}
-                  >
-                    Decline
-                  </Button>
+                  >{tr('Decline')}</Button>
                 </div>
               </li>
             ))}
@@ -512,7 +490,7 @@ function PeopleTab({ team, amDriver }: { team: CarpoolTeam; amDriver: boolean })
       )}
 
       <section>
-        <h3 className="eyebrow mb-2">On this carpool</h3>
+        <h3 className="eyebrow mb-2">{tr('On this carpool')}</h3>
         <ul className="space-y-1.5">
           {members.map(({ membership, profile }) => {
             const phone = net.phoneOf(membership.userId);
@@ -555,29 +533,23 @@ function PeopleTab({ team, amDriver }: { team: CarpoolTeam; amDriver: boolean })
 
       {amDriver && (
         <section>
-          <h3 className="eyebrow mb-2">Add someone</h3>
+          <h3 className="eyebrow mb-2">{tr('Add someone')}</h3>
           <Button
             variant="secondary"
             full
             loading={busy}
             icon={<UserPlus className="size-4" />}
             onClick={() => void makeInvite()}
-          >
-            Create an invite link
-          </Button>
+          >{tr('Create an invite link')}</Button>
           {invite && <InviteLink token={invite} />}
           {net.kind === 'local' && (
-            <p className="mt-2 text-xs text-ink-4">
-              A link can be made now, but it can only be accepted once you and they are both signed in.
-            </p>
+            <p className="mt-2 text-xs text-ink-4">{tr('A link can be made now, but it can only be accepted once you and they are both signed in.')}</p>
           )}
         </section>
       )}
 
       {!amDriver && (
-        <Button variant="secondary" className="text-negative" onClick={() => setConfirmLeave(true)}>
-          Leave this carpool
-        </Button>
+        <Button variant="secondary" className="text-negative" onClick={() => setConfirmLeave(true)}>{tr('Leave this carpool')}</Button>
       )}
 
       <Confirm
@@ -586,7 +558,7 @@ function PeopleTab({ team, amDriver }: { team: CarpoolTeam; amDriver: boolean })
         title={`Leave ${team.name}?`}
         confirmLabel="Leave"
         tone="danger"
-        body="You will stop seeing the ride log, and the driver will no longer see your number. Rides already logged are kept."
+        body={tr('You will stop seeing the ride log, and the driver will no longer see your number. Rides already logged are kept.')}
         onConfirm={async () => {
           await net.leaveTeam(team.id);
           toast.show('You have left the carpool');
@@ -602,7 +574,7 @@ function InviteLink({ token }: { token: string }) {
 
   return (
     <div className="mt-3 rounded-[--radius] border border-accent bg-accent-soft p-3.5">
-      <p className="eyebrow mb-1.5">Share this</p>
+      <p className="eyebrow mb-1.5">{tr('Share this')}</p>
       <p className="tnum break-all text-xs text-ink">{url}</p>
       <div className="mt-2.5 flex gap-2">
         <Button
@@ -627,13 +599,9 @@ function InviteLink({ token }: { token: string }) {
           rel="noopener noreferrer"
           className="inline-flex min-h-8 items-center gap-1.5 rounded-[8px] border border-line-strong bg-surface px-3 text-[0.8125rem] font-medium text-ink"
         >
-          <Send className="size-3.5" />
-          Send on WhatsApp
-        </a>
+          <Send className="size-3.5" />{tr('Send on WhatsApp')}</a>
       </div>
-      <p className="mt-2 text-[0.6875rem] text-ink-3">
-        Anyone with this link can ask to join. You still decide who gets added.
-      </p>
+      <p className="mt-2 text-[0.6875rem] text-ink-3">{tr('Anyone with this link can ask to join. You still decide who gets added.')}</p>
     </div>
   );
 }
@@ -662,7 +630,7 @@ function RouteTab({ team, amDriver }: { team: CarpoolTeam; amDriver: boolean }) 
         </p>
       </div>
     ) : (
-      <EmptyState compact title="No route set" body="The driver has not marked their route yet." />
+      <EmptyState compact title={tr('No route set')} body={tr('The driver has not marked their route yet.')} />
     );
   }
 
@@ -694,12 +662,12 @@ function RouteTab({ team, amDriver }: { team: CarpoolTeam; amDriver: boolean }) 
     <div className="space-y-4">
       <RoutePreview path={path} />
 
-      <Field label="Stops, in order">
+      <Field label={tr('Stops, in order')}>
         <RouteStops path={path} onChange={setPath} saved={places} onSave={save} />
       </Field>
 
       <div className="grid gap-3 sm:grid-cols-2">
-        <Field label="Leaves at">
+        <Field label={tr('Leaves at')}>
           <TextInput
             type="time"
             value={departure}
@@ -707,7 +675,7 @@ function RouteTab({ team, amDriver }: { team: CarpoolTeam; amDriver: boolean }) 
             className="tnum"
           />
         </Field>
-        <Field label="Seats for passengers">
+        <Field label={tr('Seats for passengers')}>
           <Select value={String(seats)} onChange={(e) => setSeats(Number(e.target.value))}>
             {[1, 2, 3, 4, 5, 6].map((n) => (
               <option key={n} value={n}>{n}</option>
@@ -716,7 +684,7 @@ function RouteTab({ team, amDriver }: { team: CarpoolTeam; amDriver: boolean }) 
         </Field>
       </div>
 
-      <Field label="Days it runs">
+      <Field label={tr('Days it runs')}>
         <div className="flex flex-wrap gap-1.5">
           {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((label, i) => (
             <button
@@ -736,10 +704,7 @@ function RouteTab({ team, amDriver }: { team: CarpoolTeam; amDriver: boolean }) 
         </div>
       </Field>
 
-      <Field
-        label="How far you will divert to collect someone"
-        hint="Passengers further off your route than this will not be shown your carpool."
-      >
+      <Field label={tr('Furthest you will go to pick someone up')}>
         <Select value={String(radius)} onChange={(e) => setRadius(Number(e.target.value))}>
           {[500, 1000, 1500, 2500, 5000].map((m) => (
             <option key={m} value={m}>{formatDistance(m)}</option>
@@ -750,13 +715,11 @@ function RouteTab({ team, amDriver }: { team: CarpoolTeam; amDriver: boolean }) 
       <Toggle
         checked={discoverable}
         onChange={setDiscoverable}
-        label="Let people find this route"
-        description="Your route, departure time and name become searchable. Your phone number does not — that is shared only with passengers you have accepted."
+        label={tr('Let people find this route')}
+        description={tr('Your route, time and name become searchable. Your phone number stays private.')}
       />
 
-      <Button variant="primary" full loading={saving} onClick={() => void saveRoute()} disabled={path.length < 2}>
-        Save route
-      </Button>
+      <Button variant="primary" full loading={saving} onClick={() => void saveRoute()} disabled={path.length < 2}>{tr('Save route')}</Button>
     </div>
   );
 }
@@ -769,7 +732,7 @@ function RidesTab({ team }: { team: CarpoolTeam }) {
   const rides = net.ridesFor(team.id);
 
   if (rides.length === 0) {
-    return <EmptyState compact title="No rides logged yet" body="Anyone on the carpool can log one — not just the driver." />;
+    return <EmptyState compact title={tr('No rides logged yet')} body={tr('Anyone on the carpool can log one — not just the driver.')} />;
   }
 
   return (
@@ -824,27 +787,22 @@ function LogRideSheet({ team, onClose }: { team: CarpoolTeam; onClose: () => voi
     <Sheet
       open
       onClose={onClose}
-      title="Log a ride"
-      description="Everyone on the carpool sees this, so nobody has to remember alone."
+      title={tr('Log a ride')}
       footer={
         <div className="flex gap-2.5">
-          <Button variant="secondary" full onClick={onClose}>Cancel</Button>
-          <Button variant="primary" full loading={saving} onClick={() => void save()} disabled={!canLog || riders.length === 0}>
-            Log it
-          </Button>
+          <Button variant="secondary" full onClick={onClose}>{tr('Cancel')}</Button>
+          <Button variant="primary" full loading={saving} onClick={() => void save()} disabled={!canLog || riders.length === 0}>{tr('Log it')}</Button>
         </div>
       }
     >
       <div className="space-y-4 pb-2">
-        <Field label="Date">
+        <Field label={tr('Date')}>
           <DateInput value={date} onChange={setDate} max={asOf} />
         </Field>
 
-        <Field label="Who rode?">
+        <Field label={tr('Who rode?')}>
           {members.length === 0 ? (
-            <p className="text-[0.8125rem] text-ink-3">
-              Nobody has joined yet. Add passengers from the People tab first.
-            </p>
+            <p className="text-[0.8125rem] text-ink-3">{tr('Nobody has joined yet. Add passengers from the People tab first.')}</p>
           ) : (
             <div className="space-y-1.5">
               {members.map(({ membership, profile }) => {
@@ -881,11 +839,11 @@ function LogRideSheet({ team, onClose }: { team: CarpoolTeam; onClose: () => voi
           )}
         </Field>
 
-        <Field label="Note" optional>
-          <Textarea value={note} rows={2} onChange={(e) => setNote(e.target.value)} placeholder="Went the long way, traffic on Shahrah-e-Faisal" />
+        <Field label={tr('Note')} optional>
+          <Textarea value={note} rows={2} onChange={(e) => setNote(e.target.value)} placeholder={tr('Went the long way, traffic on Shahrah-e-Faisal')} />
         </Field>
 
-        {!canLog && <Notice tone="warn">Only people on this carpool can log a ride.</Notice>}
+        {!canLog && <Notice tone="warn">{tr('Only people on this carpool can log a ride.')}</Notice>}
       </div>
     </Sheet>
   );
@@ -927,32 +885,32 @@ function DiscoveryPanel() {
   return (
     <div className="space-y-4">
       <Card>
-        <CardHeader eyebrow="Find a ride" title="Where are you going?" />
+        <CardHeader eyebrow={tr('Find a ride')} title={tr('Where are you going?')} />
         <div className="space-y-4 px-5 pb-5">
           <PlacePicker
-            label="From"
+            label={tr('From')}
             value={origin}
             onChange={(p) => { setOrigin(p); setSearched(false); }}
             saved={places}
             onSave={save}
             onForget={forget}
-            placeholder="Where you set off"
+            placeholder={tr('Where you set off')}
           />
           <PlacePicker
-            label="To"
+            label={tr('To')}
             value={destination}
             onChange={(p) => { setDestination(p); setSearched(false); }}
             saved={places}
             onSave={save}
             onForget={forget}
-            placeholder="Where you are heading"
+            placeholder={tr('Where you are heading')}
           />
 
           <div className="grid gap-3 sm:grid-cols-2">
-            <Field label="Around what time">
+            <Field label={tr('Around what time')}>
               <TextInput type="time" value={time} onChange={(e) => setTime(e.target.value)} className="tnum" />
             </Field>
-            <Field label="Willing to walk">
+            <Field label={tr('Willing to walk')}>
               <Select value={String(maxWalk)} onChange={(e) => setMaxWalk(Number(e.target.value))}>
                 {[400, 800, 1200, 2000, 3000].map((m) => (
                   <option key={m} value={m}>{formatDistance(m)}</option>
@@ -967,9 +925,7 @@ function DiscoveryPanel() {
             icon={<Search className="size-4" />}
             disabled={!origin || !destination}
             onClick={() => setSearched(true)}
-          >
-            Find carpools going my way
-          </Button>
+          >{tr('Find carpools going my way')}</Button>
         </div>
       </Card>
 
@@ -978,7 +934,7 @@ function DiscoveryPanel() {
           <Card>
             <EmptyState
               icon={<MapPin className="size-5" />}
-              title="Nothing on your route yet"
+              title={tr('Nothing on your route yet')}
               body={explainEmptySearch(result)}
             />
           </Card>
@@ -992,10 +948,7 @@ function DiscoveryPanel() {
       )}
 
       {net.kind === 'local' && searched && (
-        <Notice tone="neutral" title="Searching needs an account">
-          Route search finds carpools run by other people, so it only returns results once you are
-          signed in and others have published routes.
-        </Notice>
+        <Notice tone="neutral" title={tr('Searching needs an account')}>{tr("Route search finds carpools run by other people, so it only returns results once you are signed in and others have published routes.")}</Notice>
       )}
 
       {asking && <RequestJoinSheet match={asking} onClose={() => setAsking(null)} />}
@@ -1024,53 +977,49 @@ function MatchCard({ match, onAsk }: { match: RouteMatch; onAsk: () => void }) {
           path={match.route.path}
           height={120}
           highlight={[
-            { point: match.pickup.place, label: 'Pickup', tone: 'pickup' },
-            { point: match.dropoff.place, label: 'Drop-off', tone: 'dropoff' },
+            { point: match.pickup.place, label: tr('Pickup'), tone: 'pickup' },
+            { point: match.dropoff.place, label: tr('Drop-off'), tone: 'dropoff' },
           ]}
         />
 
         <dl className="mt-3 space-y-1.5 text-[0.8125rem]">
           <div className="flex justify-between gap-3">
-            <dt className="text-ink-3">Walk to pickup</dt>
+            <dt className="text-ink-3">{tr('Walk to pickup')}</dt>
             <dd className="text-ink">
               {formatDistance(match.pickup.walkMetres)} · about {match.pickup.walkMinutes} min
             </dd>
           </div>
           <div className="flex justify-between gap-3">
-            <dt className="text-ink-3">Walk from drop-off</dt>
+            <dt className="text-ink-3">{tr('Walk from drop-off')}</dt>
             <dd className="text-ink">{formatDistance(match.dropoff.walkMetres)}</dd>
           </div>
           <div className="flex justify-between gap-3">
-            <dt className="text-ink-3">Leaves</dt>
+            <dt className="text-ink-3">{tr('Leaves')}</dt>
             <dd className="tnum text-ink">{match.route.departure}</dd>
           </div>
           {team && (
             <div className="flex justify-between gap-3">
-              <dt className="text-ink-3">Per trip</dt>
+              <dt className="text-ink-3">{tr('Per trip')}</dt>
               <dd className="text-ink">
                 <Money value={team.ratePerTrip} currency={settings.baseCurrency} size="sm" symbol={false} />
               </dd>
             </div>
           )}
           <div className="flex justify-between gap-3">
-            <dt className="text-ink-3">Driver</dt>
+            <dt className="text-ink-3">{tr('Driver')}</dt>
             <dd className="text-ink">{driver?.displayName ?? 'A driver'}</dd>
           </div>
         </dl>
 
         {status === 'requested' ? (
-          <Notice tone="neutral" className="mt-3">You have asked to join. The driver decides next.</Notice>
+          <Notice tone="neutral" className="mt-3">{tr('You have asked to join. The driver decides next.')}</Notice>
         ) : status === 'active' ? (
-          <Notice tone="positive" className="mt-3">You are already on this carpool.</Notice>
+          <Notice tone="positive" className="mt-3">{tr('You are already on this carpool.')}</Notice>
         ) : (
-          <Button variant="primary" full className="mt-3" icon={<UserPlus className="size-4" />} onClick={onAsk}>
-            Ask to join
-          </Button>
+          <Button variant="primary" full className="mt-3" icon={<UserPlus className="size-4" />} onClick={onAsk}>{tr('Ask to join')}</Button>
         )}
 
-        <p className="mt-2 text-[0.6875rem] text-ink-4">
-          Contact details are exchanged only if the driver adds you.
-        </p>
+        <p className="mt-2 text-[0.6875rem] text-ink-4">{tr('Contact details are exchanged only if the driver adds you.')}</p>
       </div>
     </Card>
   );
@@ -1095,34 +1044,27 @@ function RequestJoinSheet({ match, onClose }: { match: RouteMatch; onClose: () =
     <Sheet
       open
       onClose={onClose}
-      title="Ask to join"
+      title={tr('Ask to join')}
       description={describeRoute(match.route)}
       footer={
         <div className="flex gap-2.5">
-          <Button variant="secondary" full onClick={onClose}>Cancel</Button>
-          <Button variant="primary" full loading={saving} onClick={() => void send()}>Send request</Button>
+          <Button variant="secondary" full onClick={onClose}>{tr('Cancel')}</Button>
+          <Button variant="primary" full loading={saving} onClick={() => void send()}>{tr('Send request')}</Button>
         </div>
       }
     >
       <div className="space-y-4 pb-2">
-        <Field
-          label="Say something"
-          optional
-          hint="A word about where you live and which days you need helps the driver decide."
-        >
+        <Field label={tr('Message to the driver')} optional>
           <Textarea
             data-autofocus
             rows={3}
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            placeholder="Salaam — I live near Nazimabad and need a ride weekday mornings."
+            placeholder={tr('Salaam — I live near Nazimabad and need a ride weekday mornings.')}
           />
         </Field>
 
-        <Notice tone="neutral" title="What the driver sees">
-          Your name and this message. Your phone number stays hidden unless they add you to the
-          carpool.
-        </Notice>
+        <Notice tone="neutral" title={tr('What the driver sees')}>{tr("Your name and this message. Your phone number stays hidden unless they add you to the carpool.")}</Notice>
 
         {error && <Notice tone="negative">{error}</Notice>}
       </div>
@@ -1154,19 +1096,16 @@ function JoinByLinkSheet({ onClose }: { onClose: () => void }) {
     <Sheet
       open
       onClose={onClose}
-      title="Join with an invite"
-      description="Paste the link a driver sent you, or type the code."
+      title={tr('Join with an invite')}
       footer={
         <div className="flex gap-2.5">
-          <Button variant="secondary" full onClick={onClose}>Cancel</Button>
-          <Button variant="primary" full loading={saving} onClick={() => void join()} disabled={!input.trim()}>
-            Join
-          </Button>
+          <Button variant="secondary" full onClick={onClose}>{tr('Cancel')}</Button>
+          <Button variant="primary" full loading={saving} onClick={() => void join()} disabled={!input.trim()}>{tr('Join')}</Button>
         </div>
       }
     >
       <div className="space-y-4 pb-2">
-        <Field label="Invite link or code">
+        <Field label={tr('Invite link or code')}>
           <TextInput
             data-autofocus
             value={input}

@@ -14,6 +14,7 @@
 
 import * as React from 'react';
 import { useStore } from '../store/useStore';
+import { UR_SCREENS } from './i18n.ur';
 
 export type Lang = 'en' | 'ur';
 
@@ -22,7 +23,26 @@ const UR: Record<string, string> = {
   'Home': 'ہوم',
   'Activity': 'سرگرمی',
   'Carpool': 'کارپول',
-  'Me': 'میں',
+  'Plan': 'منصوبہ',
+  'More': 'مزید',
+  'People': 'لوگ',
+  'Reports': 'رپورٹس',
+  'Net worth': 'کل مالیت',
+  'Show amounts': 'رقم دکھائیں',
+  'Sign in': 'سائن ان',
+  'Offline': 'آف لائن',
+  'What you can spend and what needs attention': 'آپ کیا خرچ کر سکتے ہیں اور کس پر توجہ درکار ہے',
+  'Everything you have recorded': 'آپ نے جو کچھ ریکارڈ کیا',
+  'Log trips and see who owes what': 'سفر درج کریں اور دیکھیں کون کتنا دے گا',
+  'What you pay regularly': 'جو آپ باقاعدگی سے ادا کرتے ہیں',
+  'Limits you set on spending': 'خرچ پر آپ کی مقرر کردہ حدیں',
+  'What you are saving for': 'آپ کس کے لیے بچت کر رہے ہیں',
+  'Your banks, cash and cards': 'آپ کے بینک، نقد اور کارڈ',
+  'Who owes you and who you owe': 'کون آپ کا مقروض ہے اور آپ کس کے',
+  'Where your money went': 'آپ کا پیسہ کہاں گیا',
+  'Account, appearance, currency and data': 'اکاؤنٹ، ظاہری شکل، کرنسی اور ڈیٹا',
+  'Bills, budgets and goals': 'بل، بجٹ اور اہداف',
+  'Everything else': 'باقی سب کچھ',
   'Accounts': 'اکاؤنٹ',
   'Budgets': 'بجٹ',
   'Bills': 'بل',
@@ -39,7 +59,35 @@ const UR: Record<string, string> = {
   'Expense': 'خرچہ',
   'Income': 'آمدنی',
   'Transfer': 'منتقلی',
-  'Lend / Borrow': 'قرض دیں / لیں',
+  'Lent': 'قرض دیا',
+  'Borrowed': 'قرض لیا',
+  'Form': 'فارم',
+  'Quick type': 'جلدی لکھیں',
+  'More options': 'مزید اختیارات',
+  'Notes, receipt, budget, split': 'نوٹ، رسید، بجٹ، تقسیم',
+  'Say what happened': 'بتائیں کیا ہوا',
+  'Which expense is this refunding?': 'یہ کس خرچے کی واپسی ہے؟',
+  'Choose a person': 'کوئی شخص چنیں',
+  'Choose an account': 'اکاؤنٹ چنیں',
+  'From my account': 'میرے اکاؤنٹ سے',
+  'To whom': 'کس کو',
+  'From whom': 'کس سے',
+  'Into my account': 'میرے اکاؤنٹ میں',
+  'Amount received in': 'موصول شدہ رقم بصورت',
+  'Earned': 'کمایا',
+  'Saved': 'بچایا',
+  'Overspent': 'زیادہ خرچ',
+  'Transfers': 'منتقلیاں',
+  'Safe to spend': 'خرچ کے لیے محفوظ',
+  'How is this worked out?': 'یہ کیسے نکالا گیا؟',
+  'Net': 'خالص',
+  'entry': 'اندراج',
+  'entries': 'اندراجات',
+  'Add an account': 'اکاؤنٹ شامل کریں',
+  'Open Bills': 'بل کھولیں',
+  'Open Budgets': 'بجٹ کھولیں',
+  'Open People': 'لوگ کھولیں',
+  'Open Carpool': 'کارپول کھولیں',
   'Refund': 'واپسی',
   'Amount': 'رقم',
   'Category': 'زمرہ',
@@ -103,6 +151,7 @@ const UR: Record<string, string> = {
   'English': 'انگریزی',
   'Urdu': 'اردو',
   'Font size': 'حروف کا سائز',
+  'Font': 'فونٹ',
   'Normal': 'معمول',
   'Large': 'بڑا',
   'Extra Large': 'بہت بڑا',
@@ -147,7 +196,20 @@ const UR: Record<string, string> = {
 
 export function translate(key: string, lang: Lang): string {
   if (lang === 'en') return key;
-  return UR[key] ?? key;
+  return UR[key] ?? UR_SCREENS[key] ?? key;
+}
+
+/**
+ * Translate outside a hook. Screens remount on navigation and re-render on
+ * any settings change, so reading the language directly is safe for them.
+ */
+export function tr(key: string): string {
+  return translate(key, getCurrentLang());
+}
+
+/** Translate a string with `{placeholders}`, then fill them in. */
+export function trf(key: string, vars: Record<string, string | number>): string {
+  return tr(key).replace(/\{(\w+)\}/g, (_, k) => String(vars[k] ?? ''));
 }
 
 /** React hook — returns a translator function for the current language. */

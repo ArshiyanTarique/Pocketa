@@ -412,6 +412,8 @@ export interface Settings {
   fontSize: 'normal' | 'large' | 'xlarge';
   /** Display density: 'comfortable' | 'compact' */
   density: 'comfortable' | 'compact';
+  /** Typeface pairing — see src/app/fonts.ts */
+  fontFamily: 'classic' | 'rounded' | 'playful' | 'modern' | 'editorial' | 'bold';
   createdAt: ISOTimestamp;
   updatedAt: ISOTimestamp;
 }

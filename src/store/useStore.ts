@@ -197,6 +197,7 @@ const EMPTY_SETTINGS: Settings = {
   language: 'en',
   fontSize: 'normal',
   density: 'comfortable',
+  fontFamily: 'classic',
   createdAt: nowIso(),
   updatedAt: nowIso(),
 };

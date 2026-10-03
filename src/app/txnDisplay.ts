@@ -10,6 +10,7 @@
 import { sumMinor } from '../core/money';
 import type { Account, ID, Transaction, TxnKind } from '../core/types';
 import { TXN_KIND_LABELS } from '../core/types';
+import { tr, trf } from './i18n';
 
 export interface TxnDisplay {
   title: string;
@@ -69,12 +70,12 @@ export function describeTransaction(
 
   switch (txn.kind) {
     case 'expense': {
-      title = txn.merchant || categoryNames[0] || 'Expense';
+      title = txn.merchant || categoryNames[0] || tr('Expense');
       const where = sources[0]?.account?.name ?? '';
       subtitle = isSplit
-        ? `${categoryNames.length} categories · ${where}`
+        ? `${trf('{n} categories', { n: categoryNames.length })} · ${where}`
         : [categoryNames[0], where].filter(Boolean).join(' · ');
-      if (isShared) subtitle = `Shared · ${subtitle}`;
+      if (isShared) subtitle = `${tr('Shared')} · ${subtitle}`;
       direction = 'out';
       // Show what the user actually spent, not what they fronted for the table.
       amount = expense > 0 ? expense : gross;
@@ -103,7 +104,7 @@ export function describeTransaction(
     case 'repay_in': {
       const from = sources[0]?.account?.name ?? '—';
       const to = destinations[0]?.account?.name ?? '—';
-      title = TXN_KIND_LABELS[txn.kind];
+      title = tr(TXN_KIND_LABELS[txn.kind]);
       subtitle = `${from} → ${to}`;
       direction = 'neutral';
       color = null;
@@ -141,7 +142,7 @@ export function describeTransaction(
     nativeCurrency: showNative ? currency : null,
     direction,
     kind: txn.kind,
-    kindLabel: TXN_KIND_LABELS[txn.kind],
+    kindLabel: tr(TXN_KIND_LABELS[txn.kind]),
     color,
     initial: initialOf(title),
     categoryNames,

@@ -15,6 +15,7 @@ import { nowIso } from '../core/dates';
 import type { BudgetStatus } from '../core/projections';
 import type { Budget, BudgetPeriod, ID } from '../core/types';
 
+import { tr, trf } from '../app/i18n';
 export function Budgets() {
   const statuses = useBudgetStatuses();
   const budgets = useStore((s) => s.budgets);
@@ -37,7 +38,7 @@ export function Budgets() {
     <div className="space-y-6">
       {statuses.length > 0 && (
         <section>
-          <p className="text-[0.6875rem] font-semibold uppercase tracking-widest text-ink-4 mb-3">Still available</p>
+          <p className="text-[0.6875rem] font-semibold uppercase tracking-widest text-ink-4 mb-3">{tr('Still available')}</p>
           <div className="count-in flex flex-wrap items-end justify-between gap-x-6 gap-y-2">
             <Money
               value={totalLimit - totalSpent}
@@ -49,11 +50,11 @@ export function Budgets() {
             />
             <div className="flex gap-5 pb-1.5">
               <span className="flex flex-col gap-0.5">
-                <span className="text-[0.625rem] font-semibold uppercase tracking-widest text-ink-4">Budgeted</span>
+                <span className="text-[0.625rem] font-semibold uppercase tracking-widest text-ink-4">{tr('Budgeted')}</span>
                 <Money value={totalLimit} currency={settings.baseCurrency} hidden={hidden} size="sm" weight="semibold" symbol={false} />
               </span>
               <span className="flex flex-col gap-0.5">
-                <span className="text-[0.625rem] font-semibold uppercase tracking-widest text-ink-4">Spent</span>
+                <span className="text-[0.625rem] font-semibold uppercase tracking-widest text-ink-4">{tr('Spent')}</span>
                 <Money value={totalSpent} currency={settings.baseCurrency} hidden={hidden} size="sm" weight="semibold" symbol={false} />
               </span>
             </div>
@@ -63,21 +64,17 @@ export function Budgets() {
       )}
 
       <div className="flex items-center justify-between">
-        <h2 className="display text-[1.0625rem]">Budgets</h2>
-        <Button size="sm" variant="primary" icon={<Plus className="size-3.5" />} onClick={() => setEditing('new')}>
-          New budget
-        </Button>
+        <h2 className="display text-[1.0625rem]">{tr('Budgets')}</h2>
+        <Button variant="primary" icon={<Plus className="size-4" />} onClick={() => setEditing('new')}>{tr('Add a budget')}</Button>
       </div>
 
       {statuses.length === 0 ? (
         <EmptyState
           icon={<PieChart className="size-5" />}
-          title="No budgets yet"
-          body="Set a limit per category. Pocketa shows how much is left and where you are heading."
+          title={tr('No budgets yet')}
+          body={tr('Set a limit per category. Pocketa shows how much is left and where you are heading.')}
           action={
-            <Button variant="primary" icon={<Plus className="size-4" />} onClick={() => setEditing('new')}>
-              Create a budget
-            </Button>
+            <Button variant="primary" icon={<Plus className="size-4" />} onClick={() => setEditing('new')}>{tr('Create a budget')}</Button>
           }
         />
       ) : (
@@ -106,9 +103,7 @@ export function Budgets() {
             {archived.map((b) => (
               <li key={b.id} className="flex items-center justify-between px-4 py-2.5">
                 <span className="text-[0.8125rem] text-ink-2">{b.name}</span>
-                <Button size="sm" variant="ghost" onClick={() => setEditing(b)}>
-                  Restore
-                </Button>
+                <Button size="sm" variant="ghost" onClick={() => setEditing(b)}>{tr('Restore')}</Button>
               </li>
             ))}
           </ul>
@@ -148,7 +143,7 @@ function BudgetCard({
     .filter(Boolean) as string[];
   const scope =
     budget.categoryIds.length === 0
-      ? 'All spending'
+      ? tr('All spending')
       : names.slice(0, 2).join(', ') + (names.length > 2 ? ` +${names.length - 2}` : '');
 
   /**
@@ -165,7 +160,7 @@ function BudgetCard({
           <span className="flex items-baseline justify-between gap-3">
             <span className="truncate text-sm font-semibold text-ink">{budget.name}</span>
             <span className="tnum shrink-0 text-xs text-ink-4">
-              {status.daysRemaining} day{status.daysRemaining === 1 ? '' : 's'} left
+              {status.daysRemaining === 1 ? tr('1 day left') : trf('{n} days left', { n: status.daysRemaining })}
             </span>
           </span>
           <Progress
@@ -189,7 +184,7 @@ function BudgetCard({
             symbol={false}
             tone={status.remaining < 0 ? 'negative' : 'default'}
           />
-          <span className="text-[0.6875rem] text-ink-4">{status.remaining < 0 ? 'over' : 'left'}</span>
+          <span className="text-[0.6875rem] text-ink-4">{status.remaining < 0 ? tr('over') : tr('left')}</span>
         </span>
       }
     >
@@ -212,11 +207,11 @@ function BudgetCard({
           hidden={hidden}
           showSigns={false}
           lines={[
-            { key: 'spent', label: `Spent · ${Math.round(status.used * 100)}%`, amount: status.spent },
-            { key: 'limit', label: 'Budget', amount: status.limit },
-            { key: 'daily', label: 'Per remaining day', amount: status.safeDailyRemaining },
+            { key: 'spent', label: `${tr('Spent')} · ${Math.round(status.used * 100)}%`, amount: status.spent },
+            { key: 'limit', label: tr('Budget'), amount: status.limit },
+            { key: 'daily', label: tr('Per remaining day'), amount: status.safeDailyRemaining },
           ]}
-          total={{ label: 'Heading for', amount: status.projected }}
+          total={{ label: tr('Heading for'), amount: status.projected }}
         />
       ) : (
         <Reckoning
@@ -225,21 +220,19 @@ function BudgetCard({
           hidden={hidden}
           showSigns={false}
           lines={[
-            { key: 'spent', label: `Spent · ${Math.round(status.used * 100)}%`, amount: status.spent },
-            { key: 'limit', label: 'Budget', amount: status.limit },
+            { key: 'spent', label: `${tr('Spent')} · ${Math.round(status.used * 100)}%`, amount: status.spent },
+            { key: 'limit', label: tr('Budget'), amount: status.limit },
           ]}
-          total={{ label: 'Remaining', amount: status.remaining }}
+          total={{ label: tr('Remaining'), amount: status.remaining }}
         />
       )}
 
       {status.health === 'over' && (
-        <Notice tone="negative" className="mt-3" icon={<CircleAlert className="size-4" />}>
-          Over by <Money value={-status.remaining} currency={currency} hidden={hidden} size="sm" />.
+        <Notice tone="negative" className="mt-3" icon={<CircleAlert className="size-4" />}>{tr('Over by')}<Money value={-status.remaining} currency={currency} hidden={hidden} size="sm" />.
         </Notice>
       )}
       {status.health === 'projected_over' && status.projectionReliable && (
-        <Notice tone="warn" className="mt-3" icon={<TriangleAlert className="size-4" />}>
-          Under <Money value={status.safeDailyRemaining} currency={currency} hidden={hidden} size="sm" symbol={false} /> a day keeps it inside.
+        <Notice tone="warn" className="mt-3" icon={<TriangleAlert className="size-4" />}>{tr('Under')}<Money value={status.safeDailyRemaining} currency={currency} hidden={hidden} size="sm" symbol={false} /> a day keeps it inside.
         </Notice>
       )}
 
@@ -254,12 +247,8 @@ function BudgetCard({
                 : '/transactions',
             )
           }
-        >
-          Transactions
-        </Button>
-        <Button size="sm" variant="ghost" icon={<Pencil className="size-3.5" />} onClick={onEdit} aria-label={`Edit ${budget.name}`}>
-          Edit
-        </Button>
+        >{tr('Transactions')}</Button>
+        <Button size="sm" variant="ghost" icon={<Pencil className="size-3.5" />} onClick={onEdit} aria-label={`Edit ${budget.name}`}>{tr('Edit')}</Button>
       </div>
     </ExpandingRow>
   );
@@ -334,9 +323,7 @@ function BudgetEditor({ budget, onClose }: { budget: Budget | null; onClose: () 
       footer={
         <div className="flex gap-2.5">
           {!isNew && (
-            <Button variant="secondary" icon={<Archive className="size-4" />} onClick={() => setConfirmArchive(true)}>
-              Archive
-            </Button>
+            <Button variant="secondary" icon={<Archive className="size-4" />} onClick={() => setConfirmArchive(true)}>{tr('Archive')}</Button>
           )}
           <Button variant="primary" full onClick={() => void save()}>
             {isNew ? 'Create budget' : 'Save changes'}
@@ -345,34 +332,31 @@ function BudgetEditor({ budget, onClose }: { budget: Budget | null; onClose: () 
       }
     >
       <div className="space-y-4 pb-2">
-        <Field label="Name" htmlFor="b-name">
+        <Field label={tr('Name')} htmlFor="b-name">
           <TextInput
             id="b-name"
             data-autofocus
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Groceries"
+            placeholder={tr('Groceries')}
           />
         </Field>
 
-        <Field label="Limit">
+        <Field label={tr('Limit')}>
           <AmountInput value={limit} onChange={setLimit} currency={settings.baseCurrency} size="hero" />
         </Field>
 
-        <Field label="Period">
+        <Field label={tr('Period')}>
           <Select value={period} onChange={(e) => setPeriod(e.target.value as BudgetPeriod)}>
-            <option value="monthly">Monthly</option>
-            <option value="weekly">Weekly</option>
-            <option value="yearly">Yearly</option>
-            <option value="custom">Custom dates</option>
+            <option value="monthly">{tr('Monthly')}</option>
+            <option value="weekly">{tr('Weekly')}</option>
+            <option value="yearly">{tr('Yearly')}</option>
+            <option value="custom">{tr('Custom dates')}</option>
           </Select>
         </Field>
 
         {period === 'monthly' && (
-          <Field
-            label="Month starts on day"
-            hint="Set this to your payday if you budget from one salary to the next."
-          >
+          <Field label={tr('Month starts on day (e.g. your payday)')}>
             <Select value={startDay} onChange={(e) => setStartDay(e.target.value)}>
               {Array.from({ length: 28 }, (_, i) => i + 1).map((d) => (
                 <option key={d} value={d}>
@@ -385,17 +369,17 @@ function BudgetEditor({ budget, onClose }: { budget: Budget | null; onClose: () 
 
         {period === 'custom' && (
           <div className="grid gap-3 sm:grid-cols-2">
-            <Field label="From">
+            <Field label={tr('From')}>
               <DateInput value={customFrom} onChange={setCustomFrom} />
             </Field>
-            <Field label="To">
+            <Field label={tr('To')}>
               <DateInput value={customTo} onChange={setCustomTo} />
             </Field>
           </div>
         )}
 
         <Field
-          label="Categories"
+          label={tr('Categories')}
           hint={
             categoryIds.length === 0
               ? 'Nothing selected means this budget covers all spending.'
@@ -427,7 +411,7 @@ function BudgetEditor({ budget, onClose }: { budget: Budget | null; onClose: () 
           </div>
         </Field>
 
-        <Field label="Warn me at">
+        <Field label={tr('Warn me at')}>
           <Select value={String(warnAt)} onChange={(e) => setWarnAt(Number(e.target.value))}>
             <option value="0.5">50% of the limit</option>
             <option value="0.7">70% of the limit</option>
@@ -436,18 +420,18 @@ function BudgetEditor({ budget, onClose }: { budget: Budget | null; onClose: () 
           </Select>
         </Field>
 
-        <Field label="At month end">
+        <Field label={tr('At month end')}>
           <Select value={rolloverMode} onChange={(e) => setRolloverMode(e.target.value as typeof rolloverMode)}>
-            <option value="restart">Restart fresh</option>
-            <option value="carry">Carry unspent forward</option>
-            <option value="transfer">Move unspent to an account</option>
+            <option value="restart">{tr('Restart fresh')}</option>
+            <option value="carry">{tr('Carry unspent forward')}</option>
+            <option value="transfer">{tr('Move unspent to an account')}</option>
           </Select>
         </Field>
 
         {rolloverMode === 'transfer' && (
-          <Field label="Transfer surplus into" hint="At the start of each new period, any leftover is transferred into this account automatically.">
+          <Field label={tr('Move leftover into')}>
             <Select value={rolloverAccountId} onChange={(e) => setRolloverAccountId(e.target.value as ID)}>
-              <option value="">Choose an account</option>
+              <option value="">{tr('Choose an account')}</option>
               {spendableAccounts.map((a) => (
                 <option key={a.id} value={a.id}>{a.name}</option>
               ))}
@@ -463,7 +447,7 @@ function BudgetEditor({ budget, onClose }: { budget: Budget | null; onClose: () 
         onClose={() => setConfirmArchive(false)}
         title={`Archive ${budget?.name}?`}
         confirmLabel="Archive"
-        body="The budget stops tracking, but your transactions are untouched."
+        body={tr('The budget stops tracking, but your transactions are untouched.')}
         onConfirm={async () => {
           await archiveBudget(budget!.id, true);
           toast.saved('Budget archived');

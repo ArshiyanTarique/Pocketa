@@ -26,6 +26,7 @@ import { cn } from '../ui/cn';
 import { navigate, useRoute } from '../app/router';
 import { useAccountMap, useCategories, useToday } from '../app/useLedger';
 import { useStore } from '../store/useStore';
+import { FONT_PRESETS, ensureFontLoaded, type FontPreset } from '../app/fonts';
 import { CURRENCIES } from '../core/money';
 import { formatDate, monthRange, nowIso } from '../core/dates';
 import { newId } from '../core/ids';
@@ -53,6 +54,7 @@ import {
 import { CREATABLE_CATEGORY_CLASSES } from './constants';
 import type { Account, ID, Settings } from '../core/types';
 
+import { tr } from '../app/i18n';
 type SettingsTab = 'account' | 'appearance' | 'money' | 'categories' | 'data';
 
 const TABS: Array<{ value: SettingsTab; label: string }> = [
@@ -74,10 +76,10 @@ export function SettingsScreen() {
   return (
     <div className="space-y-5">
       <Segmented
-        label="Settings section"
+        label={tr('Settings section')}
         value={tab}
         onChange={(v) => navigate(`/settings/${v}`, { replace: true })}
-        options={TABS}
+        options={TABS.map((x) => ({ ...x, label: tr(x.label) }))}
         className="max-w-full overflow-x-auto no-scrollbar"
       />
       <div key={tab} className="fade-in space-y-4">
@@ -128,27 +130,25 @@ function SyncSection() {
       <div className="overflow-hidden rounded-[--radius-lg] border border-line bg-surface">
         <div className="flex items-center justify-between border-b border-line px-5 py-4">
           <div>
-            <p className="text-[0.625rem] font-semibold uppercase tracking-widest text-ink-4 mb-0.5">Your account</p>
-            <h2 className="text-[0.9375rem] font-semibold text-ink">Sync across devices</h2>
+            <p className="text-[0.625rem] font-semibold uppercase tracking-widest text-ink-4 mb-0.5">{tr('Your account')}</p>
+            <h2 className="text-[0.9375rem] font-semibold text-ink">{tr('Sync across devices')}</h2>
           </div>
         </div>
         <div className="px-5 py-5">
-          <Notice tone="neutral" icon={<Info className="size-4" />} title="Not set up in this build">
+          <Notice tone="neutral" icon={<Info className="size-4" />} title={tr('Not set up in this build')}>
             Pocketa works fully offline on this device without an account. To sync a phone and a
             laptop, connect a Supabase project by setting <code className="tnum text-[0.75rem]">VITE_SUPABASE_URL</code> and{' '}
             <code className="tnum text-[0.75rem]">VITE_SUPABASE_ANON_KEY</code>, then run the table
             setup below in that project.
           </Notice>
-          <Button size="sm" variant="secondary" className="mt-3" onClick={() => setShowSql(true)}>
-            Show the setup SQL
-          </Button>
+          <Button size="sm" variant="secondary" className="mt-3" onClick={() => setShowSql(true)}>{tr('Show the setup SQL')}</Button>
           <p className="mt-3 text-xs leading-relaxed text-ink-4">
             Your ledger stays in your own project, isolated per account by row-level security. Until
             then, use Export and Import below to move data between devices.
           </p>
         </div>
 
-        <Sheet open={showSql} onClose={() => setShowSql(false)} title="Sync setup" size="lg">
+        <Sheet open={showSql} onClose={() => setShowSql(false)} title={tr('Sync setup')} size="lg">
           <div className="space-y-3 pb-2">
             <p className="text-sm leading-relaxed text-ink-2">
               Run this once in your Supabase project&apos;s SQL editor. It creates a single
@@ -164,12 +164,10 @@ function SyncSection() {
                 void navigator.clipboard.writeText(SCHEMA_SQL);
                 toast.saved('Ledger SQL copied');
               }}
-            >
-              Copy the ledger SQL
-            </Button>
+            >{tr('Copy the ledger SQL')}</Button>
 
             <div className="border-t border-line pt-3">
-              <h3 className="eyebrow mb-1.5">Carpool</h3>
+              <h3 className="eyebrow mb-1.5">{tr('Carpool')}</h3>
               <p className="mb-2 text-sm leading-relaxed text-ink-2">
                 Only needed if you want carpool teams, invite links and route search. It is a
                 separate set of tables with its own rules, so nothing here can widen access to your
@@ -182,9 +180,7 @@ function SyncSection() {
                   void navigator.clipboard.writeText(CARPOOL_SCHEMA_SQL);
                   toast.saved('Carpool SQL copied');
                 }}
-              >
-                Copy the carpool SQL
-              </Button>
+              >{tr('Copy the carpool SQL')}</Button>
             </div>
           </div>
         </Sheet>
@@ -196,7 +192,7 @@ function SyncSection() {
     <div className="overflow-hidden rounded-[--radius-lg] border border-line bg-surface">
       <div className="flex items-center justify-between border-b border-line px-5 py-4">
         <div>
-          <p className="text-[0.625rem] font-semibold uppercase tracking-widest text-ink-4 mb-0.5">Your account</p>
+          <p className="text-[0.625rem] font-semibold uppercase tracking-widest text-ink-4 mb-0.5">{tr('Your account')}</p>
           <h2 className="text-[0.9375rem] font-semibold text-ink">{session ? session.user.email ?? 'Signed in' : 'Sync across devices'}</h2>
         </div>
         {session && (
@@ -209,9 +205,7 @@ function SyncSection() {
               setSession(null);
               toast.show('Signed out', 'Your data stays on this device.');
             }}
-          >
-            Sign out
-          </Button>
+          >{tr('Sign out')}</Button>
         )}
       </div>
       <div className="px-5 py-5">
@@ -220,10 +214,7 @@ function SyncSection() {
             <div className="flex items-center justify-between gap-3 rounded-[--radius] border border-line px-3.5 py-3">
               <div className="min-w-0">
                 <p className="text-[0.8125rem] font-medium text-ink">{describeSync(sync)}</p>
-                <p className="mt-0.5 text-xs leading-relaxed text-ink-3">
-                  Changes go up on their own. Sign in with this account on another device and the
-                  whole ledger appears there.
-                </p>
+                <p className="mt-0.5 text-xs leading-relaxed text-ink-3">{tr("Changes go up on their own. Sign in with this account on another device and the whole ledger appears there.")}</p>
               </div>
               <Button
                 size="sm"
@@ -232,26 +223,19 @@ function SyncSection() {
                 disabled={!sync.online}
                 icon={<RefreshCw className="size-3.5" />}
                 onClick={runSync}
-              >
-                Sync now
-              </Button>
+              >{tr('Sync now')}</Button>
             </div>
 
             {sync.phase === 'failed' && sync.online && (
-              <Notice tone="warn" title="Not reaching your account">
+              <Notice tone="warn" title={tr('Not reaching your account')}>
                 <p>{sync.error}</p>
-                <p className="mt-1.5">
-                  Nothing is lost — everything is saved here and goes up as soon as it can.
-                </p>
+                <p className="mt-1.5">{tr('Nothing is lost — everything is saved here and goes up as soon as it can.')}</p>
               </Notice>
             )}
           </div>
         ) : (
           <div className="space-y-3">
-            <p className="text-[0.8125rem] leading-relaxed text-ink-2">
-              Pocketa works without an account. Sign in to back your ledger up and pick it up on
-              another device.
-            </p>
+            <p className="text-[0.8125rem] leading-relaxed text-ink-2">{tr("Pocketa works without an account. Sign in to back your ledger up and pick it up on another device.")}</p>
             <Button
               variant="primary"
               full
@@ -260,9 +244,7 @@ function SyncSection() {
                 const r = await signInWithGoogle();
                 if (!r.ok) toast.error('Could not sign in', r.error);
               }}
-            >
-              Continue with Google
-            </Button>
+            >{tr('Continue with Google')}</Button>
             <div className="flex items-center gap-3 text-xs text-ink-4">
               <span className="h-px flex-1 bg-line" /> or <span className="h-px flex-1 bg-line" />
             </div>
@@ -275,7 +257,7 @@ function SyncSection() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@example.com"
-                  aria-label="Email address"
+                  aria-label={tr('Email address')}
                 />
                 <Button
                   variant="secondary"
@@ -285,9 +267,7 @@ function SyncSection() {
                     if (r.ok) setSent(true);
                     else toast.error('Could not send the link', r.error);
                   }}
-                >
-                  Send link
-                </Button>
+                >{tr('Send link')}</Button>
               </div>
             )}
           </div>
@@ -299,21 +279,61 @@ function SyncSection() {
 
 // ===========================================================================
 
+/**
+ * Each option is drawn in its own faces, so the choice is made by looking,
+ * not by reading a description of a typeface.
+ */
+function FontPicker({ value, onChange }: { value: FontPreset; onChange: (v: FontPreset) => void }) {
+  React.useEffect(() => {
+    for (const p of FONT_PRESETS) ensureFontLoaded(p.id);
+  }, []);
+
+  return (
+    <div className="grid grid-cols-2 gap-2 pt-1 sm:grid-cols-3">
+      {FONT_PRESETS.map((p) => {
+        const active = p.id === value;
+        return (
+          <button
+            key={p.id}
+            type="button"
+            aria-pressed={active}
+            onClick={() => onChange(p.id)}
+            className={cn(
+              'flex flex-col items-start gap-1 rounded-[--radius] border px-3 py-3 text-left transition-colors',
+              active ? 'border-accent bg-accent-soft/60' : 'border-line hover:border-line-strong hover:bg-surface-2/60',
+            )}
+          >
+            <span className="text-[1.5rem] leading-none text-ink" style={{ fontFamily: p.display, fontWeight: 700 }}>
+              Aa <span className="tnum text-[0.9rem] font-semibold text-ink-3">1,250</span>
+            </span>
+            <span className="mt-1 text-[0.875rem] font-semibold text-ink" style={{ fontFamily: p.sans }}>
+              {p.label}
+            </span>
+            <span className="text-[0.75rem] text-ink-3" style={{ fontFamily: p.sans }}>
+              {p.mood}
+            </span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 function AppearanceSection() {
   const settings = useStore((s) => s.settings);
   const updateSettings = useStore((s) => s.updateSettings);
 
   // fill values match ACCENTS in App.tsx — both must stay in sync
   const ACCENT_OPTIONS: Array<{ value: string; label: string; fill: string }> = [
-    { value: 'blue',   label: 'Blue',   fill: '#386ee9' },
-    { value: 'green',  label: 'Green',  fill: '#37b47e' },
+    { value: 'blue',   label: tr('Blue'),   fill: '#386ee9' },
+    { value: 'green',  label: tr('Green'),  fill: '#37b47e' },
     { value: 'purple', label: 'Purple', fill: '#8b63b4' },
-    { value: 'red',    label: 'Red',    fill: '#d53b3b' },
-    { value: 'slate',  label: 'Slate',  fill: '#4b5563' },
-    { value: 'gold',   label: 'Gold',   fill: '#e3b53a' },
-    { value: 'teal',   label: 'Teal',   fill: '#07809d' },
+    { value: 'red',    label: tr('Red'),    fill: '#d53b3b' },
+    { value: 'slate',  label: tr('Slate'),  fill: '#4b5563' },
+    { value: 'gold',   label: tr('Gold'),   fill: '#e3b53a' },
+    { value: 'teal',   label: tr('Teal'),   fill: '#07809d' },
     { value: 'orange', label: 'Orange', fill: '#bd5711' },
-    { value: 'pink',   label: 'Pink',   fill: '#cb3e84' },
+    { value: 'pink',   label: tr('Pink'),   fill: '#cb3e84' },
   ];
 
   return (
@@ -342,7 +362,7 @@ function AppearanceSection() {
             </div>
           </Field>
 
-          <Field label="Theme">
+          <Field label={tr('Theme')}>
             <Segmented
               value={settings.theme}
               onChange={(v) => void updateSettings({ theme: v })}
@@ -354,7 +374,7 @@ function AppearanceSection() {
             />
           </Field>
 
-          <Field label="Accent color">
+          <Field label={tr('Accent color')}>
             <div className="flex flex-wrap gap-2 pt-1">
               {ACCENT_OPTIONS.map((opt) => {
                 const active = (settings.accentColor ?? 'blue') === opt.value;
@@ -375,10 +395,14 @@ function AppearanceSection() {
             </div>
           </Field>
 
-          <Field
-            label="Text size"
-            hint="Makes all text and numbers larger — helpful on a small screen."
-          >
+          <Field label={tr('Font')}>
+            <FontPicker
+              value={(settings.fontFamily ?? 'classic') as FontPreset}
+              onChange={(v) => void updateSettings({ fontFamily: v })}
+            />
+          </Field>
+
+          <Field label={tr('Text size')}>
             <Segmented
               value={settings.fontSize ?? 'normal'}
               onChange={(v) => void updateSettings({ fontSize: v as Settings['fontSize'] })}
@@ -390,10 +414,7 @@ function AppearanceSection() {
             />
           </Field>
 
-          <Field
-            label="Display density"
-            hint="Comfortable gives more breathing room; compact fits more on screen."
-          >
+          <Field label={tr('Spacing')}>
             <Segmented
               value={settings.density ?? 'comfortable'}
               onChange={(v) => void updateSettings({ density: v as Settings['density'] })}
@@ -407,17 +428,16 @@ function AppearanceSection() {
           <Toggle
             checked={settings.hideAmounts}
             onChange={(v) => void updateSettings({ hideAmounts: v })}
-            label="Hide amounts"
-            description="Replaces every figure with dots. Useful on a shared screen."
+            label={tr('Hide amounts')}
           />
 
-          <Field label="Week starts on">
+          <Field label={tr('Week starts on')}>
             <Select
               value={String(settings.weekStartsOn)}
               onChange={(e) => void updateSettings({ weekStartsOn: Number(e.target.value) as 0 | 1 })}
             >
-              <option value="1">Monday</option>
-              <option value="0">Sunday</option>
+              <option value="1">{tr('Monday')}</option>
+              <option value="0">{tr('Sunday')}</option>
             </Select>
           </Field>
         </div>
@@ -445,10 +465,7 @@ function MoneySection() {
   return (
     <div className="overflow-hidden rounded-[--radius-lg] border border-line bg-surface">
       <div className="space-y-4 px-5 py-5">
-        <Field
-          label="Base currency"
-          hint="Totals, budgets and net worth are reported in this currency. Each transaction keeps the currency it happened in."
-        >
+        <Field label={tr('Main currency')}>
           <Select
             value={settings.baseCurrency}
             onChange={(e) => void updateSettings({ baseCurrency: e.target.value })}
@@ -464,10 +481,8 @@ function MoneySection() {
         {usedCurrencies.length > 0 && (
           <div>
             <div className="mb-2 flex items-center justify-between">
-              <h3 className="eyebrow">Exchange rates</h3>
-              <Button size="sm" variant="ghost" icon={<Coins className="size-3.5" />} onClick={() => setEditingRates(true)}>
-                Edit
-              </Button>
+              <h3 className="eyebrow">{tr('Exchange rates')}</h3>
+              <Button size="sm" variant="ghost" icon={<Coins className="size-3.5" />} onClick={() => setEditingRates(true)}>{tr('Edit')}</Button>
             </div>
             <ul className="space-y-1.5">
               {usedCurrencies.map((code) => (
@@ -521,12 +536,12 @@ function RatesEditor({ onClose, currencies }: { onClose: () => void; currencies:
     <Sheet
       open
       onClose={onClose}
-      title="Exchange rates"
+      title={tr('Exchange rates')}
       description={`How many ${settings.baseCurrency} one unit of each currency is worth.`}
       footer={
         <div className="flex gap-2.5">
-          <Button variant="secondary" full onClick={onClose}>Cancel</Button>
-          <Button variant="primary" full onClick={() => void save()}>Save rates</Button>
+          <Button variant="secondary" full onClick={onClose}>{tr('Cancel')}</Button>
+          <Button variant="primary" full onClick={() => void save()}>{tr('Save rates')}</Button>
         </div>
       }
     >
@@ -545,10 +560,7 @@ function RatesEditor({ onClose, currencies }: { onClose: () => void; currencies:
             </div>
           </Field>
         ))}
-        <Notice tone="neutral" icon={<Info className="size-4" />}>
-          Changing a rate affects only transactions recorded from now on. Existing ones keep the
-          rate they were recorded with.
-        </Notice>
+        <Notice tone="neutral" icon={<Info className="size-4" />}>{tr("Changing a rate affects only transactions recorded from now on. Existing ones keep the rate they were recorded with.")}</Notice>
       </div>
     </Sheet>
   );
@@ -563,7 +575,7 @@ function SafeToSpendSection() {
   return (
     <div className="overflow-hidden rounded-[--radius-lg] border border-line bg-surface">
       <div className="space-y-4 px-5 py-5">
-        <Field label="Look ahead" hint="Bills falling due inside this window are reserved.">
+        <Field label={tr('Hold back bills due within')}>
           <Select
             value={String(settings.safeToSpendHorizon)}
             onChange={(e) => void updateSettings({ safeToSpendHorizon: Number(e.target.value) })}
@@ -577,14 +589,10 @@ function SafeToSpendSection() {
         <Toggle
           checked={settings.safeToSpendReserveGoals}
           onChange={(v) => void updateSettings({ safeToSpendReserveGoals: v })}
-          label="Reserve planned goal contributions"
-          description="Holds back what you have said you will put aside this month, until you have put it aside."
+          label={tr('Hold back planned goal savings')}
         />
 
-        <Notice tone="neutral" icon={<Info className="size-4" />}>
-          Safe to Spend is a transparent budgeting calculation, not financial advice. The dashboard
-          always shows the full derivation.
-        </Notice>
+        <Notice tone="neutral" icon={<Info className="size-4" />}>{tr("Safe to Spend is a transparent budgeting calculation, not financial advice. The dashboard always shows the full derivation.")}</Notice>
       </div>
     </div>
   );
@@ -615,14 +623,12 @@ function CategoriesSection() {
   return (
     <div className="overflow-hidden rounded-[--radius-lg] border border-line bg-surface">
       <div className="flex items-center justify-between border-b border-line px-5 py-4">
-        <h2 className="text-[0.9375rem] font-semibold text-ink">Categories</h2>
-        <Button size="sm" variant="secondary" icon={<Plus className="size-3.5" />} onClick={() => setEditing('new')}>
-          Add
-        </Button>
+        <h2 className="text-[0.9375rem] font-semibold text-ink">{tr('Categories')}</h2>
+        <Button size="sm" variant="secondary" icon={<Plus className="size-3.5" />} onClick={() => setEditing('new')}>{tr('Add')}</Button>
       </div>
       <div className="px-5 py-4">
         <Segmented
-          label="Report kind"
+          label={tr('Report kind')}
           size="sm"
           value={kind}
           onChange={setKind}
@@ -658,10 +664,7 @@ function CategoriesSection() {
           </button>
         )}
 
-        <Notice tone="neutral" className="mt-4" icon={<Info className="size-4" />}>
-          Categories are archived rather than deleted, so transactions filed against them keep their
-          history and every past report still adds up.
-        </Notice>
+        <Notice tone="neutral" className="mt-4" icon={<Info className="size-4" />}>{tr("Categories are archived rather than deleted, so transactions filed against them keep their history and every past report still adds up.")}</Notice>
       </div>
 
       {editing && (
@@ -701,7 +704,7 @@ function CategoryRow({
       <span className={cn('flex-1 truncate text-[0.8125rem]', nested ? 'text-ink-2' : 'font-medium text-ink')}>
         {account.name}
       </span>
-      {account.archived && <Badge tone="neutral">Archived</Badge>}
+      {account.archived && <Badge tone="neutral">{tr('Archived')}</Badge>}
       {count > 0 && <span className="tnum text-[0.6875rem] text-ink-4">{count}</span>}
       {/* Always visible: a hover-revealed control cannot be reached on a
           touch screen, and 36px is the smallest comfortable thumb target. */}
@@ -799,20 +802,20 @@ function CategoryEditor({
       }
     >
       <div className="space-y-4 pb-2">
-        <Field label="Name" htmlFor="c-name">
+        <Field label={tr('Name')} htmlFor="c-name">
           <TextInput id="c-name" data-autofocus value={name} onChange={(e) => setName(e.target.value)} />
         </Field>
 
-        <Field label="Sits under" optional hint="Leave empty to make this a top-level category.">
+        <Field label={tr('Parent category')} optional>
           <Select value={parentId} onChange={(e) => setParentId(e.target.value as ID)}>
-            <option value="">Top level</option>
+            <option value="">{tr('Top level')}</option>
             {parents.map((p) => (
               <option key={p.id} value={p.id}>{p.name}</option>
             ))}
           </Select>
         </Field>
 
-        <Field label="Colour">
+        <Field label={tr('Colour')}>
           <div className="flex flex-wrap gap-2">
             {PALETTE.map((c) => (
               <button
@@ -918,7 +921,7 @@ function DataSection() {
         ? `Backup shared — ${formatBackupSize(blob.size)}`
         : `Backup saved — ${formatBackupSize(blob.size)}`,
       {
-        label: 'What is in it?',
+        label: tr('What is in it?'),
         run: () =>
           toast.show(
             how === 'shared' ? 'Sent wherever you chose' : 'Check your downloads folder',
@@ -944,7 +947,7 @@ function DataSection() {
     const periodTxns = txns.filter((t) => t.date >= range.from && t.date <= range.to);
 
     const html = buildReportHtml({
-      title: 'Pocketa statement',
+      title: tr('Pocketa statement'),
       periodLabel: formatDate(range.from, 'month'),
       generatedAt: formatDate(asOf, 'long'),
       baseCurrency: store.settings.baseCurrency,
@@ -994,18 +997,13 @@ function DataSection() {
     <div className="overflow-hidden rounded-[--radius-lg] border border-line bg-surface">
       <div className="space-y-5 px-5 py-5">
         <div>
-          <h3 className="eyebrow mb-2.5">Bring data in</h3>
-          <Button variant="secondary" full icon={<Upload className="size-4" />} onClick={() => setImporting(true)}>
-            Import from CSV
-          </Button>
-          <p className="mt-2 text-xs leading-relaxed text-ink-4">
-            You map the columns and review every row, with likely duplicates flagged, before
-            anything is added.
-          </p>
+          <h3 className="eyebrow mb-2.5">{tr('Bring data in')}</h3>
+          <Button variant="secondary" full icon={<Upload className="size-4" />} onClick={() => setImporting(true)}>{tr('Import from CSV')}</Button>
+          <p className="mt-2 text-xs leading-relaxed text-ink-4">{tr("You map the columns and review every row, with likely duplicates flagged, before anything is added.")}</p>
         </div>
 
         <div>
-          <h3 className="eyebrow mb-2.5">Take data out</h3>
+          <h3 className="eyebrow mb-2.5">{tr('Take data out')}</h3>
           {sharing && (
             <p className="mb-2.5 text-xs leading-relaxed text-ink-3">
               These open your phone&apos;s share sheet, so a file can go straight to Drive,
@@ -1016,32 +1014,22 @@ function DataSection() {
             <Button variant="secondary" icon={<FileText className="size-4" />} onClick={() => void exportCsv()}>
               CSV
             </Button>
-            <Button variant="secondary" icon={<FileSpreadsheet className="size-4" />} onClick={() => void exportExcel()}>
-              Spreadsheet
-            </Button>
-            <Button variant="secondary" icon={<Printer className="size-4" />} onClick={openReport}>
-              PDF report
-            </Button>
+            <Button variant="secondary" icon={<FileSpreadsheet className="size-4" />} onClick={() => void exportExcel()}>{tr('Spreadsheet')}</Button>
+            <Button variant="secondary" icon={<Printer className="size-4" />} onClick={openReport}>{tr('PDF report')}</Button>
           </div>
         </div>
 
         <div>
-          <h3 className="eyebrow mb-2.5">Backup</h3>
+          <h3 className="eyebrow mb-2.5">{tr('Backup')}</h3>
           <div className="grid gap-2 sm:grid-cols-2">
-            <Button variant="secondary" icon={<Download className="size-4" />} onClick={() => void exportBackup(true)}>
-              Save a backup
-            </Button>
-            <Button variant="secondary" icon={<Database className="size-4" />} onClick={() => fileRef.current?.click()}>
-              Restore a backup
-            </Button>
+            <Button variant="secondary" icon={<Download className="size-4" />} onClick={() => void exportBackup(true)}>{tr('Save a backup')}</Button>
+            <Button variant="secondary" icon={<Database className="size-4" />} onClick={() => fileRef.current?.click()}>{tr('Restore a backup')}</Button>
           </div>
           {store.attachments.length > 0 && (
             <button
               onClick={() => void exportBackup(false)}
               className="mt-1 inline-flex min-h-9 items-center text-xs text-accent underline-offset-2 hover:underline"
-            >
-              Save a smaller backup without receipts
-            </button>
+            >{tr('Save a smaller backup without receipts')}</button>
           )}
           <input
             ref={fileRef}
@@ -1067,10 +1055,8 @@ function DataSection() {
         <DataAudit />
 
         <div className="border-t border-line pt-4">
-          <h3 className="eyebrow mb-2.5">Start over</h3>
-          <Button variant="secondary" className="text-negative" icon={<ShieldAlert className="size-4" />} onClick={() => setConfirmReset(true)}>
-            Erase everything on this device
-          </Button>
+          <h3 className="eyebrow mb-2.5">{tr('Start over')}</h3>
+          <Button variant="secondary" className="text-negative" icon={<ShieldAlert className="size-4" />} onClick={() => setConfirmReset(true)}>{tr('Erase everything on this device')}</Button>
         </div>
       </div>
 
@@ -1079,7 +1065,7 @@ function DataSection() {
       <Confirm
         open={confirmRestore != null}
         onClose={() => setConfirmRestore(null)}
-        title="Replace everything with this backup?"
+        title={tr('Replace everything with this backup?')}
         tone="danger"
         confirmLabel="Restore backup"
         requirePhrase="RESTORE"
@@ -1089,10 +1075,7 @@ function DataSection() {
               Every account, transaction, budget, bill, goal and audit record currently on this
               device will be <strong>permanently replaced</strong> by the contents of the backup file.
             </p>
-            <p className="mt-2">
-              This cannot be undone. If you are not certain, cancel and save a backup of what is here
-              first.
-            </p>
+            <p className="mt-2">{tr("This cannot be undone. If you are not certain, cancel and save a backup of what is here first.")}</p>
           </>
         }
         onConfirm={async () => {
@@ -1106,17 +1089,14 @@ function DataSection() {
       <Confirm
         open={confirmReset}
         onClose={() => setConfirmReset(false)}
-        title="Erase everything?"
+        title={tr('Erase everything?')}
         tone="danger"
         confirmLabel="Erase everything"
         requirePhrase="ERASE"
         body={
           <>
-            <p>
-              This deletes every account, transaction, budget, bill, goal and audit record on this
-              device, and cannot be undone.
-            </p>
-            <p className="mt-2">Save a backup first if there is any chance you will want this data back.</p>
+            <p>{tr("This deletes every account, transaction, budget, bill, goal and audit record on this device, and cannot be undone.")}</p>
+            <p className="mt-2">{tr('Save a backup first if there is any chance you will want this data back.')}</p>
           </>
         }
         onConfirm={async () => {
@@ -1156,23 +1136,18 @@ function DataAudit() {
 
   return (
     <div className="border-t border-line pt-4">
-      <h3 className="eyebrow mb-2">Check this ledger</h3>
-      <p className="mb-2.5 text-xs leading-relaxed text-ink-3">
-        Looks for anything pointing at something that is no longer there, and for any transaction
-        whose two sides do not cancel. Nothing is changed by looking.
-      </p>
+      <h3 className="eyebrow mb-2">{tr('Check this ledger')}</h3>
+      <p className="mb-2.5 text-xs leading-relaxed text-ink-3">{tr("Looks for anything pointing at something that is no longer there, and for any transaction whose two sides do not cancel. Nothing is changed by looking.")}</p>
 
       <Button
         size="sm"
         variant="secondary"
         icon={<ShieldCheck className="size-3.5" />}
         onClick={() => setReport(checkIntegrity(dataset))}
-      >
-        Run the check
-      </Button>
+      >{tr('Run the check')}</Button>
 
       {report && report.issues.length === 0 && (
-        <Notice tone="positive" className="mt-2.5" title="Everything adds up">
+        <Notice tone="positive" className="mt-2.5" title={tr('Everything adds up')}>
           <p>
             {report.counts.transactions} transaction
             {report.counts.transactions === 1 ? '' : 's'} across {report.counts.accounts} accounts
@@ -1224,7 +1199,7 @@ function StorageReadout() {
 
   return (
     <div className="border-t border-line pt-4">
-      <h3 className="eyebrow mb-2">Storage</h3>
+      <h3 className="eyebrow mb-2">{tr('Storage')}</h3>
 
       <div className="space-y-2.5">
         <div className="flex items-center justify-between text-[0.8125rem]">
@@ -1236,7 +1211,7 @@ function StorageReadout() {
 
         {estimate && estimate.quota > 0 && (
           <>
-            <Progress value={pct} tone={pct > 0.85 ? 'warn' : 'accent'} label="Storage used" />
+            <Progress value={pct} tone={pct > 0.85 ? 'warn' : 'accent'} label={tr('Storage used')} />
             <p className="text-xs text-ink-3">
               {formatBytes(estimate.used)} of about {formatBytes(estimate.quota)} available to
               Pocketa on this device.
@@ -1245,7 +1220,7 @@ function StorageReadout() {
         )}
 
         {persistent === false && (
-          <Notice tone="warn" title="Storage is not marked as persistent">
+          <Notice tone="warn" title={tr('Storage is not marked as persistent')}>
             <p>
               Browsers may clear a site&apos;s data when a device runs low on space. Granting
               persistence tells this one not to.
@@ -1260,9 +1235,7 @@ function StorageReadout() {
                 if (granted) toast.saved('Storage is now persistent');
                 else toast.warn('The browser declined', 'Keep saving backups instead.');
               }}
-            >
-              Ask the browser to keep this data
-            </Button>
+            >{tr('Ask the browser to keep this data')}</Button>
           </Notice>
         )}
 
@@ -1287,8 +1260,8 @@ function AboutSection() {
   return (
     <div className="overflow-hidden rounded-[--radius-lg] border border-line bg-surface">
       <div className="border-b border-line px-5 py-4">
-        <p className="text-[0.625rem] font-semibold uppercase tracking-widest text-ink-4 mb-0.5">About</p>
-        <h2 className="text-[0.9375rem] font-semibold text-ink">Pocketa</h2>
+        <p className="text-[0.625rem] font-semibold uppercase tracking-widest text-ink-4 mb-0.5">{tr('About')}</p>
+        <h2 className="text-[0.9375rem] font-semibold text-ink">{tr('Pocketa')}</h2>
       </div>
       <div className="px-5 py-5">
         <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -1302,11 +1275,6 @@ function AboutSection() {
           ))}
         </dl>
 
-        <p className="mt-4 text-xs leading-relaxed text-ink-4">
-          Every figure Pocketa shows is summed from your transactions rather than stored, so a
-          balance can never drift from the ledger behind it. Deleting is reversible, editing keeps
-          a record of what changed, and nothing leaves this device unless you sign in.
-        </p>
       </div>
     </div>
   );

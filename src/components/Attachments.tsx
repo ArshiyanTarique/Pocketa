@@ -14,6 +14,7 @@ import {
 import { canShareFiles, deliverFile } from '../data/exchange';
 import type { Attachment, ID } from '../core/types';
 
+import { tr } from '../app/i18n';
 /**
  * Picking receipts.
  *
@@ -116,18 +117,14 @@ export function AttachmentPicker({
           icon={<Camera className="size-3.5" />}
           loading={busy}
           onClick={() => cameraRef.current?.click()}
-        >
-          Photo
-        </Button>
+        >{tr('Photo')}</Button>
         <Button
           type="button"
           size="sm"
           variant="secondary"
           icon={<Paperclip className="size-3.5" />}
           onClick={() => fileRef.current?.click()}
-        >
-          Attach a file
-        </Button>
+        >{tr('Attach a file')}</Button>
       </div>
 
       <input
@@ -225,10 +222,10 @@ export function AttachmentStrip({ attachmentIds }: { attachmentIds: ID[] }) {
       <Confirm
         open={confirmRemove != null}
         onClose={() => setConfirmRemove(null)}
-        title="Remove this receipt?"
+        title={tr('Remove this receipt?')}
         tone="danger"
         confirmLabel="Remove"
-        body="The file is deleted from this device permanently. The transaction itself is not affected."
+        body={tr('The file is deleted from this device permanently. The transaction itself is not affected.')}
         onConfirm={async () => {
           if (confirmRemove) await removeAttachment(confirmRemove.id);
           setConfirmRemove(null);
@@ -283,9 +280,7 @@ function AttachmentViewer({
       footer={
         <div className="flex gap-2.5">
           {onRemove && (
-            <Button variant="secondary" icon={<Trash2 className="size-4" />} onClick={onRemove} className="text-negative">
-              Remove
-            </Button>
+            <Button variant="secondary" icon={<Trash2 className="size-4" />} onClick={onRemove} className="text-negative">{tr('Remove')}</Button>
           )}
           <Button
             variant="secondary"
@@ -301,7 +296,7 @@ function AttachmentViewer({
     >
       <div className="flex min-h-[12rem] items-center justify-center rounded-[--radius] border border-line bg-surface-2 p-2">
         {!url ? (
-          <p className="p-8 text-sm text-ink-3">This file could not be opened.</p>
+          <p className="p-8 text-sm text-ink-3">{tr('This file could not be opened.')}</p>
         ) : isImage(attachment.mimeType) ? (
           <img
             src={url}
@@ -315,9 +310,7 @@ function AttachmentViewer({
               <p className="text-sm text-ink-2">
                 This browser will not preview {attachment.mimeType} files.
               </p>
-              <Button variant="secondary" className="mt-3" onClick={save}>
-                Save a copy to open it
-              </Button>
+              <Button variant="secondary" className="mt-3" onClick={save}>{tr('Save a copy to open it')}</Button>
             </div>
           </object>
         )}

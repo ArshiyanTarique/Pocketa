@@ -9,8 +9,11 @@ import { QuickAdd } from './components/QuickAdd';
 import { useStore } from './store/useStore';
 import { Dashboard } from './screens/Dashboard';
 import { Transactions } from './screens/Transactions';
-import { Me } from './screens/Me';
+import { Plan, More } from './screens/Destinations';
+import { applyFont } from './app/fonts';
+import { setDateLanguage } from './core/dates';
 
+import { tr } from './app/i18n';
 /**
  * The daily screens load with the shell. The rest arrive on first visit —
  * the service worker precaches every chunk, so this costs nothing offline
@@ -80,6 +83,7 @@ function applyLanguage(lang: string) {
   // the rail switches to the opposite side in RTL via CSS.
   r.lang = lang === 'ur' ? 'ur' : 'en';
   r.dir = lang === 'ur' ? 'rtl' : 'ltr';
+  setDateLanguage(lang === 'ur' ? 'ur' : 'en');
 }
 
 
@@ -106,6 +110,7 @@ function Boot() {
   const fontSize = useStore((s) => s.settings.fontSize ?? 'normal');
   const density = useStore((s) => s.settings.density ?? 'comfortable');
   const language = useStore((s) => s.settings.language ?? 'en');
+  const fontFamily = useStore((s) => s.settings.fontFamily ?? 'classic');
   const [quickAdd, setQuickAdd] = React.useState(false);
   const [editingId, setEditingId] = React.useState<string | null>(null);
 
@@ -174,6 +179,11 @@ function Boot() {
     applyLanguage(language);
   }, [language]);
 
+  // Apply the typeface pairing.
+  React.useEffect(() => {
+    applyFont(fontFamily);
+  }, [fontFamily]);
+
   // N adds a transaction from anywhere, the way a ledger app should.
   React.useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -205,15 +215,13 @@ function Boot() {
       <div className="flex min-h-dvh items-center justify-center bg-paper p-6">
         <Card className="max-w-md p-2">
           <EmptyState
-            title="Pocketa could not open your data"
+            title={tr('Pocketa could not open your data')}
             body={
               error ??
               'Your browser blocked local storage. Private browsing and some privacy extensions prevent Pocketa from saving anything.'
             }
             action={
-              <Button variant="primary" onClick={() => void init('local')}>
-                Try again
-              </Button>
+              <Button variant="primary" onClick={() => void init('local')}>{tr('Try again')}</Button>
             }
           />
         </Card>
@@ -262,7 +270,7 @@ function Screen({ onQuickAdd }: { onQuickAdd: (id?: string | null) => void }) {
     case '/':
       return <Dashboard onQuickAdd={() => onQuickAdd(null)} />;
     case '/transactions':
-      return <Transactions onEdit={onQuickAdd} />;
+      return <Transactions onEdit={onQuickAdd} onAdd={() => onQuickAdd(null)} />;
     case '/accounts':
       return <Accounts />;
     case '/budgets':
@@ -279,20 +287,21 @@ function Screen({ onQuickAdd }: { onQuickAdd: (id?: string | null) => void }) {
       return <Analytics />;
     case '/settings':
       return <SettingsScreen />;
+    case '/plan':
+      return <Plan />;
+    case '/more':
     case '/me':
-      return <Me />;
+      return <More />;
     case '/join':
       return <JoinInvite token={route.segment} />;
     default:
       return (
         <Card>
           <EmptyState
-            title="That page does not exist"
-            body="The link may be out of date."
+            title={tr('That page does not exist')}
+            body={tr('The link may be out of date.')}
             action={
-              <Button variant="primary" onClick={() => (window.location.hash = '/')}>
-                Back to dashboard
-              </Button>
+              <Button variant="primary" onClick={() => (window.location.hash = '/')}>{tr('Back to dashboard')}</Button>
             }
           />
         </Card>

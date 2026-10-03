@@ -27,6 +27,7 @@ import {
   withDayOfMonth,
   type CalendarDate,
   type DateRange,
+  getDateLanguage,
 } from './dates';
 import type {
   ID,
@@ -245,6 +246,7 @@ const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Frida
 
 export function describeRecurrence(rec: Recurrence): string {
   const step = Math.max(1, rec.interval || 1);
+  if (getDateLanguage() === 'ur') return describeRecurrenceUr(rec, step);
   switch (rec.frequency) {
     case 'daily':
       return step === 1 ? 'Every day' : `Every ${step} days`;
@@ -262,6 +264,29 @@ export function describeRecurrence(rec: Recurrence): string {
       const day = rec.byMonthDay ?? Number(rec.startDate.slice(8, 10));
       const base = step === 1 ? 'Monthly' : `Every ${step} months`;
       return `${base} on the ${ordinal(day)}`;
+    }
+  }
+}
+
+const WEEKDAYS_UR = ['اتوار', 'پیر', 'منگل', 'بدھ', 'جمعرات', 'جمعہ', 'ہفتہ'];
+
+function describeRecurrenceUr(rec: Recurrence, step: number): string {
+  switch (rec.frequency) {
+    case 'daily':
+    case 'custom_days':
+      return step === 1 ? 'روزانہ' : `ہر ${step} دن`;
+    case 'weekly': {
+      const day = rec.byWeekday != null ? WEEKDAYS_UR[rec.byWeekday] : null;
+      const base = step === 1 ? 'ہر ہفتے' : `ہر ${step} ہفتے`;
+      return day ? `${base} بروز ${day}` : base;
+    }
+    case 'yearly':
+      return step === 1 ? 'ہر سال' : `ہر ${step} سال`;
+    case 'monthly':
+    default: {
+      const day = rec.byMonthDay ?? Number(rec.startDate.slice(8, 10));
+      const base = step === 1 ? 'ماہانہ' : `ہر ${step} مہینے`;
+      return `${base}، ${day} تاریخ کو`;
     }
   }
 }

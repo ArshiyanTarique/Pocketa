@@ -7,7 +7,7 @@ import {
   Trash2,
   X,
   RotateCcw,
-  Link2 } from 'lucide-react';
+  Link2, Plus } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { Badge, Button, EmptyState, Notice, Segmented } from '../ui/primitives';
 import { Money } from '../ui/Money';
@@ -20,6 +20,7 @@ import { AttachmentStrip } from '../components/Attachments';
 import { toast } from '../ui/toast';
 import { cn } from '../ui/cn';
 import { navigate, useRoute } from '../app/router';
+import { tr, useT } from '../app/i18n';
 import { useAccountMap, useFlatCategories, useSpendableAccounts, useToday } from '../app/useLedger';
 import { useStore } from '../store/useStore';
 import { describeTransaction, signedAmount } from '../app/txnDisplay';
@@ -31,7 +32,8 @@ import { TXN_KIND_LABELS, type ID, type Transaction, type TxnKind } from '../cor
 
 type Scope = 'all' | 'expense' | 'income' | 'transfer';
 
-export function Transactions({ onEdit }: { onEdit: (id: string) => void }) {
+export function Transactions({ onEdit, onAdd }: { onEdit: (id: string) => void; onAdd: () => void }) {
+  const t = useT();
   const route = useRoute();
   const accounts = useAccountMap();
   const transactions = useStore((s) => s.transactions);
@@ -127,15 +129,15 @@ export function Transactions({ onEdit }: { onEdit: (id: string) => void }) {
             <TextInput
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search"
+              placeholder={tr('Search')}
               className="pl-9"
-              aria-label="Search transactions"
+              aria-label={tr('Search transactions')}
             />
             {query && (
               <button
                 onClick={() => setQuery('')}
                 className="absolute right-2.5 top-1/2 -translate-y-1/2 text-ink-4 hover:text-ink"
-                aria-label="Clear search"
+                aria-label={tr('Clear search')}
               >
                 <X className="size-4" />
               </button>
@@ -147,64 +149,71 @@ export function Transactions({ onEdit }: { onEdit: (id: string) => void }) {
             onClick={() => setShowFilters((v) => !v)}
             aria-expanded={showFilters}
           >
-            {activeFilters > 0 ? String(activeFilters) : 'Filter'}
+            {activeFilters > 0 ? `${t('Filter')} · ${activeFilters}` : t('Filter')}
+          </Button>
+          <Button variant="primary" icon={<Plus className="size-4" />} onClick={onAdd}>
+            {t('Add')}
           </Button>
         </div>
 
         <div className="flex items-center justify-between gap-3">
           <Segmented
-            label="Filter transactions"
+            label={tr('Filter transactions')}
             size="sm"
             value={scope}
             onChange={setScope}
             options={[
-              { value: 'all', label: 'All' },
-              { value: 'expense', label: 'Out' },
-              { value: 'income', label: 'In' },
-              { value: 'transfer', label: 'Moved' },
+              { value: 'all', label: t('All') },
+              { value: 'expense', label: t('Spent') },
+              { value: 'income', label: t('Earned') },
+              { value: 'transfer', label: t('Transfers') },
             ]}
           />
-          {/* The count carries the totals as its tooltip rather than as a
-              permanent three-figure strip: they restate what is on screen. */}
-          <span
-            className="tnum shrink-0 text-xs text-ink-4"
-            title={hidden ? undefined : `Out ${totals.spent / 100} · In ${totals.earned / 100} · Net ${totals.net / 100}`}
-          >
-            {filtered.length}
+          <span className="tnum shrink-0 text-xs text-ink-4">
+            {filtered.length} {filtered.length === 1 ? t('entry') : t('entries')}
           </span>
         </div>
+
+        {/* What the list in view adds up to — visible, not a tooltip */}
+        {filtered.length > 0 && (
+          <div className="flex flex-wrap gap-x-5 gap-y-1 text-xs text-ink-3">
+            <span>{t('Spent')} <Money value={totals.spent} currency={settings.baseCurrency} hidden={hidden} size="xs" symbol={false} className="font-semibold text-ink" /></span>
+            <span>{t('Earned')} <Money value={totals.earned} currency={settings.baseCurrency} hidden={hidden} size="xs" symbol={false} className="font-semibold text-positive" /></span>
+            <span>{t('Net')} <Money value={totals.net} currency={settings.baseCurrency} hidden={hidden} size="xs" symbol={false} sign="always" tone="auto" className="font-semibold" /></span>
+          </div>
+        )}
 
         <div className="disclose" data-open={showFilters || undefined}>
           <div>
             <div className="space-y-3 border-t border-line pt-3">
               <div className="grid gap-3 sm:grid-cols-2">
-                <Field label="Category">
+                <Field label={tr('Category')}>
                   <Select value={categoryId} onChange={(e) => setCategoryId(e.target.value as ID)}>
-                    <option value="">Any category</option>
-                    <optgroup label="Expenses">
+                    <option value="">{tr('Any category')}</option>
+                    <optgroup label={tr('Expenses')}>
                       {categories.map((c) => (
                         <option key={c.id} value={c.id}>{c.path}</option>
                       ))}
                     </optgroup>
-                    <optgroup label="Income">
+                    <optgroup label={tr('Income')}>
                       {incomeCategories.map((c) => (
                         <option key={c.id} value={c.id}>{c.path}</option>
                       ))}
                     </optgroup>
                   </Select>
                 </Field>
-                <Field label="Account">
+                <Field label={tr('Account')}>
                   <Select value={accountId} onChange={(e) => setAccountId(e.target.value as ID)}>
-                    <option value="">Any account</option>
+                    <option value="">{tr('Any account')}</option>
                     {spendable.map((a) => (
                       <option key={a.id} value={a.id}>{a.name}{a.archived ? ' (archived)' : ''}</option>
                     ))}
                   </Select>
                 </Field>
-                <Field label="From">
+                <Field label={tr('From')}>
                   <DateInput value={from} onChange={setFrom} />
                 </Field>
-                <Field label="To">
+                <Field label={tr('To')}>
                   <DateInput value={to} onChange={setTo} />
                 </Field>
               </div>
@@ -218,9 +227,7 @@ export function Transactions({ onEdit }: { onEdit: (id: string) => void }) {
                     setFrom(r.from);
                     setTo(r.to);
                   }}
-                >
-                  This month
-                </Button>
+                >{tr('This month')}</Button>
                 <Button
                   size="sm"
                   variant={includeVoided ? 'quiet' : 'secondary'}
@@ -239,9 +246,7 @@ export function Transactions({ onEdit }: { onEdit: (id: string) => void }) {
                       setFrom('');
                       setTo('');
                     }}
-                  >
-                    Clear
-                  </Button>
+                  >{tr('Clear')}</Button>
                 )}
               </div>
             </div>
@@ -255,9 +260,7 @@ export function Transactions({ onEdit }: { onEdit: (id: string) => void }) {
           title={query || activeFilters > 0 ? 'Nothing matches' : 'No transactions yet'}
           action={
             query || activeFilters > 0 ? (
-              <Button size="sm" variant="secondary" onClick={() => { setQuery(''); setScope('all'); }}>
-                Clear search
-              </Button>
+              <Button size="sm" variant="secondary" onClick={() => { setQuery(''); setScope('all'); }}>{tr('Clear search')}</Button>
             ) : undefined
           }
         />
@@ -319,9 +322,7 @@ export function Transactions({ onEdit }: { onEdit: (id: string) => void }) {
 
           {list.hasMore && (
             <div ref={list.sentinelRef} className="flex flex-col items-center gap-2 py-2">
-              <Button variant="secondary" size="sm" onClick={list.showMore}>
-                Show more
-              </Button>
+              <Button variant="secondary" size="sm" onClick={list.showMore}>{tr('Show more')}</Button>
               <p className="tnum text-xs text-ink-4">
                 {list.count} of {filtered.length}
               </p>
@@ -382,9 +383,7 @@ export function TransactionDetail({
     <Sheet open onClose={onClose} title={d.title} description={formatDate(txn.date, 'long')} size="lg">
       <div className="space-y-5 pb-2">
         {txn.voided && (
-          <Notice tone="neutral" title="This transaction is deleted">
-            It is excluded from every total but kept so it can be restored.
-          </Notice>
+          <Notice tone="neutral" title={tr('This transaction is deleted')}>{tr('It is excluded from every total but kept so it can be restored.')}</Notice>
         )}
 
         <div className="text-center">
@@ -398,16 +397,16 @@ export function TransactionDetail({
           />
           <div className="mt-2 flex justify-center gap-2">
             <Badge tone="neutral">{d.kindLabel}</Badge>
-            {d.isSplit && <Badge tone="info">Split</Badge>}
-            {d.isShared && <Badge tone="info">Shared</Badge>}
-            {txn.recurrenceId && <Badge tone="accent">Recurring</Badge>}
-            {txn.importBatchId && <Badge tone="neutral">Imported</Badge>}
+            {d.isSplit && <Badge tone="info">{tr('Split')}</Badge>}
+            {d.isShared && <Badge tone="info">{tr('Shared')}</Badge>}
+            {txn.recurrenceId && <Badge tone="accent">{tr('Recurring')}</Badge>}
+            {txn.importBatchId && <Badge tone="neutral">{tr('Imported')}</Badge>}
           </div>
         </div>
 
         {/* The postings, shown plainly — the ledger has nothing to hide. */}
         <section>
-          <h3 className="eyebrow mb-2.5">Where the money moved</h3>
+          <h3 className="eyebrow mb-2.5">{tr('Where the money moved')}</h3>
           <Reckoning
             size="sm"
             currency={txn.currency}
@@ -417,20 +416,18 @@ export function TransactionDetail({
               label: accounts.get(p.accountId)?.name ?? 'Unknown account',
               detail: p.memo ?? undefined,
               amount: p.amount }))}
-            total={{ label: 'Balances to', amount: 0 }}
+            total={{ label: tr('Balances to'), amount: 0 }}
           />
-          <p className="mt-2 text-xs text-ink-4">
-            Every transaction balances to zero. Money is only ever moved, never created.
-          </p>
+          <p className="mt-2 text-xs text-ink-4">{tr('Every transaction balances to zero. Money is only ever moved, never created.')}</p>
         </section>
 
         {(original || linked.length > 0) && (
           <section>
-            <h3 className="eyebrow mb-2.5">Linked</h3>
+            <h3 className="eyebrow mb-2.5">{tr('Linked')}</h3>
             <div className="space-y-1.5">
               {original && (
                 <LinkedRow
-                  label="Refund of"
+                  label={tr('Refund of')}
                   txn={original}
                   onClick={() => navigate(`/transactions/${original.id}`)}
                 />
@@ -438,7 +435,7 @@ export function TransactionDetail({
               {linked.map((r) => (
                 <LinkedRow
                   key={r.id}
-                  label="Refunded"
+                  label={tr('Refunded')}
                   txn={r}
                   onClick={() => navigate(`/transactions/${r.id}`)}
                 />
@@ -480,9 +477,7 @@ export function TransactionDetail({
                 void restoreTransaction(txn.id);
                 toast.saved('Transaction restored');
               }}
-            >
-              Restore
-            </Button>
+            >{tr('Restore')}</Button>
           ) : (
             <>
               <Button
@@ -493,17 +488,13 @@ export function TransactionDetail({
                   onClose();
                   onEdit(txn.id);
                 }}
-              >
-                Edit
-              </Button>
+              >{tr('Edit')}</Button>
               <Button
                 variant="secondary"
                 icon={<Trash2 className="size-4" />}
                 onClick={() => setConfirmDelete(true)}
                 className="text-negative"
-              >
-                Delete
-              </Button>
+              >{tr('Delete')}</Button>
             </>
           )}
         </div>
@@ -512,19 +503,16 @@ export function TransactionDetail({
       <Confirm
         open={confirmDelete}
         onClose={() => setConfirmDelete(false)}
-        title="Delete this transaction?"
+        title={tr('Delete this transaction?')}
         tone="danger"
         confirmLabel="Delete"
         body={
-          <>
-            It will be removed from all balances and totals, but kept in your history so you can
-            restore it later. Nothing is permanently erased.
-          </>
+          <>{tr("It will be removed from all balances and totals, but kept in your history so you can restore it later. Nothing is permanently erased.")}</>
         }
         onConfirm={async () => {
           await voidTransaction(txn.id);
           toast.saved('Transaction deleted', {
-            label: 'Undo',
+            label: tr('Undo'),
             run: () => void restoreTransaction(txn.id) });
           onClose();
         }}
@@ -605,7 +593,7 @@ function AuditTrail({ history, currency }: { history: Op[]; currency: string }) 
                     <li key={change.field} className="flex flex-wrap items-baseline gap-1.5 text-xs">
                       <span className="text-ink-3">{change.label}:</span>
                       <ChangeValue value={change.before} money={change.money} currency={currency} strike />
-                      <span className="text-ink-4" aria-label="changed to">→</span>
+                      <span className="text-ink-4" aria-label={tr('changed to')}>→</span>
                       <ChangeValue value={change.after} money={change.money} currency={currency} />
                     </li>
                   ))}
