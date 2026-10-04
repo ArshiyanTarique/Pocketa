@@ -271,6 +271,14 @@ async function ensurePersistentStorage(database: PocketaDB): Promise<void> {
   }
 }
 
+/** A ledger context that also knows accounts not yet written. */
+function withAccounts(ctx: LedgerContext, extra: readonly Account[]): LedgerContext {
+  if (extra.length === 0) return ctx;
+  const accounts = new Map(ctx.accounts);
+  for (const a of extra) accounts.set(a.id, a);
+  return { ...ctx, accounts };
+}
+
 function db(): PocketaDB {
   return getDb(useStore.getState().namespace);
 }
@@ -1692,6 +1700,9 @@ export const useStore = create<Store>()((set, get) => ({
     }
     const billable = lines.filter((l) => l.amount > 0 && l.trips > 0);
     if (billable.length === 0) return { ok: false, error: 'There is nothing to bill for this period.' };
+    if (!get().accounts.some((a) => a.id === carpool.settleCategoryId)) {
+      return { ok: false, error: 'Choose the category carpool money counts against.' };
+    }
 
     const settlementId = newId('imp');
     const created: Transaction[] = [];
@@ -1736,7 +1747,9 @@ export const useStore = create<Store>()((set, get) => ({
           merchant: carpool.name,
           notes: `${line.trips} trip${line.trips === 1 ? '' : 's'}, ${range.from} to ${range.to}`,
         },
-        get().ledgerContext(),
+        // The receivables held back above must be visible to the builder, or a
+        // rider billed for the first time is "nobody" to it.
+        withAccounts(get().ledgerContext(), newAccounts),
       );
 
       if (!built.ok) {

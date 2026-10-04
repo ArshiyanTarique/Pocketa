@@ -1033,8 +1033,11 @@ function SettleSheet({
   onClose: () => void;
 }) {
   const settleCarpool = useStore((s) => s.settleCarpool);
+  const saveCarpool = useStore((s) => s.saveCarpool);
   const accounts = useStore((s) => s.accounts);
   const people = useStore((s) => s.people);
+  const expenseCategories = useFlatCategories('expense_category');
+  const incomeCategories = useFlatCategories('income_category');
   const settings = useStore((s) => s.settings);
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
@@ -1051,6 +1054,12 @@ function SettleSheet({
   const chosenTotal = chosen.reduce((sum, l) => sum + l.amount, 0);
   const category = accounts.find((a) => a.id === carpool.settleCategoryId);
   const month = formatDate(range.from, 'month');
+  // The carpool's category may be unknown on this device (set elsewhere). Ask
+  // here rather than send the person off to the carpool settings.
+  const categoryChoices = carpool.settleAs === 'income' ? incomeCategories : expenseCategories;
+  const [pickedCategory, setPickedCategory] = React.useState<ID>(
+    () => categoryChoices.find((c) => /transport|fuel/i.test(c.path))?.id ?? categoryChoices[0]?.id ?? '',
+  );
 
   function toggle(id: ID) {
     setPicked((prev) => {
@@ -1065,6 +1074,13 @@ function SettleSheet({
     if (chosen.length === 0) return;
     setBusy(true);
     setError(null);
+    if (!category) {
+      if (!pickedCategory) {
+        setBusy(false);
+        return setError(tr('Choose the category carpool money counts against.'));
+      }
+      await saveCarpool({ ...carpool, settleCategoryId: pickedCategory, updatedAt: nowIso() });
+    }
     const result = await settleCarpool(carpool.id, range, chosen);
     setBusy(false);
     if (!result.ok) return setError(result.error ?? 'Nothing could be billed.');
@@ -1215,11 +1231,21 @@ function SettleSheet({
               })}
             </div>
 
-            <p className="text-xs leading-relaxed text-ink-4">
-              {trf('Billed amounts become money owed to you under People and count against {category}.', {
-                category: category?.name ?? tr('your chosen category'),
-              })}
-            </p>
+            {category ? (
+              <p className="text-xs leading-relaxed text-ink-4">
+                {trf('Billed amounts become money owed to you under People and count against {category}.', {
+                  category: category.name,
+                })}
+              </p>
+            ) : (
+              <Field label={tr('Carpool money counts against')}>
+                <Select value={pickedCategory} onChange={(e) => setPickedCategory(e.target.value as ID)}>
+                  {categoryChoices.map((c) => (
+                    <option key={c.id} value={c.id}>{c.path}</option>
+                  ))}
+                </Select>
+              </Field>
+            )}
           </>
         )}
 
