@@ -67,6 +67,7 @@ import { buildOccurrences } from '../core/recurrence';
 import { budgetRange, previousPeriod, spentInRange } from '../core/projections';
 import { buildCarpoolSettlement } from '../core/ledger';
 import { tripsToSettle, isUntouched, stampBilled } from '../core/carpool';
+import { applyRemoteOp, sweepTombstones } from '../data/applyOps';
 import type { DateRange } from '../core/dates';
 import { checkIntegrity, repairDataset, summariseIssues, type Dataset } from '../data/integrity';
 import {
@@ -400,6 +401,14 @@ export const useStore = create<Store>()((set, get) => ({
             return seed.settings;
           },
         );
+
+        // Rows a peer deleted but an older build wrote back in are removed
+        // before anything is read, so the screens never show them.
+        try {
+          await sweepTombstones(database, await database.ops.toArray());
+        } catch {
+          // A repair that cannot run must never stop the app from opening.
+        }
 
         const [accounts, transactions, budgets, recurrences, overrides, goals, debts, people, imports, ops,
                carpools, carpoolRiders, carpoolTrips, carpoolSettlements, attachments] =
@@ -790,13 +799,22 @@ export const useStore = create<Store>()((set, get) => ({
         accounts: s.accounts.filter((a) => a.id !== id),
         transactions: s.transactions.map((t) => voided.find((v) => v.id === t.id) ?? t),
       }),
-      log: {
-        type: 'account.archived',
-        entity: 'account',
-        entityId: id,
-        summary: `Deleted ${account.name}`,
-        snapshot: { ...account, deleted: true },
-      },
+      log: [
+        {
+          type: 'account.archived',
+          entity: 'account',
+          entityId: id,
+          summary: `Deleted ${account.name}`,
+          snapshot: { ...account, deleted: true },
+        },
+        ...voided.map((t) => ({
+          type: 'txn.voided' as const,
+          entity: 'transaction' as const,
+          entityId: t.id,
+          summary: `Voided with ${account.name}`,
+          snapshot: t,
+        })),
+      ],
     });
   },
 
@@ -914,7 +932,7 @@ export const useStore = create<Store>()((set, get) => ({
         entity: 'occurrence',
         entityId: existing.id,
         summary: `${rec?.name ?? 'Bill'} on ${dueDate}: reset to scheduled`,
-        snapshot: null,
+        snapshot: { ...existing, deleted: true },
       },
     });
   },
@@ -1085,13 +1103,36 @@ export const useStore = create<Store>()((set, get) => ({
         transactions: s.transactions.map((t) => voided.find((v) => v.id === t.id) ?? t),
         debts: s.debts.filter((d) => d.personId !== personId),
       }),
-      log: {
-        type: 'account.archived',
-        entity: 'person',
-        entityId: personId,
-        summary: `Deleted ${person.name}`,
-        snapshot: { ...person, deleted: true },
-      },
+      log: [
+        {
+          type: 'account.archived',
+          entity: 'person',
+          entityId: personId,
+          summary: `Deleted ${person.name}`,
+          snapshot: { ...person, deleted: true },
+        },
+        ...linkedAccounts.map((a) => ({
+          type: 'account.archived' as const,
+          entity: 'account' as const,
+          entityId: a.id,
+          summary: `Deleted ${a.name} with ${person.name}`,
+          snapshot: { ...a, deleted: true },
+        })),
+        ...debtsToRemove.map((d) => ({
+          type: 'debt.amended' as const,
+          entity: 'debt' as const,
+          entityId: d.id,
+          summary: `Removed a debt with ${person.name}`,
+          snapshot: { ...d, deleted: true },
+        })),
+        ...voided.map((t) => ({
+          type: 'txn.voided' as const,
+          entity: 'transaction' as const,
+          entityId: t.id,
+          summary: `Voided with ${person.name}`,
+          snapshot: t,
+        })),
+      ],
     });
   },
 
@@ -1235,43 +1276,17 @@ export const useStore = create<Store>()((set, get) => ({
       await database.ops.bulkPut(fresh);
 
       for (const op of fresh) {
-        if (op.snapshot == null) continue;
         // A peer may be running an older build, or have data of its own that is
         // damaged. Nothing arriving over the wire is trusted into the ledger
-        // without the same checks a restored backup gets.
-        if (!acceptableSnapshot(op)) continue;
-        switch (op.entity) {
-          case 'transaction':
-            await database.transactions.put(op.snapshot as Transaction);
-            break;
-          case 'account':
-            await database.accounts.put(op.snapshot as Account);
-            break;
-          case 'budget':
-            await database.budgets.put(op.snapshot as Budget);
-            break;
-          case 'recurrence':
-            await database.recurrences.put(op.snapshot as Recurrence);
-            break;
-          case 'occurrence':
-            await database.overrides.put(op.snapshot as OccurrenceOverride);
-            break;
-          case 'goal':
-            await database.goals.put(op.snapshot as Goal);
-            break;
-          case 'debt':
-            await database.debts.put(op.snapshot as Debt);
-            break;
-          case 'person':
-            await database.people.put(op.snapshot as Person);
-            break;
-          case 'settings':
-            break; // settings are device-local; never overwritten by a peer
-          default:
-            break;
-        }
+        // without the same checks a restored backup gets. Deletions are
+        // applied as deletions — a put would write the removed row back in.
+        await applyRemoteOp(database, op, acceptableSnapshot);
       }
     });
+
+    // Deletions recorded before every cascaded row was logged (a person's
+    // accounts, an account's transactions) are completed here.
+    await sweepTombstones(database, [...get().ops, ...fresh]);
 
     opState.lamport = Math.max(opState.lamport, highestLamport(fresh));
     await get().init(get().namespace);
