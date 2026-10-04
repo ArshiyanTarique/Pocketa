@@ -29,6 +29,7 @@ export type OpType =
   | 'account.amended'
   | 'account.archived'
   | 'account.unarchived'
+  | 'account.aliased'
   | 'category.created'
   | 'category.amended'
   | 'category.archived'

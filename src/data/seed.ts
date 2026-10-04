@@ -9,6 +9,7 @@
 
 import { nowIso } from '../core/dates';
 import { newId } from '../core/ids';
+import { registerStarters, starterId } from './starters';
 import type { Account, AccountClass, ID, Settings } from '../core/types';
 
 export const SYSTEM_ADJUSTMENT_ID = 'sys_adjustment';
@@ -97,6 +98,7 @@ export function defaultCategories(currency: string): Account[] {
 
   for (const seed of EXPENSE_CATEGORIES) {
     const parent = account('expense_category', seed.name, currency, {
+      id: starterId('expense_category', seed.name),
       icon: seed.icon,
       color: seed.color,
       sortOrder: order++,
@@ -105,6 +107,7 @@ export function defaultCategories(currency: string): Account[] {
     for (const child of seed.children ?? []) {
       out.push(
         account('expense_category', child, currency, {
+          id: starterId('expense_category', child),
           parentId: parent.id,
           icon: seed.icon,
           color: seed.color,
@@ -118,6 +121,7 @@ export function defaultCategories(currency: string): Account[] {
   for (const seed of INCOME_CATEGORIES) {
     out.push(
       account('income_category', seed.name, currency, {
+        id: starterId('income_category', seed.name),
         icon: seed.icon,
         color: seed.color,
         sortOrder: order++,
@@ -131,9 +135,14 @@ export function defaultCategories(currency: string): Account[] {
 /** A starter cash account so the very first transaction has somewhere to go. */
 export function starterAccounts(currency: string): Account[] {
   return [
-    account('cash', 'Cash', currency, { icon: 'wallet', color: '#3FBF7F', sortOrder: 0 }),
+    account('cash', 'Cash', currency, { id: starterId('cash', 'Cash'), icon: 'wallet', color: '#3FBF7F', sortOrder: 0 }),
   ];
 }
+
+// Every device seeds the same ids, so the starters are one set per Pocketa
+// account rather than one per device. starters.ts needs the list to recognise
+// starters that were seeded before this, under random ids.
+registerStarters([...starterAccounts('PKR'), ...defaultCategories('PKR')]);
 
 export function defaultSettings(deviceId: string, currency: string): Settings {
   const ts = nowIso();
