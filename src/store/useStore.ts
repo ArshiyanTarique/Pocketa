@@ -67,7 +67,8 @@ import { buildOccurrences } from '../core/recurrence';
 import { budgetRange, previousPeriod, spentInRange } from '../core/projections';
 import { buildCarpoolSettlement } from '../core/ledger';
 import { tripsToSettle, isUntouched, stampBilled } from '../core/carpool';
-import { applyRemoteOp, backfillCarpool, dropUnusedStarterDuplicates, restampTripsFromSettlements, sweepTombstones } from '../data/applyOps';
+import { applyRemoteOp, backfillCarpool, restampTripsFromSettlements, sweepTombstones } from '../data/applyOps';
+import { normalizeStarters } from '../data/starters';
 import type { DateRange } from '../core/dates';
 import { checkIntegrity, repairDataset, summariseIssues, type Dataset } from '../data/integrity';
 import {
@@ -414,15 +415,16 @@ export const useStore = create<Store>()((set, get) => ({
         // Rows a peer deleted but an older build wrote back in are removed
         // before anything is read, so the screens never show them.
         try {
-          const log = await database.ops.toArray();
-          await sweepTombstones(database, log);
           // Carpool rows a peer sent before they were applied on arrival.
-          await backfillCarpool(database, log, acceptableSnapshot);
+          await backfillCarpool(database, await database.ops.toArray(), acceptableSnapshot);
+          // One Cash and one set of built-in categories per Pocketa account,
+          // whatever ids each device first gave them.
+          const { aliases } = await normalizeStarters(database, settings.deviceId);
+          await sweepTombstones(database, await database.ops.toArray(), aliases);
           await restampTripsFromSettlements(database);
-          // This device's own starter Cash, once a synced Cash has arrived.
-          await dropUnusedStarterDuplicates(database, log);
-        } catch {
+        } catch (err) {
           // A repair that cannot run must never stop the app from opening.
+          console.warn('Pocketa: startup repair skipped', err);
         }
 
         const [accounts, transactions, budgets, recurrences, overrides, goals, debts, people, imports, ops,
@@ -1363,10 +1365,8 @@ export const useStore = create<Store>()((set, get) => ({
       }
     });
 
-    // Deletions recorded before every cascaded row was logged (a person's
-    // accounts, an account's transactions) are completed here.
-    await sweepTombstones(database, [...get().ops, ...fresh]);
-    await restampTripsFromSettlements(database);
+    // init() below runs the startup repairs (deletions, starters, carpool) over
+    // the combined log, so they need no separate pass here.
 
     opState.lamport = Math.max(opState.lamport, highestLamport(fresh));
     await get().init(get().namespace);

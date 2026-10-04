@@ -37,6 +37,7 @@ type EntityTable =
 
 /** The local table an op's entity lives in, or null for ops that change no row here. */
 export function tableFor(op: Pick<Op, 'entity' | 'type'>): EntityTable | null {
+  if (op.type === 'account.aliased') return null; // bookkeeping, not a row
   switch (op.entity) {
     case 'transaction':
       return 'transactions';
@@ -105,14 +106,20 @@ export async function applyRemoteOp(
  * deleting device performed. Idempotent: a clean device finds nothing to do.
  * Returns how many rows it changed.
  */
-export async function sweepTombstones(database: PocketaDB, ops: readonly Op[]): Promise<number> {
+export async function sweepTombstones(
+  database: PocketaDB,
+  ops: readonly Op[],
+  aliases: ReadonlyMap<ID, ID> = new Map(),
+): Promise<number> {
   // The last op per entity decides. A row deleted and later recreated under the
-  // same id (a restore) stays.
+  // same id (a restore) stays. Ops naming a starter's old id count for its
+  // shared id: deleting Cash on one device deletes the one Cash everywhere.
   const latest = new Map<string, Op>();
   for (const op of [...ops].sort(compareOps)) {
     const name = tableFor(op);
     if (!name || !op.entityId) continue;
-    latest.set(`${name}:${op.entityId}`, op);
+    const id = aliases.get(op.entityId) ?? op.entityId;
+    latest.set(`${name}:${id}`, { ...op, entityId: id });
   }
 
   const doomed = new Map<EntityTable, Set<ID>>();
@@ -244,47 +251,4 @@ export async function restampTripsFromSettlements(database: PocketaDB): Promise<
     }
   });
   return stamped;
-}
-
-// ---------------------------------------------------------------------------
-// Starter-account duplicates
-//
-// Every device seeds its own "Cash" account with its own id, and seeding is
-// not logged. Once another device's Cash arrives through sync, this device has
-// two. The local one is removed only when it is provably disposable: never
-// logged (so no other device knows it), referenced by nothing, and shadowed by
-// a same-named account of the same kind that the log does know.
-// ---------------------------------------------------------------------------
-
-const STARTER_CLASSES: ReadonlySet<string> = new Set(['cash', 'bank', 'ewallet', 'savings', 'credit_card']);
-
-export async function dropUnusedStarterDuplicates(database: PocketaDB, ops: readonly Op[]): Promise<number> {
-  const logged = new Set(ops.filter((o) => o.entity === 'account').map((o) => o.entityId));
-  const key = (a: Account) => `${a.class}:${a.name.trim().toLowerCase()}`;
-
-  let removed = 0;
-  await database.transaction('rw', database.tables, async () => {
-    const accounts = (await database.accounts.toArray()).filter((a) => STARTER_CLASSES.has(a.class) && !a.system);
-    const syncedKeys = new Set(accounts.filter((a) => logged.has(a.id) && !a.archived).map(key));
-    const candidates = accounts.filter((a) => !logged.has(a.id) && syncedKeys.has(key(a)));
-    if (candidates.length === 0) return;
-
-    const used = new Set<ID>();
-    for (const t of await database.transactions.toArray()) for (const p of t.postings) used.add(p.accountId);
-    for (const r of await database.recurrences.toArray()) {
-      used.add(r.accountId);
-      if (r.toAccountId) used.add(r.toAccountId);
-    }
-    for (const b of await database.budgets.toArray()) if (b.rolloverAccountId) used.add(b.rolloverAccountId);
-    for (const g of await database.goals.toArray()) used.add(g.accountId);
-    for (const d of await database.debts.toArray()) used.add(d.accountId);
-    for (const i of await database.imports.toArray()) if (i.accountId) used.add(i.accountId);
-
-    const disposable = candidates.filter((a) => !used.has(a.id)).map((a) => a.id);
-    if (disposable.length > 0) {
-      await database.accounts.bulkDelete(disposable);
-      removed = disposable.length;
-    }
-  });
-  return removed;
 }
