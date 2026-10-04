@@ -67,6 +67,7 @@ import { buildOccurrences } from '../core/recurrence';
 import { budgetRange, previousPeriod, spentInRange } from '../core/projections';
 import { buildCarpoolSettlement } from '../core/ledger';
 import { tripsToSettle, isUntouched, stampBilled } from '../core/carpool';
+import { applyRemoteOp, backfillCarpool, restampTripsFromSettlements, sweepTombstones } from '../data/applyOps';
 import type { DateRange } from '../core/dates';
 import { checkIntegrity, repairDataset, summariseIssues, type Dataset } from '../data/integrity';
 import {
@@ -156,6 +157,7 @@ export interface StoreActions {
 
   markOpsSynced(ids: ID[], seqByopId: Record<ID, number>): Promise<void>;
   ingestRemoteOps(ops: Op[]): Promise<void>;
+  repairCarpoolCharges(): Promise<number>;
 
   addAttachment(file: File, txnId: ID | null): Promise<{ ok: boolean; id?: ID; error?: string }>;
   linkAttachments(txnId: ID, attachmentIds: ID[]): Promise<void>;
@@ -401,6 +403,18 @@ export const useStore = create<Store>()((set, get) => ({
           },
         );
 
+        // Rows a peer deleted but an older build wrote back in are removed
+        // before anything is read, so the screens never show them.
+        try {
+          const log = await database.ops.toArray();
+          await sweepTombstones(database, log);
+          // Carpool rows a peer sent before they were applied on arrival.
+          await backfillCarpool(database, log, acceptableSnapshot);
+          await restampTripsFromSettlements(database);
+        } catch {
+          // A repair that cannot run must never stop the app from opening.
+        }
+
         const [accounts, transactions, budgets, recurrences, overrides, goals, debts, people, imports, ops,
                carpools, carpoolRiders, carpoolTrips, carpoolSettlements, attachments] =
           await Promise.all([
@@ -457,6 +471,13 @@ export const useStore = create<Store>()((set, get) => ({
           ops,
           settings,
         });
+
+        // Charges a peer's billing created but never sent (older builds).
+        try {
+          await get().repairCarpoolCharges();
+        } catch {
+          // Never block a boot on a repair.
+        }
       } catch (err) {
         set({
           status: 'error',
@@ -790,13 +811,22 @@ export const useStore = create<Store>()((set, get) => ({
         accounts: s.accounts.filter((a) => a.id !== id),
         transactions: s.transactions.map((t) => voided.find((v) => v.id === t.id) ?? t),
       }),
-      log: {
-        type: 'account.archived',
-        entity: 'account',
-        entityId: id,
-        summary: `Deleted ${account.name}`,
-        snapshot: { ...account, deleted: true },
-      },
+      log: [
+        {
+          type: 'account.archived',
+          entity: 'account',
+          entityId: id,
+          summary: `Deleted ${account.name}`,
+          snapshot: { ...account, deleted: true },
+        },
+        ...voided.map((t) => ({
+          type: 'txn.voided' as const,
+          entity: 'transaction' as const,
+          entityId: t.id,
+          summary: `Voided with ${account.name}`,
+          snapshot: t,
+        })),
+      ],
     });
   },
 
@@ -914,7 +944,7 @@ export const useStore = create<Store>()((set, get) => ({
         entity: 'occurrence',
         entityId: existing.id,
         summary: `${rec?.name ?? 'Bill'} on ${dueDate}: reset to scheduled`,
-        snapshot: null,
+        snapshot: { ...existing, deleted: true },
       },
     });
   },
@@ -1085,13 +1115,36 @@ export const useStore = create<Store>()((set, get) => ({
         transactions: s.transactions.map((t) => voided.find((v) => v.id === t.id) ?? t),
         debts: s.debts.filter((d) => d.personId !== personId),
       }),
-      log: {
-        type: 'account.archived',
-        entity: 'person',
-        entityId: personId,
-        summary: `Deleted ${person.name}`,
-        snapshot: { ...person, deleted: true },
-      },
+      log: [
+        {
+          type: 'account.archived',
+          entity: 'person',
+          entityId: personId,
+          summary: `Deleted ${person.name}`,
+          snapshot: { ...person, deleted: true },
+        },
+        ...linkedAccounts.map((a) => ({
+          type: 'account.archived' as const,
+          entity: 'account' as const,
+          entityId: a.id,
+          summary: `Deleted ${a.name} with ${person.name}`,
+          snapshot: { ...a, deleted: true },
+        })),
+        ...debtsToRemove.map((d) => ({
+          type: 'debt.amended' as const,
+          entity: 'debt' as const,
+          entityId: d.id,
+          summary: `Removed a debt with ${person.name}`,
+          snapshot: { ...d, deleted: true },
+        })),
+        ...voided.map((t) => ({
+          type: 'txn.voided' as const,
+          entity: 'transaction' as const,
+          entityId: t.id,
+          summary: `Voided with ${person.name}`,
+          snapshot: t,
+        })),
+      ],
     });
   },
 
@@ -1217,6 +1270,63 @@ export const useStore = create<Store>()((set, get) => ({
    * Accept ops authored elsewhere. Snapshots carry the full entity, so applying
    * a peer's change is a put rather than a replay of the whole log.
    */
+  /**
+   * Recreate carpool charges a settlement names but this device does not have.
+   *
+   * Billing used to log the settlement without the charge transactions it
+   * created, so other devices knew a rider had been billed but not that they
+   * owed anything. The settlement keeps each charge's id, amount, rider and
+   * period, which is everything needed to rebuild it under the same id. Written
+   * locally without a new op: the billing device already has the original.
+   */
+  async repairCarpoolCharges() {
+    const state = get();
+    const have = new Set(state.transactions.map((t) => t.id));
+    const rebuilt: Transaction[] = [];
+    for (const settlement of state.carpoolSettlements) {
+      const carpool = state.carpools.find((c) => c.id === settlement.carpoolId);
+      if (!carpool?.settleCategoryId) continue;
+      for (const line of settlement.lines) {
+        if (!line.txnId || have.has(line.txnId)) continue;
+        const receivable = state.accounts.find((a) => a.class === 'receivable' && a.personId === line.personId);
+        if (!receivable) continue;
+        // The category may be one this device has under a different id (built-in
+        // categories are seeded per device). What the rider owes is carried by
+        // the receivable leg, so a stand-in lets the charge be rebuilt exactly.
+        const ctx = state.ledgerContext();
+        const categoryId = carpool.settleCategoryId;
+        const accounts = new Map(ctx.accounts);
+        if (!accounts.has(categoryId)) {
+          accounts.set(categoryId, {
+            ...receivable,
+            id: categoryId,
+            class: carpool.settleAs === 'income' ? 'income_category' : 'expense_category',
+            name: carpool.name,
+            personId: null,
+          });
+        }
+        const built = buildCarpoolSettlement(
+          {
+            date: settlement.to,
+            personAccountId: receivable.id,
+            categoryId,
+            amount: line.amount,
+            merchant: carpool.name,
+            notes: `${line.trips} trip${line.trips === 1 ? '' : 's'}, ${settlement.from} to ${settlement.to}`,
+          },
+          { ...ctx, accounts, allowArchived: true },
+        );
+        if (!built.ok) continue;
+        rebuilt.push({ ...built.value, id: line.txnId, createdAt: settlement.createdAt, updatedAt: settlement.createdAt });
+        have.add(line.txnId);
+      }
+    }
+    if (rebuilt.length === 0) return 0;
+    await db().transactions.bulkPut(rebuilt);
+    set((s) => ({ transactions: [...s.transactions, ...rebuilt] }));
+    return rebuilt.length;
+  },
+
   async ingestRemoteOps(remote) {
     if (remote.length === 0) return;
     const known = new Set(get().ops.map((o) => o.id));
@@ -1235,43 +1345,18 @@ export const useStore = create<Store>()((set, get) => ({
       await database.ops.bulkPut(fresh);
 
       for (const op of fresh) {
-        if (op.snapshot == null) continue;
         // A peer may be running an older build, or have data of its own that is
         // damaged. Nothing arriving over the wire is trusted into the ledger
-        // without the same checks a restored backup gets.
-        if (!acceptableSnapshot(op)) continue;
-        switch (op.entity) {
-          case 'transaction':
-            await database.transactions.put(op.snapshot as Transaction);
-            break;
-          case 'account':
-            await database.accounts.put(op.snapshot as Account);
-            break;
-          case 'budget':
-            await database.budgets.put(op.snapshot as Budget);
-            break;
-          case 'recurrence':
-            await database.recurrences.put(op.snapshot as Recurrence);
-            break;
-          case 'occurrence':
-            await database.overrides.put(op.snapshot as OccurrenceOverride);
-            break;
-          case 'goal':
-            await database.goals.put(op.snapshot as Goal);
-            break;
-          case 'debt':
-            await database.debts.put(op.snapshot as Debt);
-            break;
-          case 'person':
-            await database.people.put(op.snapshot as Person);
-            break;
-          case 'settings':
-            break; // settings are device-local; never overwritten by a peer
-          default:
-            break;
-        }
+        // without the same checks a restored backup gets. Deletions are
+        // applied as deletions — a put would write the removed row back in.
+        await applyRemoteOp(database, op, acceptableSnapshot);
       }
     });
+
+    // Deletions recorded before every cascaded row was logged (a person's
+    // accounts, an account's transactions) are completed here.
+    await sweepTombstones(database, [...get().ops, ...fresh]);
+    await restampTripsFromSettlements(database);
 
     opState.lamport = Math.max(opState.lamport, highestLamport(fresh));
     await get().init(get().namespace);
@@ -1698,6 +1783,22 @@ export const useStore = create<Store>()((set, get) => ({
           entityId: a.id,
           summary: `Created ${a.name}`,
           snapshot: a,
+        })),
+        // The charges and the billed stamps travel too; without them another
+        // device sees the settlement but nobody owing anything.
+        ...created.map((t) => ({
+          type: 'txn.created' as const,
+          entity: 'transaction' as const,
+          entityId: t.id,
+          summary: `Carpool charge: ${t.merchant ?? carpool.name}`,
+          snapshot: t,
+        })),
+        ...covered.map((t) => ({
+          type: 'carpool.trip_amended' as const,
+          entity: 'carpool_trip' as const,
+          entityId: t.id,
+          summary: `Billed the trip on ${t.date}`,
+          snapshot: t,
         })),
         {
           type: 'carpool.settled' as const,
