@@ -67,7 +67,7 @@ import { buildOccurrences } from '../core/recurrence';
 import { budgetRange, previousPeriod, spentInRange } from '../core/projections';
 import { buildCarpoolSettlement } from '../core/ledger';
 import { tripsToSettle, isUntouched, stampBilled } from '../core/carpool';
-import { applyRemoteOp, backfillCarpool, restampTripsFromSettlements, sweepTombstones } from '../data/applyOps';
+import { applyRemoteOp, backfillCarpool, dropUnusedStarterDuplicates, restampTripsFromSettlements, sweepTombstones } from '../data/applyOps';
 import type { DateRange } from '../core/dates';
 import { checkIntegrity, repairDataset, summariseIssues, type Dataset } from '../data/integrity';
 import {
@@ -411,6 +411,8 @@ export const useStore = create<Store>()((set, get) => ({
           // Carpool rows a peer sent before they were applied on arrival.
           await backfillCarpool(database, log, acceptableSnapshot);
           await restampTripsFromSettlements(database);
+          // This device's own starter Cash, once a synced Cash has arrived.
+          await dropUnusedStarterDuplicates(database, log);
         } catch {
           // A repair that cannot run must never stop the app from opening.
         }
