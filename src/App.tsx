@@ -53,11 +53,15 @@ const ACCENTS: Record<AccentColor, {
 export function applyAccent(color: string) {
   const p = ACCENTS[color as AccentColor] ?? ACCENTS.blue;
   const r = document.documentElement;
-  r.style.setProperty('--accent',       p.accent);
-  r.style.setProperty('--accent-fill',  p.fill);
-  r.style.setProperty('--accent-hover', p.hover);
-  r.style.setProperty('--accent-soft',  p.soft);
-  r.style.setProperty('--accent-ink',   p.ink);
+  // The palette goes in as raw values; index.css turns them into the live
+  // --accent tokens per theme. Setting --accent-soft here directly would pin
+  // the light-theme tint in dark mode, where it sits pale under white text.
+  r.style.setProperty('--user-accent',       p.accent);
+  r.style.setProperty('--user-accent-fill',  p.fill);
+  r.style.setProperty('--user-accent-hover', p.hover);
+  r.style.setProperty('--user-accent-soft',  p.soft);
+  r.style.setProperty('--user-accent-ink',   p.ink);
+  r.dataset.accent = color;
 }
 
 function applyFontSize(size: string) {

@@ -579,7 +579,7 @@ function AuditTrail({ history, currency }: { history: Op[]; currency: string }) 
           {history.map((op) => (
             <li key={op.id} className="relative">
               <span
-                className="absolute -start-[1.3125rem] top-1.5 size-2 rounded-full bg-line-strong ring-4 ring-[--surface]"
+                className="absolute -start-[1.3125rem] top-1.5 size-2 rounded-full bg-line-strong ring-4 ring-(--surface)"
                 aria-hidden="true"
               />
               <p className="text-[0.8125rem] text-ink">{op.summary}</p>

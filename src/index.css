@@ -762,3 +762,27 @@ html {
 :root[data-density='compact'] main :where(.gap-4, .gap-5, .gap-6) { gap: 0.75rem; }
 :root[data-density='compact'] main .density-row { min-height: var(--density-row-h); }
 :root[data-density='compact'] main .pb-28 { padding-bottom: 5rem; }
+
+/* ---------------------------------------------------------------------------
+   Chosen accent colour. Unlayered so it wins over the theme defaults.
+   Light: the palette as designed. Dark: the tint becomes a translucent wash of
+   the fill (so text on it stays the light ink), and accent text is lifted
+   towards white so it reads on a dark surface.
+   --------------------------------------------------------------------------- */
+:root[data-accent] {
+  --accent: var(--user-accent);
+  --accent-fill: var(--user-accent-fill);
+  --accent-hover: var(--user-accent-hover);
+  --accent-soft: var(--user-accent-soft);
+  --accent-ink: var(--user-accent-ink);
+}
+:root[data-accent][data-theme='dark'] {
+  --accent: color-mix(in srgb, var(--user-accent-fill) 62%, white);
+  --accent-soft: color-mix(in srgb, var(--user-accent-fill) 24%, transparent);
+}
+@media (prefers-color-scheme: dark) {
+  :root[data-accent]:not([data-theme='light']) {
+    --accent: color-mix(in srgb, var(--user-accent-fill) 62%, white);
+    --accent-soft: color-mix(in srgb, var(--user-accent-fill) 24%, transparent);
+  }
+}

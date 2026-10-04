@@ -756,7 +756,7 @@ function LogTripSheet({
                   <span
                     className={cn(
                       'flex size-5 shrink-0 items-center justify-center rounded-[7px] border',
-                      active ? 'border-accent-fill bg-accent-fill text-[--accent-ink]' : 'border-line-strong',
+                      active ? 'border-accent-fill bg-accent-fill text-(--accent-ink)' : 'border-line-strong',
                     )}
                     aria-hidden="true"
                   >
@@ -1147,7 +1147,7 @@ function SettleSheet({
           <Button variant="secondary" full onClick={onClose}>{tr('Cancel')}</Button>
           <Button variant="primary" full loading={busy} onClick={() => void bill()} disabled={chosen.length === 0}>
             {tr('Bill')}
-            <Money value={chosenTotal} currency={settings.baseCurrency} size="sm" symbol={false} className="text-[--accent-ink]" />
+            <Money value={chosenTotal} currency={settings.baseCurrency} size="sm" symbol={false} className="text-(--accent-ink)" />
           </Button>
         </div>
       }
@@ -1188,7 +1188,7 @@ function SettleSheet({
                     <span
                       className={cn(
                         'flex size-5 shrink-0 items-center justify-center rounded-[7px] border',
-                        active ? 'border-accent-fill bg-accent-fill text-[--accent-ink]' : 'border-line-strong',
+                        active ? 'border-accent-fill bg-accent-fill text-(--accent-ink)' : 'border-line-strong',
                       )}
                       aria-hidden="true"
                     >
