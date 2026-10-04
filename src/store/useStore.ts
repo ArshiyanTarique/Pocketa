@@ -67,7 +67,7 @@ import { buildOccurrences } from '../core/recurrence';
 import { budgetRange, previousPeriod, spentInRange } from '../core/projections';
 import { buildCarpoolSettlement } from '../core/ledger';
 import { tripsToSettle, isUntouched, stampBilled } from '../core/carpool';
-import { applyRemoteOp, sweepTombstones } from '../data/applyOps';
+import { applyRemoteOp, backfillCarpool, restampTripsFromSettlements, sweepTombstones } from '../data/applyOps';
 import type { DateRange } from '../core/dates';
 import { checkIntegrity, repairDataset, summariseIssues, type Dataset } from '../data/integrity';
 import {
@@ -157,6 +157,7 @@ export interface StoreActions {
 
   markOpsSynced(ids: ID[], seqByopId: Record<ID, number>): Promise<void>;
   ingestRemoteOps(ops: Op[]): Promise<void>;
+  repairCarpoolCharges(): Promise<number>;
 
   addAttachment(file: File, txnId: ID | null): Promise<{ ok: boolean; id?: ID; error?: string }>;
   linkAttachments(txnId: ID, attachmentIds: ID[]): Promise<void>;
@@ -405,7 +406,11 @@ export const useStore = create<Store>()((set, get) => ({
         // Rows a peer deleted but an older build wrote back in are removed
         // before anything is read, so the screens never show them.
         try {
-          await sweepTombstones(database, await database.ops.toArray());
+          const log = await database.ops.toArray();
+          await sweepTombstones(database, log);
+          // Carpool rows a peer sent before they were applied on arrival.
+          await backfillCarpool(database, log, acceptableSnapshot);
+          await restampTripsFromSettlements(database);
         } catch {
           // A repair that cannot run must never stop the app from opening.
         }
@@ -466,6 +471,13 @@ export const useStore = create<Store>()((set, get) => ({
           ops,
           settings,
         });
+
+        // Charges a peer's billing created but never sent (older builds).
+        try {
+          await get().repairCarpoolCharges();
+        } catch {
+          // Never block a boot on a repair.
+        }
       } catch (err) {
         set({
           status: 'error',
@@ -1258,6 +1270,63 @@ export const useStore = create<Store>()((set, get) => ({
    * Accept ops authored elsewhere. Snapshots carry the full entity, so applying
    * a peer's change is a put rather than a replay of the whole log.
    */
+  /**
+   * Recreate carpool charges a settlement names but this device does not have.
+   *
+   * Billing used to log the settlement without the charge transactions it
+   * created, so other devices knew a rider had been billed but not that they
+   * owed anything. The settlement keeps each charge's id, amount, rider and
+   * period, which is everything needed to rebuild it under the same id. Written
+   * locally without a new op: the billing device already has the original.
+   */
+  async repairCarpoolCharges() {
+    const state = get();
+    const have = new Set(state.transactions.map((t) => t.id));
+    const rebuilt: Transaction[] = [];
+    for (const settlement of state.carpoolSettlements) {
+      const carpool = state.carpools.find((c) => c.id === settlement.carpoolId);
+      if (!carpool?.settleCategoryId) continue;
+      for (const line of settlement.lines) {
+        if (!line.txnId || have.has(line.txnId)) continue;
+        const receivable = state.accounts.find((a) => a.class === 'receivable' && a.personId === line.personId);
+        if (!receivable) continue;
+        // The category may be one this device has under a different id (built-in
+        // categories are seeded per device). What the rider owes is carried by
+        // the receivable leg, so a stand-in lets the charge be rebuilt exactly.
+        const ctx = state.ledgerContext();
+        const categoryId = carpool.settleCategoryId;
+        const accounts = new Map(ctx.accounts);
+        if (!accounts.has(categoryId)) {
+          accounts.set(categoryId, {
+            ...receivable,
+            id: categoryId,
+            class: carpool.settleAs === 'income' ? 'income_category' : 'expense_category',
+            name: carpool.name,
+            personId: null,
+          });
+        }
+        const built = buildCarpoolSettlement(
+          {
+            date: settlement.to,
+            personAccountId: receivable.id,
+            categoryId,
+            amount: line.amount,
+            merchant: carpool.name,
+            notes: `${line.trips} trip${line.trips === 1 ? '' : 's'}, ${settlement.from} to ${settlement.to}`,
+          },
+          { ...ctx, accounts, allowArchived: true },
+        );
+        if (!built.ok) continue;
+        rebuilt.push({ ...built.value, id: line.txnId, createdAt: settlement.createdAt, updatedAt: settlement.createdAt });
+        have.add(line.txnId);
+      }
+    }
+    if (rebuilt.length === 0) return 0;
+    await db().transactions.bulkPut(rebuilt);
+    set((s) => ({ transactions: [...s.transactions, ...rebuilt] }));
+    return rebuilt.length;
+  },
+
   async ingestRemoteOps(remote) {
     if (remote.length === 0) return;
     const known = new Set(get().ops.map((o) => o.id));
@@ -1287,6 +1356,7 @@ export const useStore = create<Store>()((set, get) => ({
     // Deletions recorded before every cascaded row was logged (a person's
     // accounts, an account's transactions) are completed here.
     await sweepTombstones(database, [...get().ops, ...fresh]);
+    await restampTripsFromSettlements(database);
 
     opState.lamport = Math.max(opState.lamport, highestLamport(fresh));
     await get().init(get().namespace);
@@ -1713,6 +1783,22 @@ export const useStore = create<Store>()((set, get) => ({
           entityId: a.id,
           summary: `Created ${a.name}`,
           snapshot: a,
+        })),
+        // The charges and the billed stamps travel too; without them another
+        // device sees the settlement but nobody owing anything.
+        ...created.map((t) => ({
+          type: 'txn.created' as const,
+          entity: 'transaction' as const,
+          entityId: t.id,
+          summary: `Carpool charge: ${t.merchant ?? carpool.name}`,
+          snapshot: t,
+        })),
+        ...covered.map((t) => ({
+          type: 'carpool.trip_amended' as const,
+          entity: 'carpool_trip' as const,
+          entityId: t.id,
+          summary: `Billed the trip on ${t.date}`,
+          snapshot: t,
         })),
         {
           type: 'carpool.settled' as const,

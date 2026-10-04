@@ -18,6 +18,7 @@ import type { Table } from 'dexie';
 import { nowIso } from '../core/dates';
 import type { Account, Debt, ID, Transaction } from '../core/types';
 import { compareOps, type Op } from './oplog';
+import { isBilledFor, stampBilled } from '../core/carpool';
 import type { PocketaDB } from './db';
 
 type EntityTable =
@@ -160,4 +161,87 @@ export async function sweepTombstones(database: PocketaDB, ops: readonly Op[]): 
     }
   });
   return changed;
+}
+
+// ---------------------------------------------------------------------------
+// Carpool backfill
+//
+// Until carpool ops were applied on arrival, a device stored every carpool op
+// it pulled but wrote none of the rows. Those ops are never pulled again (the
+// device already has them), so the rows have to be rebuilt from the log it
+// holds. Only missing rows are filled: a row that exists is never overwritten,
+// because billing stamped trips without logging the stamp, and the last op on
+// such a trip is older than the row.
+// ---------------------------------------------------------------------------
+
+const CARPOOL_TABLES: ReadonlySet<EntityTable> = new Set([
+  'carpools',
+  'carpoolRiders',
+  'carpoolTrips',
+  'carpoolSettlements',
+]);
+
+/** Write carpool rows the log knows about but this device never stored. Returns rows added. */
+export async function backfillCarpool(
+  database: PocketaDB,
+  ops: readonly Op[],
+  accept: (op: Op) => boolean,
+): Promise<number> {
+  const latest = new Map<string, Op>();
+  for (const op of [...ops].sort(compareOps)) {
+    const name = tableFor(op);
+    if (!name || !CARPOOL_TABLES.has(name) || !op.entityId) continue;
+    latest.set(`${name}:${op.entityId}`, op);
+  }
+  if (latest.size === 0) return 0;
+
+  let added = 0;
+  await database.transaction(
+    'rw',
+    [database.carpools, database.carpoolRiders, database.carpoolTrips, database.carpoolSettlements],
+    async () => {
+      for (const [key, op] of latest) {
+        if (isDeletion(op) || op.snapshot == null || !accept(op)) continue;
+        const t = table(database, key.slice(0, key.indexOf(':')) as EntityTable);
+        if (await t.get(op.entityId)) continue;
+        await t.put(op.snapshot as { id: ID });
+        added++;
+      }
+    },
+  );
+  return added;
+}
+
+/**
+ * Re-mark trips as billed from the settlements that billed them.
+ *
+ * Billing used to stamp trips without logging the stamp, so on other devices
+ * those trips looked unbilled. A settlement records its carpool, date range,
+ * riders and the moment it was made; a trip it covered is one in that range,
+ * logged before it, ridden by a rider it billed. Only ever adds a stamp.
+ */
+export async function restampTripsFromSettlements(database: PocketaDB): Promise<number> {
+  const settlements = (await database.carpoolSettlements.toArray()).sort((a, b) =>
+    a.createdAt.localeCompare(b.createdAt),
+  );
+  if (settlements.length === 0) return 0;
+
+  let stamped = 0;
+  await database.transaction('rw', database.carpoolTrips, database.carpoolSettlements, async () => {
+    const trips = new Map((await database.carpoolTrips.toArray()).map((t) => [t.id, t]));
+    for (const s of settlements) {
+      const riderIds = s.lines.map((l) => l.riderId);
+      for (const trip of trips.values()) {
+        if (trip.carpoolId !== s.carpoolId || trip.date < s.from || trip.date > s.to) continue;
+        if (trip.createdAt > s.createdAt) continue;
+        const missing = riderIds.filter((id) => trip.riderIds.includes(id) && !isBilledFor(trip, id));
+        if (missing.length === 0) continue;
+        const next = { ...stampBilled(trip, missing, trip.settlementId ?? s.id), updatedAt: trip.updatedAt };
+        trips.set(trip.id, next);
+        await database.carpoolTrips.put(next);
+        stamped++;
+      }
+    }
+  });
+  return stamped;
 }
