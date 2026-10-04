@@ -593,4 +593,6 @@ export const UR_SCREENS: Record<string, string> = {
   "{n} trips": "{n} سفر",
   "Billed amounts become money owed to you under People and count against {category}.": "بل کی رقم لوگ میں آپ کو واجب الادا رقم بن جاتی ہے اور {category} میں شمار ہوتی ہے۔",
   "your chosen category": "آپ کا منتخب زمرہ",
+  "Choose the category carpool money counts against.": "وہ زمرہ چنیں جس میں کارپول کی رقم شمار ہو۔",
+  "Carpool money counts against": "کارپول کی رقم شمار ہوگی",
 };
