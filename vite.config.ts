@@ -39,7 +39,7 @@ export default defineConfig({
         navigateFallback: 'index.html',
         runtimeCaching: [
           {
-            // The two webfonts are the app's only external request. Caching them
+            // Google Fonts are the app's only external request. Caching them
             // means the second launch looks identical with no network at all,
             // rather than silently dropping to a system fallback.
             urlPattern: /^https:\/\/fonts\.googleapis\.com\//,
@@ -51,7 +51,7 @@ export default defineConfig({
             handler: 'CacheFirst',
             options: {
               cacheName: 'google-fonts-files',
-              expiration: { maxEntries: 24, maxAgeSeconds: 60 * 60 * 24 * 365 },
+              expiration: { maxEntries: 120, maxAgeSeconds: 60 * 60 * 24 * 365 },
               cacheableResponse: { statuses: [0, 200] },
             },
           },

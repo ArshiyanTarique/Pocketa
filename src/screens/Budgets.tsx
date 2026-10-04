@@ -487,7 +487,7 @@ function CategoryToggle({
       <span
         className={cn(
           'flex size-4 shrink-0 items-center justify-center rounded-[5px] border',
-          checked ? 'border-accent-fill bg-accent-fill text-[--accent-ink]' : 'border-line-strong',
+          checked ? 'border-accent-fill bg-accent-fill text-(--accent-ink)' : 'border-line-strong',
         )}
         aria-hidden="true"
       >

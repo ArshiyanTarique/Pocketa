@@ -66,7 +66,7 @@ import { buildSeed, findCategoryByName, SYSTEM_ADJUSTMENT_ID, SYSTEM_OPENING_ID 
 import { buildOccurrences } from '../core/recurrence';
 import { budgetRange, previousPeriod, spentInRange } from '../core/projections';
 import { buildCarpoolSettlement } from '../core/ledger';
-import { tripsToSettle } from '../core/carpool';
+import { tripsToSettle, isUntouched, stampBilled } from '../core/carpool';
 import type { DateRange } from '../core/dates';
 import { checkIntegrity, repairDataset, summariseIssues, type Dataset } from '../data/integrity';
 import {
@@ -1551,7 +1551,7 @@ export const useStore = create<Store>()((set, get) => ({
 
   async logTrip(trip, isNew = false) {
     const before = get().carpoolTrips.find((t) => t.id === trip.id);
-    if (before?.settlementId) {
+    if (before && !isUntouched(before)) {
       // A billed trip is history. Editing it would silently change an invoice
       // the rider has already been given.
       return;
@@ -1573,7 +1573,7 @@ export const useStore = create<Store>()((set, get) => ({
 
   async deleteTrip(id) {
     const trip = get().carpoolTrips.find((t) => t.id === id);
-    if (!trip || trip.settlementId) return; // never unpick a billed trip
+    if (!trip || !isUntouched(trip)) return; // never unpick a billed trip
     await commit({
       write: (d) => d.carpoolTrips.delete(id),
       apply: (s) => ({ carpoolTrips: s.carpoolTrips.filter((t) => t.id !== id) }),
@@ -1660,8 +1660,9 @@ export const useStore = create<Store>()((set, get) => ({
     }
 
     // Stamp the covered trips so a second run cannot bill them again.
-    const covered = tripsToSettle(get().carpoolTrips, range, billable.map((l) => l.riderId))
-      .map((t) => ({ ...t, settlementId, updatedAt: nowIso() }));
+    const billedIds = billable.map((l) => l.riderId);
+    const covered = tripsToSettle(get().carpoolTrips, range, billedIds)
+      .map((t) => ({ ...stampBilled(t, billedIds, settlementId), updatedAt: nowIso() }));
 
     const settlement: CarpoolSettlement = {
       id: settlementId,

@@ -223,7 +223,7 @@ type ButtonSize = 'sm' | 'md' | 'lg';
 
 const BUTTON_VARIANTS: Record<ButtonVariant, string> = {
   primary:
-    'bg-accent-fill text-[--accent-ink] hover:bg-accent-hover active:scale-[0.985] shadow-[0_1px_3px_rgb(0_0_0/0.12),0_4px_12px_-2px_rgb(0_0_0/0.08)]',
+    'bg-accent-fill text-(--accent-ink) hover:bg-accent-hover active:scale-[0.985] shadow-[0_1px_3px_rgb(0_0_0/0.12),0_4px_12px_-2px_rgb(0_0_0/0.08)]',
   secondary:
     'bg-surface text-ink border border-line-strong hover:bg-surface-2 active:scale-[0.985]',
   ghost: 'text-ink-3 hover:text-ink hover:bg-surface-2',

@@ -166,7 +166,7 @@ function Sidebar({ current, onQuickAdd }: { current: string; onQuickAdd: () => v
           onClick={onQuickAdd}
           className={cn(
             'flex h-10 w-full items-center rounded-[--radius] bg-accent-fill ps-[0.725rem]',
-            'text-[0.875rem] font-semibold text-[--accent-ink] transition-all hover:bg-accent-hover active:scale-[0.98]',
+            'text-[0.875rem] font-semibold text-(--accent-ink) transition-all hover:bg-accent-hover active:scale-[0.98]',
             'shadow-[0_1px_3px_rgb(0_0_0/0.12),0_4px_12px_-2px_rgb(0_0_0/0.08)]',
           )}
         >
@@ -334,18 +334,20 @@ function TabBar({ current, onQuickAdd }: { current: string; onQuickAdd: () => vo
           <TabLink key={item.path} item={item} active={tabActive(item, current)} />
         ))}
 
+        {/* Raised above the bar with a surface-coloured ring, so the button
+            reads as a separate object whatever the accent colour is. */}
         <button
           onClick={onQuickAdd}
-          className="flex flex-col items-center justify-center gap-0.5 text-[0.6875rem] font-semibold text-accent"
+          className="flex flex-col items-center justify-end gap-0.5 self-stretch pb-1.5 text-[0.6875rem] font-semibold text-ink"
         >
           <span
             className={cn(
-              'flex size-9 items-center justify-center rounded-full bg-accent-fill text-[--accent-ink]',
-              'shadow-[var(--shadow-md)] transition-transform active:scale-90',
+              '-mt-6 flex size-12 items-center justify-center rounded-full bg-accent-fill text-(--accent-ink)',
+              'ring-4 ring-surface shadow-[0_6px_16px_-4px_rgb(0_0_0/0.45)] transition-transform active:scale-90',
             )}
             aria-hidden="true"
           >
-            <Plus className="size-5" strokeWidth={2.5} />
+            <Plus className="size-6 drop-shadow-[0_1px_1px_rgb(0_0_0/0.35)]" strokeWidth={3} />
           </span>
           {t('Add')}
         </button>

@@ -619,7 +619,7 @@ function FirstRun({ onQuickAdd }: { onQuickAdd: () => void }) {
                 className="card group flex h-full w-full flex-col gap-4 px-5 py-5 text-left transition-transform hover:-translate-y-px"
               >
                 <span className="flex items-center justify-between">
-                  <span className="tnum flex size-8 items-center justify-center rounded-full bg-accent-fill text-xs font-semibold text-[--accent-ink]">
+                  <span className="tnum flex size-8 items-center justify-center rounded-full bg-accent-fill text-xs font-semibold text-(--accent-ink)">
                     {i + 1}
                   </span>
                   <Icon className="size-4.5 text-ink-3 transition-colors group-hover:text-accent" />

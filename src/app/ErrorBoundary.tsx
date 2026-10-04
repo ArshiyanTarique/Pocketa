@@ -107,7 +107,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
           <div className="mt-5 space-y-2">
             <button
               onClick={this.retry}
-              className="w-full rounded-[11px] bg-accent-fill px-4 py-2.5 text-sm font-semibold text-[--accent-ink] transition-colors hover:bg-accent-hover"
+              className="w-full rounded-[11px] bg-accent-fill px-4 py-2.5 text-sm font-semibold text-(--accent-ink) transition-colors hover:bg-accent-hover"
             >
               Try this screen again
             </button>

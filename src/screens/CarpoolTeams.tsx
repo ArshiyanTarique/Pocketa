@@ -318,7 +318,7 @@ function TeamCard({
               <span
                 key={membership.id}
                 title={profile?.displayName ?? 'Member'}
-                className="flex size-7 items-center justify-center rounded-full border-2 border-[--surface] bg-accent-soft text-[0.625rem] font-semibold text-accent"
+                className="flex size-7 items-center justify-center rounded-full border-2 border-(--surface) bg-accent-soft text-[0.625rem] font-semibold text-accent"
               >
                 {(profile?.displayName ?? '?').slice(0, 1).toUpperCase()}
               </span>
@@ -824,7 +824,7 @@ function LogRideSheet({ team, onClose }: { team: CarpoolTeam; onClose: () => voi
                     <span
                       className={cn(
                         'flex size-5 items-center justify-center rounded-[6px] border',
-                        on ? 'border-accent-fill bg-accent-fill text-[--accent-ink]' : 'border-line-strong',
+                        on ? 'border-accent-fill bg-accent-fill text-(--accent-ink)' : 'border-line-strong',
                       )}
                     >
                       {on && <Check className="size-3" strokeWidth={3} />}

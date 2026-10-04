@@ -10,6 +10,8 @@ import {
   lastRiders,
   lifetimeValue,
   unbilledTrips,
+  stampBilled,
+  isUntouched,
 } from './carpool';
 import { monthRange } from './dates';
 import { rs } from '../test/fixtures';
@@ -176,6 +178,48 @@ describe('billing never charges twice', () => {
 
   it('lists unbilled trips', () => {
     expect(unbilledTrips(trips).map((t) => t.id)).toEqual(['tp_2', 'tp_3']);
+  });
+});
+
+describe('billing some riders and not others', () => {
+  const range = monthRange('2026-09-15');
+  const shared = [trip('tp_1', '2026-09-01', ['rd_sara', 'rd_bilal']), trip('tp_2', '2026-09-02', ['rd_sara', 'rd_bilal'])];
+  const bill = (ts: CarpoolTrip[], ids: string[], st: string) => {
+    const covered = new Set(tripsToSettle(ts, range, ids).map((t) => t.id));
+    return ts.map((t) => (covered.has(t.id) ? stampBilled(t, ids, st) : t));
+  };
+  const tally = (ts: CarpoolTrip[]) =>
+    Object.fromEntries(tallyRiders({ carpool, riders: riders.slice(0, 2), trips: ts, people, range }).map((r) => [r.name, r]));
+
+  it('keeps an unbilled rider owing on a shared trip', () => {
+    const after = bill(shared, ['rd_sara'], 'st_1');
+    const t = tally(after);
+    expect(t.Sara.unbilledTrips).toBe(0);
+    expect(t.Sara.billedAmount).toBe(rs(300));
+    expect(t.Bilal.unbilledTrips).toBe(2);
+    expect(t.Bilal.amount).toBe(rs(300));
+  });
+
+  it('bills the rest later without charging the first rider again', () => {
+    const later = bill(bill(shared, ['rd_sara'], 'st_1'), ['rd_bilal'], 'st_2');
+    const t = tally(later);
+    expect(t.Sara.amount).toBe(0);
+    expect(t.Bilal.amount).toBe(0);
+    expect(t.Bilal.billedAmount).toBe(rs(300));
+    expect(tripsToSettle(later, range, ['rd_sara', 'rd_bilal'])).toEqual([]);
+  });
+
+  it('locks a trip once anyone on it is billed', () => {
+    const after = bill(shared, ['rd_sara'], 'st_1');
+    expect(after.every((t) => !isUntouched(t))).toBe(true);
+    expect(unbilledTrips(after)).toHaveLength(2); // Bilal still owes on both
+  });
+
+  it('treats an old billed trip with no rider list as billed for everyone', () => {
+    const legacy = [trip('tp_x', '2026-09-05', ['rd_sara', 'rd_bilal'], {}, 'st_old')];
+    const t = tally(legacy);
+    expect(t.Sara.amount).toBe(0);
+    expect(t.Bilal.amount).toBe(0);
   });
 });
 

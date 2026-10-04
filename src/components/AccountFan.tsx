@@ -296,11 +296,11 @@ export function NoteCard({
           hidden={hidden}
           size={size === 'lg' ? 'xl' : 'lg'}
           weight="semibold"
-          className="block text-[--note-ink]"
+          className="block text-(--note-ink)"
         />
         {credit != null && (
           <p className="mt-0.5 text-[0.6875rem] font-medium opacity-80">
-            {hidden ? '••••' : <><Money value={credit} currency={account.currency} size="xs" symbol={false} className="text-[--note-ink]" /> {tr('available')}</>}
+            {hidden ? '••••' : <><Money value={credit} currency={account.currency} size="xs" symbol={false} className="text-(--note-ink)" /> {tr('available')}</>}
           </p>
         )}
       </div>

@@ -825,7 +825,7 @@ function CategoryEditor({
                 aria-label={`Colour ${c}`}
                 className={cn(
                   'size-8 rounded-[10px] transition-transform',
-                  color === c ? 'ring-2 ring-ink ring-offset-2 ring-offset-[--surface]' : 'hover:scale-110',
+                  color === c ? 'ring-2 ring-ink ring-offset-2 ring-offset-(--surface)' : 'hover:scale-110',
                 )}
                 style={{ background: c }}
               />

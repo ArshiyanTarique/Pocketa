@@ -371,7 +371,7 @@ export function ImportWizard({ onClose }: { onClose: () => void }) {
                       onChange={(e) =>
                         setRows(rows.map((r) => (r.index === row.index ? { ...r, include: e.target.checked } : r)))
                       }
-                      className="size-4 shrink-0 accent-[--accent]"
+                      className="size-4 shrink-0 accent-(--accent)"
                     />
                     <span className="tnum w-[5.5rem] shrink-0 text-xs text-ink-3">{row.date ?? '—'}</span>
                     <span className="min-w-0 flex-1 truncate text-[0.8125rem] text-ink">
