@@ -5,6 +5,7 @@ import {
   ChevronLeft,
   ChevronRight,
   CircleAlert,
+  MessageCircle,
   Plus,
   Receipt,
   Settings2,
@@ -14,7 +15,6 @@ import {
 } from 'lucide-react';
 import { Card, CardHeader, Badge, Button, EmptyState, Notice, Dot, IconButton, SectionLabel } from '../ui/primitives';
 import { Money, Num } from '../ui/Money';
-import { Reckoning } from '../ui/Reckoning';
 import { Sheet, Confirm } from '../ui/Sheet';
 import { AmountInput, DateInput, Field, Select, TextInput, Textarea, Toggle } from '../ui/fields';
 import { toast } from '../ui/toast';
@@ -28,6 +28,8 @@ import {
   lifetimeValue,
   rateForRider,
   rateOnTrip,
+  hasUnbilledRider,
+  isUntouched,
   settlementLines,
   summarisePeriod,
   tripsInRange,
@@ -38,7 +40,7 @@ import { newId } from '../core/ids';
 import { CarpoolTeams } from './CarpoolTeams';
 import type { Carpool as CarpoolType, CarpoolRider, CarpoolTrip, ID, Person } from '../core/types';
 
-import { tr } from '../app/i18n';
+import { tr, trf } from '../app/i18n';
 /**
  * One carpool, one screen.
  *
@@ -488,10 +490,10 @@ function TripRow({
     <li>
       <button
         onClick={onEdit}
-        disabled={trip.settlementId != null}
+        disabled={!isUntouched(trip)}
         className={cn(
           'flex w-full items-center gap-3 px-5 py-2.5 text-left transition-colors',
-          trip.settlementId ? 'cursor-default opacity-70' : 'hover:bg-surface-2',
+          !isUntouched(trip) ? 'cursor-default opacity-70' : 'hover:bg-surface-2',
         )}
       >
         <div className="flex size-9 shrink-0 flex-col items-center justify-center rounded-[11px] bg-surface-2 text-ink-2">
@@ -506,7 +508,7 @@ function TripRow({
             <span className="truncate text-sm text-ink">
               {names.length > 0 ? names.join(', ') : <span className="text-ink-4">{tr('Nobody rode')}</span>}
             </span>
-            {trip.settlementId && <Badge tone="positive">{tr('Billed')}</Badge>}
+            {!isUntouched(trip) && <Badge tone="positive">{hasUnbilledRider(trip) ? tr('Partly billed') : tr('Billed')}</Badge>}
           </div>
           <p className="mt-0.5 text-xs text-ink-3">{formatRelativeDay(trip.date, asOf)}</p>
         </div>
@@ -705,6 +707,7 @@ function LogTripSheet({
         ),
         note: note.trim() || null,
         settlementId: existing?.settlementId ?? null,
+        billedRiderIds: existing?.billedRiderIds,
         createdAt: existing?.createdAt ?? nowIso(),
         updatedAt: nowIso(),
       },
@@ -986,6 +989,38 @@ function RiderSheet({
 // Billing
 // ===========================================================================
 
+/** Digits only, with a leading country code, for a wa.me link. Local 03xx numbers become 923xx. */
+function whatsappNumber(contact: string | null | undefined): string | null {
+  if (!contact) return null;
+  let digits = contact.replace(/[^\d+]/g, '');
+  if (digits.startsWith('+')) digits = digits.slice(1);
+  else if (digits.startsWith('00')) digits = digits.slice(2);
+  else if (digits.startsWith('0')) digits = `92${digits.slice(1)}`;
+  return /^\d{8,15}$/.test(digits) ? digits : null;
+}
+
+function billMessage(opts: {
+  name: string;
+  carpool: string;
+  month: string;
+  trips: number;
+  rate: number;
+  amount: number;
+  currency: string;
+}): string {
+  const money = (v: number) => `${opts.currency === 'PKR' ? 'Rs.' : opts.currency} ${(v / 100).toLocaleString('en-PK', { maximumFractionDigits: 2 })}`;
+  return [
+    `Assalam o Alaikum ${opts.name},`,
+    ``,
+    `*${opts.carpool} — ${opts.month}*`,
+    `Trips: ${opts.trips}`,
+    `Fare per trip: ${money(opts.rate)}`,
+    `*Total: ${money(opts.amount)}*`,
+    ``,
+    `JazakAllah!`,
+  ].join('\n');
+}
+
 function SettleSheet({
   carpool,
   summary,
@@ -999,56 +1034,120 @@ function SettleSheet({
 }) {
   const settleCarpool = useStore((s) => s.settleCarpool);
   const accounts = useStore((s) => s.accounts);
+  const people = useStore((s) => s.people);
   const settings = useStore((s) => s.settings);
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
-  // Captured at settle time: once the store updates, the lines are empty by
-  // definition, so reading them afterwards would report nothing was billed.
-  const [done, setDone] = React.useState<{ riders: number; total: number } | null>(null);
 
   const lines = React.useMemo(() => settlementLines(summary.riders), [summary.riders]);
-  const category = accounts.find((a) => a.id === carpool.settleCategoryId);
+  // Everyone is ticked to start with; untick anyone you are not billing yet.
+  const [picked, setPicked] = React.useState<Set<ID>>(() => new Set(lines.map((l) => l.riderId)));
+  // Captured at settle time: once the store updates, the lines are empty by
+  // definition, so reading them afterwards would report nothing was billed.
+  const [done, setDone] = React.useState<typeof lines | null>(null);
+  const [sent, setSent] = React.useState<Set<ID>>(new Set());
 
-  async function bill() {
-    setBusy(true);
-    setError(null);
-    const result = await settleCarpool(carpool.id, range, lines);
-    setBusy(false);
-    if (!result.ok) return setError(result.error ?? 'Nothing could be billed.');
-    setDone({ riders: lines.length, total: result.settlement?.total ?? 0 });
-    toast.saved(`Billed ${lines.length} rider${lines.length === 1 ? '' : 's'}`, {
-      label: tr('See debts'),
-      run: () => navigate('/debts'),
+  const chosen = lines.filter((l) => picked.has(l.riderId));
+  const chosenTotal = chosen.reduce((sum, l) => sum + l.amount, 0);
+  const category = accounts.find((a) => a.id === carpool.settleCategoryId);
+  const month = formatDate(range.from, 'month');
+
+  function toggle(id: ID) {
+    setPicked((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
     });
   }
 
+  async function bill() {
+    if (chosen.length === 0) return;
+    setBusy(true);
+    setError(null);
+    const result = await settleCarpool(carpool.id, range, chosen);
+    setBusy(false);
+    if (!result.ok) return setError(result.error ?? 'Nothing could be billed.');
+    setDone(chosen);
+    toast.saved(trf(chosen.length === 1 ? 'Billed {n} rider' : 'Billed {n} riders', { n: chosen.length }));
+  }
+
+  function sendOnWhatsApp(line: (typeof lines)[number]) {
+    const person = people.find((p) => p.id === line.personId);
+    const rider = summary.riders.find((r) => r.rider.id === line.riderId);
+    const text = billMessage({
+      name: line.personName,
+      carpool: carpool.name,
+      month,
+      trips: line.trips,
+      rate: rider?.rate ?? carpool.ratePerTrip,
+      amount: line.amount,
+      currency: carpool.currency,
+    });
+    const number = whatsappNumber(person?.contact);
+    const url = `https://wa.me/${number ?? ''}?text=${encodeURIComponent(text)}`;
+    window.open(url, '_blank', 'noopener');
+    setSent((prev) => new Set(prev).add(line.riderId));
+  }
+
+  // --- After billing: send each person their bill -------------------------
   if (done != null) {
     return (
-      <Sheet open onClose={onClose} title={tr('Billed')} footer={<Button variant="primary" full onClick={onClose}>{tr('Done')}</Button>}>
-        <div className="py-2">
-          <EmptyState
-            icon={<Check className="size-5 text-positive" />}
-            title={`${done.riders} rider${done.riders === 1 ? '' : 's'} billed`}
-            body={tr('Each person now owes you this amount. Record their payment on the Debts screen when it arrives.')}
-            action={
-              <Button variant="secondary" onClick={() => { onClose(); navigate('/debts'); }}>{tr('Open Debts')}</Button>
-            }
-          />
+      <Sheet
+        open
+        onClose={onClose}
+        title={trf('Billed {month}', { month })}
+        footer={<Button variant="primary" full onClick={onClose}>{tr('Done')}</Button>}
+      >
+        <div className="space-y-3 pb-2">
+          <p className="text-sm font-semibold text-ink">{tr('Send each bill on WhatsApp')}</p>
+          <ul className="divide-y divide-line rounded-[--radius] border border-line">
+            {done.map((line) => {
+              const person = people.find((p) => p.id === line.personId);
+              const hasNumber = whatsappNumber(person?.contact) != null;
+              const wasSent = sent.has(line.riderId);
+              return (
+                <li key={line.riderId} className="flex items-center gap-3 px-3 py-2.5">
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-semibold text-ink">{line.personName}</span>
+                    <span className="block text-xs text-ink-3">
+                      {trf(line.trips === 1 ? '{n} trip' : '{n} trips', { n: line.trips })}
+                      {!hasNumber && ` · ${tr('no number saved — you pick the chat')}`}
+                    </span>
+                  </span>
+                  <Money value={line.amount} currency={carpool.currency} size="sm" weight="semibold" symbol={false} />
+                  <Button
+                    size="sm"
+                    variant={wasSent ? 'secondary' : 'primary'}
+                    icon={wasSent ? <Check className="size-3.5" /> : <MessageCircle className="size-3.5" />}
+                    onClick={() => sendOnWhatsApp(line)}
+                  >
+                    {wasSent ? tr('Sent') : tr('WhatsApp')}
+                  </Button>
+                </li>
+              );
+            })}
+          </ul>
+          <Button variant="ghost" size="sm" onClick={() => { onClose(); navigate('/debts'); }}>
+            {tr('Open People')}
+          </Button>
         </div>
       </Sheet>
     );
   }
 
+  // --- Choose who to bill ----------------------------------------------------
   return (
     <Sheet
       open
       onClose={onClose}
-      title={`Bill ${formatDate(range.from, 'month')}`}
-      description={tr('Check the totals before anyone is charged. Nothing is recorded until you confirm.')}
+      title={trf('Bill {month}', { month })}
       footer={
         <div className="flex gap-2.5">
           <Button variant="secondary" full onClick={onClose}>{tr('Cancel')}</Button>
-          <Button variant="primary" full loading={busy} onClick={() => void bill()} disabled={lines.length === 0}>{tr('Bill')}<Money value={summary.outstanding} currency={settings.baseCurrency} size="sm" symbol={false} className="text-[--accent-ink]" />
+          <Button variant="primary" full loading={busy} onClick={() => void bill()} disabled={chosen.length === 0}>
+            {tr('Bill')}
+            <Money value={chosenTotal} currency={settings.baseCurrency} size="sm" symbol={false} className="text-[--accent-ink]" />
           </Button>
         </div>
       }
@@ -1058,31 +1157,68 @@ function SettleSheet({
           <Notice tone="neutral" icon={<CircleAlert className="size-4" />}>{tr('Every trip this month has already been billed.')}</Notice>
         ) : (
           <>
-            <Reckoning
-              currency={settings.baseCurrency}
-              showSigns={false}
-              lines={lines.map((l) => ({
-                key: l.riderId,
-                label: l.personName,
-                detail: `${l.trips} trip${l.trips === 1 ? '' : 's'}`,
-                amount: l.amount,
-              }))}
-              total={{ label: tr('Total to collect'), amount: summary.outstanding }}
-            />
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-semibold text-ink">{tr('Who are you billing?')}</p>
+              <Button
+                size="sm"
+                variant="quiet"
+                onClick={() =>
+                  setPicked(chosen.length === lines.length ? new Set() : new Set(lines.map((l) => l.riderId)))
+                }
+              >
+                {chosen.length === lines.length ? tr('Select none') : tr('Select all')}
+              </Button>
+            </div>
 
-            <Notice tone="neutral">
-              Each person's total becomes money they owe you, tracked under Debts. The collected
-              money is recorded against{' '}
-              <span className="font-medium text-ink">{category?.name ?? 'your chosen category'}</span>
-              {carpool.settleAs === 'recovery'
-                ? ', reducing what that category has really cost you.'
-                : ' as income.'}
-            </Notice>
+            <div className="space-y-1.5">
+              {lines.map((line) => {
+                const active = picked.has(line.riderId);
+                return (
+                  <button
+                    key={line.riderId}
+                    type="button"
+                    role="checkbox"
+                    aria-checked={active}
+                    onClick={() => toggle(line.riderId)}
+                    className={cn(
+                      'flex w-full items-center gap-3 rounded-[12px] border px-3 py-2.5 text-left transition-all',
+                      active ? 'border-accent bg-accent-soft' : 'border-line bg-surface hover:border-line-strong',
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        'flex size-5 shrink-0 items-center justify-center rounded-[7px] border',
+                        active ? 'border-accent-fill bg-accent-fill text-[--accent-ink]' : 'border-line-strong',
+                      )}
+                      aria-hidden="true"
+                    >
+                      {active && <Check className="size-3.5" strokeWidth={3} />}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className={cn('block truncate text-sm', active ? 'font-semibold text-ink' : 'text-ink-2')}>
+                        {line.personName}
+                      </span>
+                      <span className="block text-xs text-ink-3">
+                        {trf(line.trips === 1 ? '{n} trip' : '{n} trips', { n: line.trips })}
+                      </span>
+                    </span>
+                    <Money
+                      value={line.amount}
+                      currency={settings.baseCurrency}
+                      size="sm"
+                      weight="semibold"
+                      symbol={false}
+                      tone={active ? 'default' : 'muted'}
+                    />
+                  </button>
+                );
+              })}
+            </div>
 
             <p className="text-xs leading-relaxed text-ink-4">
-              {summary.unbilledTripCount === 1
-                ? 'The trip covered here is marked as billed, so it can never be charged a second time.'
-                : `The ${summary.unbilledTripCount} trips covered here are marked as billed, so they can never be charged a second time.`}
+              {trf('Billed amounts become money owed to you under People and count against {category}.', {
+                category: category?.name ?? tr('your chosen category'),
+              })}
             </p>
           </>
         )}

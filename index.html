@@ -20,15 +20,7 @@
 
     <title>Pocketa</title>
 
-    <script>
-      // Apply the saved theme before first paint so the app never flashes light.
-      try {
-        var t = localStorage.getItem('pocketa.theme');
-        if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
-      } catch (e) {
-        /* private mode — fall through to system preference */
-      }
-    </script>
+    <script src="/theme-boot.js"></script>
   </head>
   <body>
     <div id="root"></div>

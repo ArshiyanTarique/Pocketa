@@ -45,8 +45,29 @@ export function tripsInRange(trips: readonly CarpoolTrip[], range: DateRange): C
     .sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt));
 }
 
+/** Riders already billed for a trip. A billed trip with no list was billed for everyone. */
+export function billedRidersOf(trip: CarpoolTrip): ID[] {
+  if (trip.settlementId == null) return [];
+  return trip.billedRiderIds ?? trip.riderIds;
+}
+
+export function isBilledFor(trip: CarpoolTrip, riderId: ID): boolean {
+  return billedRidersOf(trip).includes(riderId);
+}
+
+/** True when nobody on the trip has been billed — the only state in which it may be edited. */
+export function isUntouched(trip: CarpoolTrip): boolean {
+  return billedRidersOf(trip).length === 0;
+}
+
+/** True when someone on the trip still owes for it. */
+export function hasUnbilledRider(trip: CarpoolTrip): boolean {
+  const billed = billedRidersOf(trip);
+  return trip.riderIds.some((id) => !billed.includes(id));
+}
+
 export function unbilledTrips(trips: readonly CarpoolTrip[]): CarpoolTrip[] {
-  return trips.filter((t) => t.settlementId == null);
+  return trips.filter(hasUnbilledRider);
 }
 
 export interface RiderTally {
@@ -88,8 +109,8 @@ export function tallyRiders(input: TallyInput): RiderTally[] {
   const tallies = input.riders.map((rider) => {
     const rate = rateForRider(rider, input.carpool);
     const ridden = inRange.filter((t) => t.riderIds.includes(rider.id));
-    const unbilled = ridden.filter((t) => t.settlementId == null);
-    const billed = ridden.filter((t) => t.settlementId != null);
+    const unbilled = ridden.filter((t) => !isBilledFor(t, rider.id));
+    const billed = ridden.filter((t) => isBilledFor(t, rider.id));
 
     return {
       rider,
@@ -126,7 +147,7 @@ export function summarisePeriod(input: TallyInput): PeriodSummary {
   return {
     range: input.range,
     tripCount: inRange.length,
-    unbilledTripCount: inRange.filter((t) => t.settlementId == null).length,
+    unbilledTripCount: inRange.filter(hasUnbilledRider).length,
     outstanding: sumMinor(riders.map((r) => r.amount)),
     billed: sumMinor(riders.map((r) => r.billedAmount)),
     riders,
@@ -147,15 +168,22 @@ export function settlementLines(tallies: readonly RiderTally[]): CarpoolSettleme
     }));
 }
 
-/** Trips a settlement covers: unbilled, in range, ridden by at least one billed rider. */
+/** Trips a settlement covers: in range, with at least one of these riders not yet billed on it. */
 export function tripsToSettle(
   trips: readonly CarpoolTrip[],
   range: DateRange,
   riderIds: readonly ID[],
 ): CarpoolTrip[] {
-  return tripsInRange(trips, range).filter(
-    (t) => t.settlementId == null && t.riderIds.some((id) => riderIds.includes(id)),
+  return tripsInRange(trips, range).filter((t) =>
+    t.riderIds.some((id) => riderIds.includes(id) && !isBilledFor(t, id)),
   );
+}
+
+/** The trip after billing these riders on it: their ids join the billed list. */
+export function stampBilled(trip: CarpoolTrip, riderIds: readonly ID[], settlementId: ID): CarpoolTrip {
+  const billed = new Set(billedRidersOf(trip));
+  for (const id of riderIds) if (trip.riderIds.includes(id)) billed.add(id);
+  return { ...trip, settlementId, billedRiderIds: trip.riderIds.filter((id) => billed.has(id)) };
 }
 
 // ---------------------------------------------------------------------------

@@ -493,8 +493,14 @@ export interface CarpoolTrip {
    */
   rates: Record<ID, number>;
   note: string | null;
-  /** Set once billed, so a trip can never be charged twice. */
+  /** Set once anyone on the trip is billed, so a trip can never be charged twice. */
   settlementId: ID | null;
+  /**
+   * Which riders have been billed for this trip, when only some were.
+   * Absent on a billed trip means everyone on it was billed (trips billed
+   * before per-rider billing existed).
+   */
+  billedRiderIds?: ID[];
   createdAt: ISOTimestamp;
   updatedAt: ISOTimestamp;
 }

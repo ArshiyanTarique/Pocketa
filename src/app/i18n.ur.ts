@@ -578,4 +578,19 @@ export const UR_SCREENS: Record<string, string> = {
   "Every transaction with them ({n}) will be voided — hidden from every total but kept in your history. Type DELETE to confirm.": "ان کے ساتھ ہر لین دین ({n}) منسوخ ہو جائے گا — ہر مجموعے سے چھپ جائے گا مگر تاریخچے میں رہے گا۔ تصدیق کے لیے DELETE لکھیں۔",
   "{name} deleted": "{name} حذف ہو گیا",
   'Details': 'تفصیلات',
+
+  // --- Carpool billing ----------------------------------------------------------
+  "Partly billed": "جزوی بل",
+  "Billed {n} rider": "{n} سوار کا بل بن گیا",
+  "Billed {n} riders": "{n} سواروں کا بل بن گیا",
+  "Billed {month}": "{month} کا بل بن گیا",
+  "Bill {month}": "{month} کا بل",
+  "Send each bill on WhatsApp": "ہر بل واٹس ایپ پر بھیجیں",
+  "no number saved — you pick the chat": "نمبر محفوظ نہیں — چیٹ آپ چنیں",
+  "Sent": "بھیج دیا",
+  "Who are you billing?": "کس کا بل بنا رہے ہیں؟",
+  "{n} trip": "{n} سفر",
+  "{n} trips": "{n} سفر",
+  "Billed amounts become money owed to you under People and count against {category}.": "بل کی رقم لوگ میں آپ کو واجب الادا رقم بن جاتی ہے اور {category} میں شمار ہوتی ہے۔",
+  "your chosen category": "آپ کا منتخب زمرہ",
 };
