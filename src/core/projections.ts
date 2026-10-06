@@ -472,7 +472,24 @@ export interface BudgetStatus {
 const MIN_DAYS_FOR_PROJECTION = 4;
 const MIN_SHARE_FOR_PROJECTION = 0.15;
 
+/** The day a budget began counting. Older rows have no startsOn and count from creation. */
+export function budgetStartsOn(budget: Budget): CalendarDate {
+  return budget.startsOn ?? budget.createdAt.slice(0, 10);
+}
+
+/**
+ * The period that contains `asOf`. The period the budget was made in starts
+ * on the day it was made rather than on the calendar boundary, so a new
+ * budget begins empty instead of inheriting the month's earlier spending.
+ */
 export function budgetRange(budget: Budget, asOf: CalendarDate = today()): DateRange {
+  const natural = naturalBudgetRange(budget, asOf);
+  const startsOn = budgetStartsOn(budget);
+  if (startsOn > natural.from && startsOn <= natural.to) return { from: startsOn, to: natural.to };
+  return natural;
+}
+
+function naturalBudgetRange(budget: Budget, asOf: CalendarDate): DateRange {
   switch (budget.period) {
     case 'custom':
       return {
@@ -549,7 +566,7 @@ export function budgetCarry(
   const mode = budget.rolloverMode ?? (budget.rollover ? 'carry' : 'restart');
   if (mode !== 'carry' || budget.period === 'custom') return 0;
 
-  const bornOn = budget.createdAt.slice(0, 10);
+  const bornOn = budgetStartsOn(budget);
   const periods: DateRange[] = [];
   let cursor = previousPeriod(budget, range);
   for (let i = 0; i < maxPeriods && cursor.to >= bornOn; i++) {

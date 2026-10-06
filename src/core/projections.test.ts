@@ -419,15 +419,18 @@ describe('budgets', () => {
   });
 
   it('supports a salary-aligned month starting on the 25th', () => {
-    const r = budgetRange(budget({ startDay: 25 }), '2026-09-10');
-    expect(r).toEqual({ from: '2026-08-25', to: '2026-09-24' });
-    expect(budgetRange(budget({ startDay: 25 }), '2026-09-26')).toEqual({ from: '2026-09-25', to: '2026-10-24' });
+    // Made in July, so the August–September period is a full one.
+    const payday = budget({ startDay: 25, startsOn: '2026-07-25' });
+    expect(budgetRange(payday, '2026-09-10')).toEqual({ from: '2026-08-25', to: '2026-09-24' });
+    expect(budgetRange(payday, '2026-09-26')).toEqual({ from: '2026-09-25', to: '2026-10-24' });
   });
 
   it('supports custom, weekly and yearly periods', () => {
     expect(budgetRange(budget({ period: 'custom', customFrom: '2026-09-05', customTo: '2026-09-19' }), '2026-09-10'))
       .toEqual({ from: '2026-09-05', to: '2026-09-19' });
-    expect(budgetRange(budget({ period: 'yearly' }), '2026-09-10')).toEqual({ from: '2026-01-01', to: '2026-12-31' });
+    expect(budgetRange(budget({ period: 'yearly', startsOn: '2026-01-01' }), '2026-09-10')).toEqual({ from: '2026-01-01', to: '2026-12-31' });
+    // A yearly budget made in September counts from September.
+    expect(budgetRange(budget({ period: 'yearly' }), '2026-09-10')).toEqual({ from: '2026-09-01', to: '2026-12-31' });
     expect(budgetRange(budget({ period: 'weekly' }), '2026-09-10')).toEqual({ from: '2026-09-07', to: '2026-09-13' });
   });
 
@@ -436,6 +439,51 @@ describe('budgets', () => {
     const s = budgetStatus(budget({ limit: 0 }), txns, accounts, '2026-09-10');
     expect(Number.isFinite(s.used)).toBe(true);
     expect(s.health).toBe('over');
+  });
+
+  /**
+   * A budget made on the 7th is an envelope opened on the 7th. What was spent
+   * on the 2nd went out before the envelope existed, so it is not in it.
+   */
+  describe('made part-way through a period', () => {
+    it('starts empty: only spending from the day it was made counts', () => {
+      const { txns, accounts } = scenario();
+      // Groceries: 12,000 on the 2nd (before), 5,000 on the 5th (after).
+      const s = budgetStatus(budget({ startsOn: '2026-09-04' }), txns, accounts, '2026-09-10');
+      expect(s.range).toEqual({ from: '2026-09-04', to: '2026-09-30' });
+      expect(s.spent).toBe(rs(5000));
+      expect(s.daysTotal).toBe(27);
+      expect(s.daysElapsed).toBe(7);
+      expect(s.daysRemaining).toBe(20);
+    });
+
+    it('runs a full period from the next one onwards', () => {
+      expect(budgetRange(budget({ startsOn: '2026-09-04' }), '2026-10-10')).toEqual({ from: '2026-10-01', to: '2026-10-31' });
+    });
+
+    it('leaves a period it was not part of alone', () => {
+      expect(budgetRange(budget({ startsOn: '2026-10-07' }), '2026-09-15')).toEqual({ from: '2026-09-01', to: '2026-09-30' });
+    });
+
+    it('carries forward from its first, shorter period', () => {
+      const { a, ctx, accounts } = makeLedger();
+      const txns = [
+        M(buildSpend({ date: '2026-08-10', accountId: a.cash.id, allocations: [{ categoryId: a.groceries.id, amount: rs(25000) }] }, ctx)),
+        M(buildSpend({ date: '2026-08-25', accountId: a.cash.id, allocations: [{ categoryId: a.groceries.id, amount: rs(3000) }] }, ctx)),
+      ];
+      const rolling = budget({ rollover: true, rolloverMode: 'carry', rolloverAccountId: null, startsOn: '2026-08-20', createdAt: '2026-08-20T09:00:00Z' });
+      // The 25,000 on the 10th predates the budget; August's leftover is 20,000 − 3,000.
+      expect(budgetStatus(rolling, txns, accounts, '2026-09-10').carry).toBe(rs(17000));
+    });
+
+    it('falls back to the creation day for budgets saved before startsOn existed', () => {
+      const { txns, accounts } = scenario();
+      const old = budget({ createdAt: '2026-09-04T10:00:00Z' });
+      delete (old as Partial<Budget>).startsOn;
+      const s = budgetStatus(old, txns, accounts, '2026-09-10');
+      expect(s.range.from).toBe('2026-09-04');
+      expect(s.spent).toBe(rs(5000));
+    });
   });
 });
 

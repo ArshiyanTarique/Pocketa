@@ -278,14 +278,14 @@ function describeRecurrenceUr(rec: Recurrence, step: number): string {
     case 'weekly': {
       const day = rec.byWeekday != null ? WEEKDAYS_UR[rec.byWeekday] : null;
       const base = step === 1 ? 'ہر ہفتے' : `ہر ${step} ہفتے`;
-      return day ? `${base} بروز ${day}` : base;
+      return day ? `${base} ${day} کو` : base;
     }
     case 'yearly':
       return step === 1 ? 'ہر سال' : `ہر ${step} سال`;
     case 'monthly':
     default: {
       const day = rec.byMonthDay ?? Number(rec.startDate.slice(8, 10));
-      const base = step === 1 ? 'ماہانہ' : `ہر ${step} مہینے`;
+      const base = step === 1 ? 'ہر مہینے' : `ہر ${step} مہینے`;
       return `${base}، ${day} تاریخ کو`;
     }
   }

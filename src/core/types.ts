@@ -248,6 +248,12 @@ export interface Budget {
   warnAt: number;
   archived: boolean;
   color: string | null;
+  /**
+   * The day the budget starts counting. A budget made on the 7th is an
+   * envelope opened on the 7th: spending from the 2nd is not in it. Absent on
+   * rows saved before this field existed; those count from their creation day.
+   */
+  startsOn?: CalendarDate | null;
   createdAt: ISOTimestamp;
   updatedAt: ISOTimestamp;
 }

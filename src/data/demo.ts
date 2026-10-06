@@ -314,11 +314,12 @@ export function buildDemo(
   });
 
   // --- budgets -----------------------------------------------------------
+  // Opened when the sample history begins, so each one shows a real month.
   const budgets: Budget[] = [
-    makeBudget('Groceries', [groceries], rs(35000)),
-    makeBudget('Eating out', [dining, coffee].filter(Boolean), rs(12000)),
-    makeBudget('Transport', [fuel, ride].filter(Boolean), rs(18000)),
-    makeBudget('Everything', [], rs(200000), 0.9),
+    makeBudget('Groceries', [groceries], rs(35000), twoMonthsAgo),
+    makeBudget('Eating out', [dining, coffee].filter(Boolean), rs(12000), twoMonthsAgo),
+    makeBudget('Transport', [fuel, ride].filter(Boolean), rs(18000), twoMonthsAgo),
+    makeBudget('Everything', [], rs(200000), twoMonthsAgo, 0.9),
   ];
 
   // --- goals -------------------------------------------------------------
@@ -407,7 +408,7 @@ function makePerson(name: string): Person {
   };
 }
 
-function makeBudget(name: string, categoryIds: string[], limit: number, warnAt = 0.8): Budget {
+function makeBudget(name: string, categoryIds: string[], limit: number, startsOn: CalendarDate, warnAt = 0.8): Budget {
   return {
     id: newId('bud'),
     name,
@@ -421,6 +422,7 @@ function makeBudget(name: string, categoryIds: string[], limit: number, warnAt =
     warnAt,
     archived: false,
     color: null,
+    startsOn,
     createdAt: nowIso(),
     updatedAt: nowIso(),
   };

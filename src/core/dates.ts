@@ -298,8 +298,8 @@ export function formatRelativeDay(date: CalendarDate, ref: CalendarDate = today(
   const diff = daysBetween(ref, date);
   const ur = dateLanguage === 'ur';
   if (diff === 0) return ur ? 'آج' : 'Today';
-  if (diff === -1) return ur ? 'کل (گزشتہ)' : 'Yesterday';
-  if (diff === 1) return ur ? 'کل (آئندہ)' : 'Tomorrow';
+  if (diff === -1) return ur ? 'کل (گزرا)' : 'Yesterday';
+  if (diff === 1) return ur ? 'کل (آنے والا)' : 'Tomorrow';
   if (diff > 1 && diff <= 6) return ur ? `${diff} دن میں` : `In ${diff} days`;
   if (diff < -1 && diff >= -6) return ur ? `${-diff} دن پہلے` : `${-diff} days ago`;
   return formatDate(date, parseDate(date).y === parseDate(ref).y ? 'short' : 'medium');
