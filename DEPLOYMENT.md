@@ -34,8 +34,8 @@ Budget about 40 minutes for 1–3, and however long your host takes for 4.
    npm run connect-supabase -- https://your-project.supabase.co sb_publishable_...
    ```
 
-   That writes `.env.local` **and** sets the same variables on the linked Netlify
-   site, because both builds need them. It refuses a privileged key outright.
+   That writes `.env.local` and prints the same two values to set on Cloudflare
+   Pages, because both builds need them. It refuses a privileged key outright.
 
 Supabase issues two shapes of key. Newer projects show **Publishable**
 (`sb_publishable_…`) and **Secret** (`sb_secret_…`); older ones show **anon** and
@@ -123,8 +123,19 @@ npm run build
 ```
 
 The router is hash-based (`/#/carpool`), so **no rewrite rules, no SPA fallback
-config, nothing host-specific is required.** Any static host serves `dist/`:
-Netlify, Vercel, Cloudflare Pages, GitHub Pages, S3, or a folder on a web server.
+config, nothing host-specific is required.**
+
+Pocketa is hosted on **Cloudflare Pages, built from GitHub**. Every push to
+`main` triggers a build. The project's build settings are:
+
+| Setting | Value |
+|---|---|
+| Build command | `npm run build` |
+| Output directory | `dist` |
+| Environment variables | `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, and `NODE_VERSION=22` |
+
+Caching and security headers live in `public/_headers`, which Cloudflare reads
+from the build output. Change them there.
 
 Two things must be true wherever it lands:
 

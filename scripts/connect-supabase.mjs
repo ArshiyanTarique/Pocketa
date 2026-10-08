@@ -14,7 +14,6 @@
  * key is the opposite of that, and this refuses to accept one.
  */
 import { writeFileSync, existsSync, readFileSync } from 'node:fs';
-import { execFileSync } from 'node:child_process';
 
 const [url, key] = process.argv.slice(2);
 
@@ -126,50 +125,11 @@ console.log(`  wrote ${envPath} (${classified.kind} key)`);
 
 // --- 2. The hosted build -----------------------------------------------------
 
-/**
- * Run the Netlify CLI.
- *
- * On Windows it is a `.cmd` shim, and Node refuses to spawn one without a
- * shell. Going through a shell means the arguments are parsed by it, so both
- * values are checked against a strict character set first — neither can contain
- * a quote, a space or anything a shell treats as punctuation.
- */
-const SHELL_SAFE = /^[A-Za-z0-9._:/-]+$/;
-
-function netlify(args) {
-  const windows = process.platform === 'win32';
-  if (!windows) {
-    return execFileSync('netlify', args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
-  }
-
-  // `cmd.exe /c` rather than `shell: true`: the latter concatenates arguments
-  // into a command line without escaping them, which Node now warns about.
-  // The character check stays as a second line of defence.
-  if (!args.every((arg) => SHELL_SAFE.test(arg))) {
-    throw new Error('refusing to pass an unexpected character to the command line');
-  }
-  return execFileSync('cmd.exe', ['/c', 'netlify.cmd', ...args], {
-    encoding: 'utf8',
-    stdio: ['ignore', 'pipe', 'pipe'],
-  });
-}
-
-if (existsSync('.netlify/state.json')) {
-  for (const [name, value] of [
-    ['VITE_SUPABASE_URL', clean],
-    ['VITE_SUPABASE_ANON_KEY', key],
-  ]) {
-    try {
-      netlify(['env:set', name, value]);
-      console.log(`  set ${name} on Netlify`);
-    } catch (error) {
-      console.warn(`  could not set ${name} on Netlify: ${String(error.message).split('\n')[0]}`);
-      console.warn('  set it by hand in Site configuration -> Environment variables.');
-    }
-  }
-} else {
-  console.log('  no linked Netlify site; skipping the hosted build');
-}
-
-console.log('\n  Now rebuild and deploy, so both halves carry the new values:\n');
-console.log('    npm run build && netlify deploy --prod --dir=dist\n');
+// Cloudflare Pages builds from GitHub, so the same two values have to be set in
+// its dashboard too. There is no CLI step here: the Pages project is linked to
+// the repository, and the next push rebuilds it with whatever is set there.
+console.log('\n  Now set the same two values on Cloudflare, so the hosted build carries them:\n');
+console.log('    Workers & Pages -> your Pages project -> Settings -> Variables and Secrets');
+console.log(`      VITE_SUPABASE_URL      = ${clean}`);
+console.log(`      VITE_SUPABASE_ANON_KEY = ${key}`);
+console.log('\n  Then push to main (or retry the latest deployment) so it rebuilds.\n');
